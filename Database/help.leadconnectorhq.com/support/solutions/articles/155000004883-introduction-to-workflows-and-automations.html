@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+       
+        <!--[if lt IE 7]><html class="no-js ie6 dew-dsm-theme " lang="en" dir="ltr" data-date-format="non_us"><![endif]-->       
+        <!--[if IE 7]><html class="no-js ie7 dew-dsm-theme " lang="en" dir="ltr" data-date-format="non_us"><![endif]-->       
+        <!--[if IE 8]><html class="no-js ie8 dew-dsm-theme " lang="en" dir="ltr" data-date-format="non_us"><![endif]-->       
+        <!--[if IE 9]><html class="no-js ie9 dew-dsm-theme " lang="en" dir="ltr" data-date-format="non_us"><![endif]-->       
+        <!--[if IE 10]><html class="no-js ie10 dew-dsm-theme " lang="en" dir="ltr" data-date-format="non_us"><![endif]-->       
+        <!--[if (gt IE 10)|!(IE)]><!--><html class="no-js  dew-dsm-theme " lang="en" dir="ltr" data-date-format="non_us"><!--<![endif]-->
+	
+<!-- Mirrored from help.leadconnectorhq.com/support/solutions/articles/155000004883-introduction-to-workflows-and-automations by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 02 Jan 2026 21:31:34 GMT -->
+<!-- Added by HTTrack --><meta http-equiv="content-type" content="text/html;charset=utf-8" /><!-- /Added by HTTrack -->
+<head>
+		
+		<!-- Title for the page -->
+<title> Introduction to Workflows and Automations : LeadConnector </title>
+
+<!-- Meta information -->
+
+      <meta charset="utf-8" />
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+      <meta name="description" content= "" />
+      <meta name="author" content= "" />
+       <meta property="og:title" content="Introduction to Workflows and Automations" />  <meta property="og:url" content="155000004883-introduction-to-workflows-and-automations.html" />  <meta property="og:description" content=" Workflow automation simplifies repetitive tasks by setting up sequences of predefined actions triggered by specific events. This introduction explains the essentials of workflow automation, including its core components—triggers and actions—key b..." />  <meta property="og:image" content="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155031488903/logo/W6IZsuUjIIDJkqMExT4DsHfGY0UAV20K1Qf64a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;amp;X-Amz-Credential=AKIAS6FNSMY2XLZULJPI%2F20251229%2Fus-east-1%2Fs3%2Faws4_request&amp;amp;X-Amz-Date=20251229T093904Z&amp;amp;X-Amz-Expires=604800&amp;amp;X-Amz-SignedHeaders=host&amp;amp;X-Amz-Signature=50642aa923a589b6237916d8a1f28128efa53fef0384d8be9fa6264da98b1f76" />  <meta property="og:site_name" content="LeadConnector" />  <meta property="og:type" content="article" />  <meta name="twitter:title" content="Introduction to Workflows and Automations" />  <meta name="twitter:url" content="155000004883-introduction-to-workflows-and-automations.html" />  <meta name="twitter:description" content=" Workflow automation simplifies repetitive tasks by setting up sequences of predefined actions triggered by specific events. This introduction explains the essentials of workflow automation, including its core components—triggers and actions—key b..." />  <meta name="twitter:image" content="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155031488903/logo/W6IZsuUjIIDJkqMExT4DsHfGY0UAV20K1Qf64a.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;amp;X-Amz-Credential=AKIAS6FNSMY2XLZULJPI%2F20251229%2Fus-east-1%2Fs3%2Faws4_request&amp;amp;X-Amz-Date=20251229T093904Z&amp;amp;X-Amz-Expires=604800&amp;amp;X-Amz-SignedHeaders=host&amp;amp;X-Amz-Signature=50642aa923a589b6237916d8a1f28128efa53fef0384d8be9fa6264da98b1f76" />  <meta name="twitter:card" content="summary" />  <link rel="canonical" href="155000004883-introduction-to-workflows-and-automations.html" /> 
+
+<!-- Responsive setting -->
+<link rel="apple-touch-icon" href="../../../assets/misc/omnifaviconc9b3.ico?702017" />
+        <link rel="apple-touch-icon" sizes="72x72" href="../../../assets/misc/omnifaviconc9b3.ico?702017" />
+        <link rel="apple-touch-icon" sizes="114x114" href="../../../assets/misc/omnifaviconc9b3.ico?702017" />
+        <link rel="apple-touch-icon" sizes="144x144" href="../../../assets/misc/omnifaviconc9b3.ico?702017" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" /> 
+		
+		<!-- Adding meta tag for CSRF token -->
+		<meta name="csrf-param" content="authenticity_token" />
+<meta name="csrf-token" content="7oCm8uqwpTi3piK1x+jFLh7yd30SmXYsf4JlV8dOV/XRO4SVrwb5jjGawnox9/BE/MIW39Z37/SkSrQghONTNQ==" />
+		<!-- End meta tag for CSRF token -->
+		
+		<!-- Fav icon for portal -->
+		<link rel='shortcut icon' href='../../../assets/misc/omnifaviconc9b3.ico?702017' />
+
+		<!-- Base stylesheet -->
+ 
+		<link rel="stylesheet" media="print" href="../../../../assets5.freshdesk.com/assets/cdn/portal_print-6e04b27f27ab27faab81f917d275d593fa892ce13150854024baaf983b3f4326.css" />
+	  		<link rel="stylesheet" media="screen" href="../../../../assets7.freshdesk.com/assets/cdn/falcon_portal_utils-a58414d6bc8bc6ca4d78f5b3f76522e4970de435e68a5a2fedcda0db58f21600.css" />	
+
+		
+		<!-- Theme stylesheet -->
+
+		<link href="../../theme2820.css?v=4&amp;d=1654757187" media="screen" rel="stylesheet" type="text/css">
+
+		<!-- Google font url if present -->
+		<link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:regular,italic,600,700,700italic|Poppins:regular,600,700' rel='stylesheet' type='text/css' nonce='25RjG4IvxqTfafVvPVoXGA=='>
+
+		<!-- Including default portal based script framework at the top -->
+		<script src="../../../../assets9.freshdesk.com/assets/cdn/portal_head_v2-d07ff5985065d4b2f2826fdbbaef7df41eb75e17b915635bf0413a6bc12fd7b7.js"></script>
+		<!-- Including syntexhighlighter for portal -->
+		<script src="../../../../assets4.freshdesk.com/assets/cdn/prism-841b9ba9ca7f9e1bc3cdfdd4583524f65913717a3ab77714a45dd2921531a402.js"></script>
+
+		    <!-- Google tag (gtag.js) -->
+	<script async src='https://www.googletagmanager.com/gtag/js?id=G-3RF84VFG86' nonce="25RjG4IvxqTfafVvPVoXGA=="></script>
+	<script nonce="25RjG4IvxqTfafVvPVoXGA==">
+	  window.dataLayer = window.dataLayer || [];
+	  function gtag(){dataLayer.push(arguments);}
+	  gtag('js', new Date());
+	  gtag('config', 'G-3RF84VFG86');
+	</script>
+
+
+		<!-- Access portal settings information via javascript -->
+		 <script type="text/javascript">     var portal = {"language":"en","name":"LeadConnector","contact_info":"","current_page_name":"article_view","current_tab":"solutions","vault_service":{"url":"https://vault-service.freshworks.com/data","max_try":2,"product_name":"fd"},"current_account_id":1180090,"preferences":{"bg_color":"#f3f5f7","header_color":"#ffffff","help_center_color":"#f3f5f7","footer_color":"#183247","tab_color":"#ffffff","tab_hover_color":"#02b875","btn_background":"#f3f5f7","btn_primary_background":"#02b875","baseFont":"Source Sans Pro","textColor":"#183247","headingsFont":"Poppins","headingsColor":"#183247","linkColor":"#183247","linkColorHover":"#2753d7","inputFocusRingColor":"#02B875","nonResponsive":"false"},"image_placeholders":{"spacer":"https://assets9.freshdesk.com/assets/misc/spacer.gif","profile_thumb":"https://assets10.freshdesk.com/assets/misc/profile_blank_thumb-4a7b26415585aebbd79863bd5497100b1ea52bab8df8db7a1aecae4da879fd96.jpg","profile_medium":"https://assets5.freshdesk.com/assets/misc/profile_blank_medium-1dfbfbae68bb67de0258044a99f62e94144f1cc34efeea73e3fb85fe51bc1a2c.jpg"},"falcon_portal_theme":true,"current_object_id":155000004883};     var attachment_size = 20;     var blocked_extensions = "";     var allowed_extensions = "";     var store = { 
+        ticket: {},
+        portalLaunchParty: {} };    store.portalLaunchParty.ticketFragmentsEnabled = false;    store.pod = "us-east-1";    store.region = "US"; </script> 
+
+
+			
+	</head>
+	<body>
+            	
+		
+		
+		
+	<header class="banner">
+		<div class="banner-wrapper page">
+			<div class="banner-title">
+				<a href="../../home.html"class='portal-logo'><span class="portal-img"><i></i>
+                    <img src='../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155031488903/logo/W6IZsuUjIIDJkqMExT4DsHfGY0UAV20K1Q.png' alt="Logo"
+                        onerror="default_image_error(this)" data-type="logo" />
+                 </span></a>
+				<h1 class="ellipsis heading">LeadConnector</h1>
+			</div>
+			<nav class="banner-nav">
+				 <div class="welcome">Welcome <b></b> </div>  <b><a href="../../login.html"><b>Login</b></a></b> &nbsp;<b><a href="../../signup.html"><b>Sign up</b></a></b>
+			</nav>
+		</div>
+	</header>
+	<nav class="page-tabs">
+		<div class="page no-padding no-header-tabs">
+			
+				<a data-toggle-dom="#header-tabs" href="#" data-animated="true" class="mobile-icon-nav-menu show-in-mobile"></a>
+				<div class="nav-link" id="header-tabs">
+					
+						
+							<a href="../../home.html" class="">Home</a>
+						
+					
+						
+							<a href="../../solutions.html" class="active">Solutions</a>
+						
+					
+				</div>
+			
+		</div>
+	</nav>
+
+<!-- Search and page links for the page -->
+
+	<section class="help-center-sc rounded-6">
+		<div class="page no-padding">
+		<div class="hc-search">
+			<div class="hc-search-c">
+				<form class="hc-search-form print--remove" autocomplete="off" action="https://help.leadconnectorhq.com/support/search/solutions" id="hc-search-form" data-csrf-ignore="true">
+	<div class="hc-search-input">
+	<label for="support-search-input" class="hide">Enter your search term here...</label>
+		<input placeholder="Enter your search term here..." type="text"
+			name="term" class="special" value=""
+            rel="page-search" data-max-matches="10" id="support-search-input">
+	</div>
+	<div class="hc-search-button">
+		<button class="btn btn-primary" aria-label="Search" type="submit" autocomplete="off">
+			<i class="mobile-icon-search hide-tablet"></i>
+			<span class="hide-in-mobile">
+				Search
+			</span>
+		</button>
+	</div>
+</form>
+			</div>
+		</div>
+		<div class="hc-nav ">
+			 <nav>   <div>
+              <a href="../../tickets/new.html" class="mobile-icon-nav-newticket new-ticket ellipsis" title="New support ticket">
+                <span> New support ticket </span>
+              </a>
+            </div>   <div>
+              <a href="../../login.html" class="mobile-icon-nav-status check-status ellipsis" title="Check ticket status">
+                <span>Check ticket status</span>
+              </a>
+            </div>  </nav>
+		</div>
+		</div>
+	</section>
+
+
+
+<div class="page">
+	
+	
+	<!-- Search and page links for the page -->
+	
+
+	<!-- Notification Messages -->
+	 <div class="alert alert-with-close notice hide" id="noticeajax"></div> 
+
+	
+	<div class="c-wrapper">		
+		<section class="main content rounded-6 min-height-on-desktop fc-article-show" id="article-show-155000004883">
+	<div class="breadcrumb">
+		<a href="../../solutions.html"> Solution home </a>
+		<a href="../48000454679.html">Marketing Category</a>
+		<a href="../folders/48000684508.html">Workflow</a>
+	</div>
+	<b class="page-stamp page-stamp-article">
+		<b class="icon-page-article"></b>
+	</b>
+
+	<h2 class="heading">Introduction to Workflows and Automations
+	 	<a href="#"
+            class="solution-print--icon print--remove"
+ 			title="Print this Article"
+ 			arial-role="link"
+ 			arial-label="Print this Article"
+			id="print-article"
+ 		>
+			<span class="icon-print"></span>
+			<span class="text-print">Print</span>
+ 		</a>
+	</h2>
+	
+	<p>Modified on: Tue, 25 Mar, 2025 at  7:31 AM</p>
+	<hr />
+	
+
+	<article class="article-body" id="article-body" rel="image-enlarge">
+		<p data-identifyelement="502">Workflow automation simplifies repetitive tasks by setting up sequences of predefined actions triggered by specific events. This introduction explains the essentials of workflow automation, including its core components—triggers and actions—key benefits, and real-world applications, providing a strong foundation to explore further.</p><hr data-identifyelement="503"><p class="fd-toc"><strong>TABLE OF CONTENTS</strong></p><ul><li><a href="#What-is-Workflow-Automation?">What is Workflow Automation?</a><a href="#Key-Benefits-of-Using-Workflow-Automation" dir="ltr"></a></li><li><a dir="ltr" href="#Key-Benefits-of-Using-Workflow-Automation">Key Benefits of Using Workflow Automation</a><a href="#Use-Cases-for-Workflows-Automation" dir="ltr"></a></li><li><a dir="ltr" href="#Use-Cases-for-Workflows-Automation">Use Cases for Workflows Automation</a><a href="#Triggers-and-Actions%3A-The-Core-of-Workflow-Automation" dir="ltr"></a></li><li><a dir="ltr" href="#Triggers-and-Actions%3A-The-Core-of-Workflow-Automation">Triggers and Actions: The Core of Workflow Automation</a><a href="#Steps-for-Setting-Up-a-Workflow" dir="ltr"></a></li><li><a dir="ltr" href="#Steps-for-Setting-Up-a-Workflow">Steps for Setting Up a Workflow</a><a href="#Frequently-Asked-Questions" dir="ltr"></a></li><li><a dir="ltr" href="#Frequently-Asked-Questions">Frequently Asked Questions</a></li></ul><hr data-identifyelement="527"><h1 data-identifyelement="528"><strong data-identifyelement="529">What is Workflow Automation?</strong></h1><p data-identifyelement="530"><br data-identifyelement="531"></p><p data-identifyelement="532">Workflow automation is the process of using technology to perform repetitive tasks automatically. By defining triggers (starting points) and actions (tasks), businesses can create efficient workflows that save time and reduce errors. For example, instead of manually logging lead details and sending follow-up emails when a form is submitted, an automated workflow can:</p><p data-identifyelement="532"><br data-identifyelement="500"></p><ol data-identifyelement="501"><li data-identifyelement="533" dir="ltr">Add the lead’s information to a CRM.<br><br></li><li data-identifyelement="534" dir="ltr">Assign it to a sales representative.<br><br></li><li data-identifyelement="535" dir="ltr">Send a personalized welcome email.</li></ol><p data-identifyelement="535"><br data-identifyelement="506"></p><p data-identifyelement="536">This ensures processes are executed efficiently and consistently, without manual intervention.</p><hr data-identifyelement="537"><h2 data-identifyelement="538"><strong data-identifyelement="539">Key Benefits of Using Workflow Automation</strong></h2><p data-identifyelement="540"><br data-identifyelement="541"></p><ol><li data-identifyelement="542" dir="ltr"><strong data-identifyelement="543">Increased Efficiency:</strong> Automate time-consuming tasks, freeing up your team for strategic priorities.<br><br></li><li data-identifyelement="544" dir="ltr"><strong data-identifyelement="545" dir="ltr">Improved Accuracy:&nbsp;</strong>Eliminate manual errors by automating routine activities.<br><br></li><li data-identifyelement="546" dir="ltr"><strong data-identifyelement="547" dir="ltr">Cost Savings:&nbsp;</strong>Save resources by reducing dependency on manual labor.<br><br></li><li data-identifyelement="548" dir="ltr"><strong data-identifyelement="549" dir="ltr">Enhanced Customer Experience:</strong> Respond faster to customer interactions with automated actions.<br><br></li><li data-identifyelement="550"><strong data-identifyelement="551" dir="ltr">Scalability:&nbsp;</strong>Effortlessly handle higher workloads without additional resources.</li></ol><hr><h2 data-identifyelement="678"><strong data-identifyelement="679" dir="ltr">Use Cases for Workflows Automation</strong></h2><p data-identifyelement="680"><br data-identifyelement="681"></p><ol><li data-identifyelement="682" dir="ltr"><strong data-identifyelement="683" dir="ltr">Lead Management:&nbsp;</strong>Automatically capture leads, update CRM records, and send welcome emails.<br><br></li><li data-identifyelement="684" dir="ltr"><strong data-identifyelement="685" dir="ltr">Appointment Scheduling:&nbsp;</strong>Confirm bookings and send reminders without manual input.<br><br></li><li data-identifyelement="686" dir="ltr"><strong data-identifyelement="687" dir="ltr">Customer Support:&nbsp;</strong>Assign tickets and notify team members based on customer queries.<br><br></li><li data-identifyelement="688" dir="ltr"><strong data-identifyelement="689" dir="ltr">Marketing Campaigns:</strong> Deliver personalized follow-ups triggered by user actions like link clicks or email opens.</li></ol><hr data-identifyelement="552"><h2 data-identifyelement="553"><strong data-identifyelement="554">Triggers and Actions: The Core of Workflow Automation</strong></h2><p data-identifyelement="507"><br data-identifyelement="508"></p><p data-identifyelement="555" dir="ltr">At the heart of workflow automation are triggers and actions—two core elements that define how automation operates. Together, they form the foundation of any automated workflow.</p><p data-identifyelement="556"><br data-identifyelement="557"></p><h3 data-identifyelement="558"><strong data-identifyelement="559">Triggers: The Starting Point</strong></h3><p data-identifyelement="560" dir="ltr">A trigger is an event that sets your workflow into motion. It’s the <strong data-identifyelement="561">“if”</strong> in the automation equation, signifying that something has happened and action needs to follow.</p><p data-identifyelement="562"><br data-identifyelement="563"></p><p data-identifyelement="564">Examples of common triggers include:<br><br></p><p data-identifyelement="565">&nbsp; &nbsp; • &nbsp; &nbsp;A customer booking an appointment.<br><br></p><p data-identifyelement="566">&nbsp; &nbsp; • &nbsp; &nbsp;A form submission.<br><br></p><p data-identifyelement="567">&nbsp; &nbsp; • &nbsp; &nbsp;A contact replying to a message.</p><p data-identifyelement="568"><br data-identifyelement="569"></p><p data-identifyelement="570">Triggers ensure that workflows respond to real-time events, allowing processes to begin exactly when they’re needed.</p><p data-identifyelement="571"><br data-identifyelement="572"></p><h3 data-identifyelement="573"><strong data-identifyelement="574">Actions: The Task Executors</strong></h3><p data-identifyelement="575" dir="ltr">An action is the task performed in response to a trigger. It’s the <strong data-identifyelement="576">“then”</strong> in the automation equation—what the workflow does once the trigger occurs.</p><p data-identifyelement="577"><br data-identifyelement="578"></p><p data-identifyelement="579">Examples of actions include:<br><br></p><p data-identifyelement="580">&nbsp; &nbsp; • &nbsp; &nbsp;Sending an email.<br><br></p><p data-identifyelement="581">&nbsp; &nbsp; • &nbsp; &nbsp;Updating contact details.<br><br></p><p data-identifyelement="582">&nbsp; &nbsp; • &nbsp; &nbsp;Assigning a lead to a team member.</p><p data-identifyelement="583"><br data-identifyelement="584"></p><p data-identifyelement="585">Actions complete the workflow by performing the tasks required to move the process forward.</p><p data-identifyelement="586"><br></p><p data-identifyelement="586"><br></p><pre class="fd-callout fd-callout--idea" dir="ltr"><span dir="ltr" style="font-family: Helvetica Neue;"><strong>Explore Triggers and Actions in Depth:</strong><br style="font-family: &quot;Helvetica Neue&quot;;"><br style="font-family: &quot;Helvetica Neue&quot;;">While this article introduces the concept of triggers and actions, each trigger or action has unique settings and use cases. Instead of diving deep into specifics here, you can explore individual articles dedicated to each trigger and action to better understand how to customize them for your workflows.</span></pre><p data-identifyelement="588"><br></p><hr data-identifyelement="596"><h2 data-identifyelement="597" dir="ltr"><strong data-identifyelement="598" dir="ltr">Steps for Setting Up a Workflow</strong></h2><p data-identifyelement="599"><br data-identifyelement="600"></p><p data-identifyelement="601" dir="ltr">Go to the <strong data-identifyelement="602">"Workflows"</strong> area inside <strong data-identifyelement="603">"Automation"</strong> section of your CRM.</p><p data-identifyelement="604" dir="ltr"><strong data-identifyelement="605" dir="ltr"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037820668/original/zmXrHwJbwULUQZA9hZBXjXPjxppJWs4yyQade8.png?1733405305" style="width: auto; max-width: 100%;" class="fr-fic fr-fil fr-dib fr-bordered" data-attachment="[object Object]" data-id="155037820668" data-identifyelement="606"></strong></p><p data-identifyelement="609" dir="ltr"><br></p><p data-identifyelement="609" dir="ltr"><br></p><p data-identifyelement="609" dir="ltr"><strong data-identifyelement="610" dir="ltr">Click "+ Create Workflow"<br data-identifyelement="611"></strong>When creating a new workflow, you have the option to create a new workflow from scratch, use existing templates or recipes.</p><p data-identifyelement="612" dir="ltr"><strong data-identifyelement="613" dir="ltr" style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037824117/original/QM_Pl55gjD6rCq6pN8Ye3FSzJIAnu3jTTw4d6b.jpg?1733407465" class="fr-fic fr-fil fr-dib fr-bordered" data-id="155037824117" style="max-width: 100%; padding: 0px 1px; width: auto;" data-attachment="[object Object]" data-identifyelement="614"></strong></p><p data-identifyelement="615" dir="ltr"><br></p><p data-identifyelement="615" dir="ltr"><br data-identifyelement="616"></p><p data-identifyelement="617" dir="ltr"><strong data-identifyelement="618" dir="ltr">Select a Recipe</strong><br data-identifyelement="619">Workflow recipes make it easier to design and implement automation by offering a ready-to-use structure that can be customized to fit your specific needs. In the next screenshot, you can see the different recipes that are ready for use.</p><p data-identifyelement="620"><strong data-identifyelement="621" dir="ltr"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037822630/original/p_wS1eWLzNd59dwL0BwRYLMwOatWeRPIVg8cc2.png?1733406526" style="width: auto; max-width: 100%;" class="fr-fic fr-fil fr-dib fr-bordered" data-attachment="[object Object]" data-id="155037822630" data-identifyelement="622"></strong></p><p data-identifyelement="623" dir="ltr"><br></p><p data-identifyelement="623" dir="ltr"><br data-identifyelement="624"></p><p data-identifyelement="625" dir="ltr"><strong data-identifyelement="626" dir="ltr">Choose a Recipe</strong><br data-identifyelement="627">Choose a workflow recipe from a wide variety of recipes that suit your needs.</p><p data-identifyelement="628"><strong data-identifyelement="629" dir="ltr" style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037824426/original/PaJtIFejKr5XXzVA3VQ-wA5W9UHxnbjlMQ20ad.jpg?1733407642" class="fr-fic fr-fil fr-dib fr-bordered" data-id="155037824426" style="max-width: 100%; padding: 0px 1px; width: auto;" data-attachment="[object Object]" data-identifyelement="630"></strong></p><p data-identifyelement="631" dir="ltr"><br></p><p data-identifyelement="631" dir="ltr"><br data-identifyelement="632"></p><p data-identifyelement="633" dir="ltr"><strong data-identifyelement="634" dir="ltr">Select from Template :</strong></p><p data-identifyelement="635" dir="ltr">Use our premade templates to create your workflow. Click <strong data-identifyelement="636">"Select from Template"</strong> option to view the template library.</p><p data-identifyelement="637"><strong data-identifyelement="638" dir="ltr"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037822673/original/jSWspVU1tLi3vvkAnQspP6gpEC_qlDpVgAd0ea.png?1733406563" style="width: auto; max-width: 100%;" class="fr-fic fr-fil fr-dib fr-bordered" data-attachment="[object Object]" data-id="155037822673" data-identifyelement="639"></strong></p><p data-identifyelement="640"><br></p><p data-identifyelement="642" dir="ltr"><br></p><p data-identifyelement="642" dir="ltr"><br></p><p data-identifyelement="642" dir="ltr"><br data-identifyelement="648"><strong data-identifyelement="649">Start from scratch</strong></p><p data-identifyelement="650" dir="ltr">Create your own workflow automation from scratch. Add multiple triggers and actions to automate your entire business operations.</p><p data-identifyelement="651" dir="ltr"><strong data-identifyelement="652" dir="ltr"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037824930/original/-qJg3EmQnuFSmPAFftt0YEwm0yzpFIIQ5gc6a5.png?1733407954" style="width: auto; max-width: 100%;" class="fr-fic fr-fil fr-dib fr-bordered" data-attachment="[object Object]" data-id="155037824930" data-identifyelement="653"></strong></p><p data-identifyelement="654" dir="ltr"><br></p><p data-identifyelement="654" dir="ltr"><br data-identifyelement="655"></p><p data-identifyelement="656" dir="ltr"><strong data-identifyelement="657" dir="ltr">Choose a Trigger</strong></p><p data-identifyelement="658" dir="ltr">Identify the event that initiates the workflow (e.g., a customer booking an appointment).<br data-identifyelement="659"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037827572/original/-zvZzXwhAKxgmi7_BBVTi1_3ysNyBZXDMw85c3.gif?1733409691" style="width: auto; max-width: 100%;" class="fr-fic fr-fil fr-dib fr-bordered" data-attachment="[object Object]" data-id="155037827572" data-identifyelement="660"></p><p data-identifyelement="658" dir="ltr"><br></p><p data-identifyelement="658" dir="ltr"><br data-identifyelement="661"></p><p data-identifyelement="662" dir="ltr"><strong data-identifyelement="663" dir="ltr">Add Actions</strong></p><p data-identifyelement="664" dir="ltr">Specify the tasks to execute after the trigger (e.g., send a notification, update records).</p><p data-identifyelement="665" dir="ltr"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037827640/original/VaUbFCVYjWBTTFACXj631OWpkAHYH3ua6g9d00.gif?1733409724" style="width: auto; max-width: 100%;" class="fr-fic fr-fil fr-dib fr-bordered" data-attachment="[object Object]" data-id="155037827640" data-identifyelement="666"></p><p data-identifyelement="665" dir="ltr"><br></p><p data-identifyelement="665" dir="ltr"><br data-identifyelement="667"></p><p data-identifyelement="668" dir="ltr"><strong data-identifyelement="669" dir="ltr">Save and Test</strong></p><p data-identifyelement="670" dir="ltr">After you have added the triggers and actions, be sure to click <strong data-identifyelement="671">"Save"&nbsp;</strong>button. Before you publish the workflow, you can test it with the help of <strong data-identifyelement="672">"Test Workflow"&nbsp;</strong>button.</p><p data-identifyelement="673" dir="ltr"><img src="../../../../s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155037821555/original/HiuA9UH97IHNAsYTMVpwchRL32w6EYbTwgeb0f.png?1733405874" style="width: auto; max-width: 100%;" class="fr-fil fr-dib fr-bordered" data-attachment="[object Object]" data-id="155037821555" data-identifyelement="674"></p><hr data-identifyelement="690"><h2 data-identifyelement="691"><strong data-identifyelement="692" dir="ltr">Frequently Asked Questions</strong></h2><p data-identifyelement="693"><br data-identifyelement="694"></p><p data-identifyelement="695"><strong><span style="color: rgb(44, 130, 201);">Q: What is the difference between triggers and actions?</span></strong></p><p data-identifyelement="696" dir="ltr">Triggers start the workflow (e.g., form submission), and actions are the resulting tasks (e.g., sending an email).</p><p data-identifyelement="697"><br data-identifyelement="698"></p><p data-identifyelement="699"><strong><span style="color: rgb(44, 130, 201);">Q: Can workflows handle complex processes with multiple steps?</span></strong></p><p data-identifyelement="700" dir="ltr">Yes, workflows can include multiple triggers and actions to streamline complex processes.</p><p data-identifyelement="701"><br data-identifyelement="702"></p><p data-identifyelement="703"><strong><span style="color: rgb(44, 130, 201);">Q: Do I need technical expertise to create workflows?</span></strong></p><p data-identifyelement="704" dir="ltr">No, most platforms provide intuitive interfaces that allow anyone to set up workflows without coding.</p>
+	</article>
+
+	<hr />	
+		
+
+		<p class="article-vote" id="voting-container" 
+											data-user-id="" 
+											data-article-id="155000004883"
+											data-language="en">
+										Did you find it helpful?<span data-href="/support/solutions/articles/155000004883/thumbs_up" class="vote-up a-link" id="article_thumbs_up" 
+									data-remote="true" data-method="put" data-update="#voting-container" 
+									data-user-id=""
+									data-article-id="155000004883"
+									data-language="en"
+									data-update-with-message="Glad we could be helpful. Thanks for the feedback.">
+								Yes</span><span class="vote-down-container"><span data-href="/support/solutions/articles/155000004883/thumbs_down" class="vote-down a-link" id="article_thumbs_down" 
+									data-remote="true" data-method="put" data-update="#vote-feedback-form" 
+									data-user-id=""
+									data-article-id="155000004883"
+									data-language="en"
+									data-hide-dom="#voting-container" data-show-dom="#vote-feedback-container">
+								No</span></span></p><a class="hide a-link" id="vote-feedback-form-link" data-hide-dom="#vote-feedback-form-link" data-show-dom="#vote-feedback-container">Send feedback</a><div id="vote-feedback-container"class="hide">	<div class="lead">Sorry we couldn't be helpful. Help us improve this article with your feedback.</div>	<div id="vote-feedback-form">		<div class="sloading loading-small loading-block"></div>	</div></div>
+		
+</section>
+<section class="sidebar content rounded-6 fc-related-articles">
+	<div id="related_articles"><div class="cs-g-c"><section class="article-list"><h3 class="list-lead">Related Articles</h3><ul rel="remote" 
+			data-remote-url="/support/search/articles/155000004883/related_articles?container=related_articles&limit=10" 
+			id="related-article-list"></ul></section></div></div>
+</section>
+
+<script nonce="25RjG4IvxqTfafVvPVoXGA==">
+	['click', 'keypress'].forEach(function eventsCallback(event) {
+		document.getElementById('print-article').addEventListener(event, function (e) {
+			if (event === 'keypress' && e.key !== 'Enter') return;
+			e.preventDefault();
+			print();
+		});
+	});
+</script>
+
+	</div>
+	
+
+	
+
+</div>
+
+	<footer class="footer rounded-6">
+		<nav class="footer-links page no-padding">
+			
+					
+						<a href="../../home.html" class="">Home</a>
+					
+						<a href="../../solutions.html" class="active">Solutions</a>
+					
+			
+			
+			
+		</nav>
+	</footer>
+	
+
+
+
+
+			<script src="../../../../assets10.freshdesk.com/assets/cdn/portal_bottom-0fe88ce7f44d512c644a48fda3390ae66247caeea647e04d017015099f25db87.js"></script>
+
+		<script src="../../../../assets10.freshdesk.com/assets/cdn/redactor-642f8cbfacb4c2762350a557838bbfaadec878d0d24e9a0d8dfe90b2533f0e5d.js"></script> 
+		<script src="../../../../assets7.freshdesk.com/assets/cdn/lang/en-4a75f878b88f0e355c2d9c4c8856e16e0e8e74807c9787aaba7ef13f18c8d691.js"></script>
+		<!-- for i18n-js translations -->
+  		<script src="../../../../assets1.freshdesk.com/assets/cdn/i18n/portal/en-7dc3290616af9ea64cf8f4a01e81b2013d3f08333acedba4871235237937ee05.js"></script>
+		<!-- Including default portal based script at the bottom -->
+		<script nonce="25RjG4IvxqTfafVvPVoXGA==">
+//<![CDATA[
+	
+	jQuery(document).ready(function() {
+					
+		// Setting the locale for moment js
+		moment.lang('en');
+
+		var validation_meassages = {"required":"This field is required.","remote":"Please fix this field.","email":"Please enter a valid email address.","url":"Please enter a valid URL.","date":"Please enter a valid date.","dateISO":"Please enter a valid date ( ISO ).","number":"Please enter a valid number.","digits":"Please enter only digits.","creditcard":"Please enter a valid credit card number.","equalTo":"Please enter the same value again.","two_decimal_place_warning":"Value cannot have more than 2 decimal digits","select2_minimum_limit":"Please type %{char_count} or more letters","select2_maximum_limit":"You can only select %{limit} %{container}","maxlength":"Please enter no more than {0} characters.","minlength":"Please enter at least {0} characters.","rangelength":"Please enter a value between {0} and {1} characters long.","range":"Please enter a value between {0} and {1}.","max":"Please enter a value less than or equal to {0}.","min":"Please enter a value greater than or equal to {0}.","select2_maximum_limit_jq":"You can only select {0} {1}","facebook_limit_exceed":"Your Facebook reply was over 8000 characters. You'll have to be more clever.","messenger_limit_exceeded":"Oops! You have exceeded Messenger Platform's character limit. Please modify your response.","not_equal_to":"This element should not be equal to","email_address_invalid":"One or more email addresses are invalid.","twitter_limit_exceed":"Oops! You have exceeded Twitter's character limit. You'll have to modify your response.","password_does_not_match":"The passwords don't match. Please try again.","valid_hours":"Please enter a valid hours.","reply_limit_exceed":"Your reply was over 2000 characters. You'll have to be more clever.","url_format":"Invalid URL format","url_without_slash":"Please enter a valid URL without '/'","link_back_url":"Please enter a valid linkback URL","requester_validation":"Please enter a valid requester details or <a href=\"#\" id=\"add_requester_btn_proxy\">add new requester.</a>","agent_validation":"Please enter valid agent details","email_or_phone":"Please enter a Email or Phone Number","upload_mb_limit":"Upload exceeds the available 15MB limit","invalid_image":"Invalid image format","atleast_one_role":"At least one role is required for the agent","invalid_time":"Invalid time.","remote_fail":"Remote validation failed","trim_spaces":"Auto trim of leading & trailing whitespace","hex_color_invalid":"Please enter a valid hex color value.","name_duplication":"The name already exists.","invalid_value":"Invalid value","invalid_regex":"Invalid Regular Expression","same_folder":"Cannot move to the same folder.","maxlength_255":"Please enter less than 255 characters","decimal_digit_valid":"Value cannot have more than 2 decimal digits","atleast_one_field":"Please fill at least {0} of these fields.","atleast_one_portal":"Select atleast one portal.","custom_header":"Please type custom header in the format -  header : value","same_password":"Should be same as Password","select2_no_match":"No matching %{container} found","integration_no_match":"no matching data...","time":"Please enter a valid time","valid_contact":"Please add a valid contact","field_invalid":"This field is invalid","select_atleast_one":"Select at least one option.","ember_method_name_reserved":"This name is reserved and cannot be used. Please choose a different name."}	
+
+		jQuery.extend(jQuery.validator.messages, validation_meassages );
+
+
+		jQuery(".call_duration").each(function () {
+			var format,time;
+			if (jQuery(this).data("time") === undefined) { return; }
+			if(jQuery(this).hasClass('freshcaller')){ return; }
+			time = jQuery(this).data("time");
+			if (time>=3600) {
+			 format = "hh:mm:ss";
+			} else {
+				format = "mm:ss";
+			}
+			jQuery(this).html(time.toTime(format));
+		});
+	});
+
+	// Shortcuts variables
+	var Shortcuts = {"global":{"help":"?","save":"mod+return","cancel":"esc","search":"/","status_dialog":"mod+alt+return","save_cuctomization":"mod+shift+s"},"app_nav":{"dashboard":"g d","tickets":"g t","social":"g e","solutions":"g s","forums":"g f","customers":"g c","reports":"g r","admin":"g a","ticket_new":"g n","compose_email":"g m"},"pagination":{"previous":"alt+left","next":"alt+right","alt_previous":"j","alt_next":"k"},"ticket_list":{"ticket_show":"return","select":"x","select_all":"shift+x","search_view":"v","show_description":"space","unwatch":"w","delete":"#","pickup":"@","spam":"!","close":"~","silent_close":"alt+shift+`","undo":"z","reply":"r","forward":"f","add_note":"n","scenario":"s"},"ticket_detail":{"toggle_watcher":"w","reply":"r","forward":"f","add_note":"n","close":"~","silent_close":"alt+shift+`","add_time":"m","spam":"!","delete":"#","show_activities_toggle":"}","properties":"p","expand":"]","undo":"z","select_watcher":"shift+w","go_to_next":["j","down"],"go_to_previous":["k","up"],"scenario":"s","pickup":"@","collaboration":"d"},"social_stream":{"search":"s","go_to_next":["j","down"],"go_to_previous":["k","up"],"open_stream":["space","return"],"close":"esc","reply":"r","retweet":"shift+r"},"portal_customizations":{"preview":"mod+shift+p"},"discussions":{"toggle_following":"w","add_follower":"shift+w","reply_topic":"r"}};
+	
+	// Date formats
+	var DATE_FORMATS = {"non_us":{"moment_date_with_week":"ddd, D MMM, YYYY","datepicker":"d M, yy","datepicker_escaped":"d M yy","datepicker_full_date":"D, d M, yy","mediumDate":"d MMM, yyyy"},"us":{"moment_date_with_week":"ddd, MMM D, YYYY","datepicker":"M d, yy","datepicker_escaped":"M d yy","datepicker_full_date":"D, M d, yy","mediumDate":"MMM d, yyyy"}};
+
+	var lang = { 
+		loadingText: "Please Wait...",
+		viewAllTickets: "View all tickets"
+	};
+
+
+//]]>
+</script> 
+
+		
+
+		<img src='155000004883-introduction-to-workflows-and-automations/hit.gif' alt='Article views count' aria-hidden='true'/>
+		<script type="text/javascript">
+     		I18n.defaultLocale = "en";
+     		I18n.locale = "en";
+		</script>
+			
+    	
+
+
+		<!-- Include dynamic input field script for signup and profile pages (Mint theme) -->
+
+	</body>
+
+<!-- Mirrored from help.leadconnectorhq.com/support/solutions/articles/155000004883-introduction-to-workflows-and-automations by HTTrack Website Copier/3.x [XR&CO'2014], Fri, 02 Jan 2026 21:31:38 GMT -->
+</html>

@@ -1,0 +1,28 @@
+HTTrack3.49-2+htsswf+htsjava launched on Fri, 02 Jan 2026 15:05:56 at https://help.leadconnectorhq.com/ +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar
+(winhttrack -qwC2%Ps2u1%s%uN0%I0p3DaK0H0%kf2A25000%f#f -F "Mozilla/4.5 (compatible; HTTrack 3.0x; Windows 98)" -%F "<!-- Mirrored from %s%s by HTTrack Website Copier/3.x [XR&CO'2014], %s -->" -%l "en, *" https://help.leadconnectorhq.com/ -O1 "C:\My Web Sites\Database" +*.png +*.gif +*.jpg +*.jpeg +*.css +*.js -ad.doubleclick.net/* -mime:application/foobar )
+
+Information, Warnings and Errors reported for this mirror:
+note:	the hts-log.txt file, and hts-cache folder, may contain sensitive information,
+	such as username/password authentication for websites mirrored in this project
+	do not share these files/folders if you want these information to remain private
+
+15:05:57	Warning: 	Found for https://help.leadconnectorhq.com/
+15:05:57	Warning: 	File has moved from https://help.leadconnectorhq.com/ to https://help.leadconnectorhq.com/support/home
+15:08:58	Error: 	"Bad Request" (400) at link https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155031488903/logo/W6IZsuUjIIDJkqMExT4DsHfGY0UAV20K1Q.png?X-Amz-Algorithm=AWS4-HMAC-SHA256&amp;X-Amz-Credential=AKIAS6FNSMY2XLZULJPI%2F20251229%2Fus-east-1%2Fs3%2Faws4_request&amp;X-Amz-Date=20251229T093904Z&amp;X-Amz-Expires=604800&amp;X-Amz-SignedHeaders=host&amp;X-Amz-Signature=50642aa923a589b6237916d8a1f28128efa53fef0384d8be9fa6264da98b1f76 (from https://help.leadconnectorhq.com/support/home)
+15:20:53	Warning: 	Retry after error -4 (Interrupted transfer) at link https://help.leadconnectorhq.com/auth/google_login (from https://help.leadconnectorhq.com/support/login)
+15:22:41	Error: 	"Not Found" (404) at link https://storage.googleapis.com/msgsndr/xxxxxxxxx.png (from https://help.leadconnectorhq.com/support/solutions/articles/155000000174-a2p-10dlc-campaign-approval-best-practices)
+15:26:30	Error: 	"Not Found" (404) at link https://help.leadconnectorhq.com/support/solutions/articles/155000000193-how-to-set-up-the-client-portal- (from https://help.leadconnectorhq.com/support/solutions/articles/155000000205-how-can-my-affiliate-see-their-stats-on-the-client-portal-)
+15:26:30	Error: 	"Not Found" (404) at link https://help.leadconnectorhq.com/support/solutions/articles/155000000197-how-can-my-customers-use-the-client-portal- (from https://help.leadconnectorhq.com/support/solutions/articles/155000000205-how-can-my-affiliate-see-their-stats-on-the-client-portal-)
+15:27:37	Warning: 	Retry after error -5 (error:00000005:lib(0):func(0):DH lib) at link https://canny-assets.io/images/b894e64465d740a9cbc16fbb001c6059.png (from https://help.leadconnectorhq.com/support/solutions/articles/155000004060-how-to-resell-and-use-prospecting-tool-for-sub-accounts)
+15:27:37	Warning: 	Retry after error -4 (Interrupted transfer) at link https://help.leadconnectorhq.com/auth/google_login (from https://help.leadconnectorhq.com/support/login)
+15:33:13	Error: 	"Not Found" (404) at link https://help.leadconnectorhq.com/support/solutions/articles/155000001478 (from https://help.leadconnectorhq.com/support/solutions/articles/155000001367-icloud-integration-with-lead-connector)
+15:33:21	Warning: 	Link https://gohighlevel.enterprise.slack.com/?redir=%2Fr-t394243081714%3Fredir%3D%252Ffiles%252FU05R748ELTE%252FF064SPXS2JV%252Fimage__2_.png%253Forigin_team%253DTBL752DM0%2526origin_channel%253DG012X4H4Y2C%2526u%253DU05R748ELTE%2526file_id%253DF064SPXS2JV%2526name%253Dimage__2_.png not scanned (follow robots meta tag)
+15:35:10	Error: 	"Interrupted transfer" (-4) after 2 retries at link https://help.leadconnectorhq.com/auth/google_login (from https://help.leadconnectorhq.com/support/login)
+15:35:10	Error: 	"Not Found" (404) at link https://help.leadconnectorhq.com/support/solutions/articles/155000000859-a2p-10dlc-campaign-vetting-changes-january-2023 (from https://help.leadconnectorhq.com/support/solutions/articles/155000000766-a2p-10dlc-brand-approval-best-practices)
+15:35:11	Error: 	"Not Found" (404) at link https://help.leadconnectorhq.com/support/solutions/articles/155000000757 (from https://help.leadconnectorhq.com/support/solutions/articles/155000000756)
+15:35:12	Error: 	"Not Found" (404) at link https://help.leadconnectorhq.com/support/solutions/articles/155000000175-a2p-10dlc-campaign-vetting-changes-january-2023 (from https://help.leadconnectorhq.com/support/solutions/articles/155000000860-u-s-a2p-10dlc-messaging-registration-mandatory-effective-from-july-5-2023)
+15:47:35	Warning: 	Retry after error -2 (Receive Time Out) at link https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155046797200/original/pj3K3I7YR4fS-JPPIlF9lfPjiYmanvgLVw.png?1747484915 (from https://help.leadconnectorhq.com/support/solutions/articles/155000006899-how-to-add-google-fonts-in-email-templates-and-campaigns)
+15:47:35	Warning: 	Retry after error -2 (Receive Time Out) at link https://s3.amazonaws.com/cdn.freshdesk.com/data/helpdesk/attachments/production/155046797227/original/LiMW_ghTylHoN5ogImm93rcJtDbQNO4Mcw.gif?1747484989 (from https://help.leadconnectorhq.com/support/solutions/articles/155000006899-how-to-add-google-fonts-in-email-templates-and-campaigns)
+
+HTTrack Website Copier/3.49-2 mirror complete in 41 minutes 41 seconds : 4267 links scanned, 4249 files written (990444709 bytes overall) [960525569 bytes received at 384056 bytes/sec], 46933881 bytes transferred using HTTP compression in 823 files, ratio 25%, 1.4 requests per connection
+(9 errors, 8 warnings, 0 messages)
