@@ -289,8 +289,45 @@ $settings = get_option('oversee_settings', []);
                         </div>
                     </div>
                 </div>
-            </div>
             
+                
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <div>
+                            <h3>Knowledge Base Sync</h3>
+                            <p>Import articles from static HTML files</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-banner" id="kbSyncStatus" style="margin-bottom:15px;display:none;"><i class="fa-solid fa-circle-info"></i><p id="kbSyncMessage">Last sync: Never</p></div>
+                        
+                        <!-- Progress Container -->
+                        <div id="kbProgressContainer" style="display:none; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span id="kbProgressPhase" style="font-weight: 600; font-size: 13px; color: #1e293b;">Initializing...</span>
+                                <span id="kbProgressCount" style="font-weight: 700; font-size: 14px; color: #ea580c; font-family: monospace;">0%</span>
+                            </div>
+                            <div style="background: #e2e8f0; border-radius: 6px; height: 10px; overflow: hidden; margin-bottom: 10px;">
+                                <div id="kbProgressBar" style="background: linear-gradient(90deg, #ea580c 0%, #f97316 100%); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                            </div>
+                            <div id="kbProgressMessage" style="font-size: 12px; color: #64748b; margin-bottom: 6px;"></div>
+                            <div id="kbProgressStats" style="font-size: 11px; color: #94a3b8; font-family: monospace;"></div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Source URL</label>
+                            <input type="text" id="kbSourceUrl" value="<?php echo esc_attr(get_option('oversee_static_kb_url', 'https://overseecrm.com/wp-content/uploads/knowledge-base')); ?>" placeholder="https://example.com/knowledge-base">
+                            <p class="form-help">URL where your static HTML knowledge base files are hosted</p>
+                        </div>
+                        <div class="form-row" style="gap:10px;">
+                            <button class="btn btn-primary" id="syncKbBtn" onclick="syncKnowledgeBase()"><i class="fa-solid fa-sync"></i> Sync Now</button>
+                            <button class="btn btn-secondary" id="clearKbBtn" onclick="clearKbData(event)"><i class="fa-solid fa-trash"></i> Clear All KB Data</button>
+                        </div>
+                        <div id="kbSyncResult" style="margin-top:15px;display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Security Tab -->
             <div id="tab-security" class="tab-content">
                 <div class="info-box warning-box">
@@ -397,6 +434,7 @@ $settings = get_option('oversee_settings', []);
             loadSessions();
             loadWPUsers();
             toggleAutoAssign();
+            loadKbSyncStatus();
         });
         
         function showTab(tab) {
@@ -629,6 +667,172 @@ $settings = get_option('oversee_settings', []);
             if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
             if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
             return Math.floor(diff / 86400) + 'd ago';
+        }
+
+        // ==========================================
+        // KB SYNC FUNCTIONS WITH LIVE PROGRESS
+        // ==========================================
+        
+        var kbSyncPolling = null;
+        
+        function syncKnowledgeBase() {
+            var btn = document.getElementById("syncKbBtn");
+            var progressContainer = document.getElementById("kbProgressContainer");
+            var progressBar = document.getElementById("kbProgressBar");
+            var progressPhase = document.getElementById("kbProgressPhase");
+            var progressCount = document.getElementById("kbProgressCount");
+            var progressMessage = document.getElementById("kbProgressMessage");
+            var progressStats = document.getElementById("kbProgressStats");
+            var result = document.getElementById("kbSyncResult");
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Starting...';
+            progressContainer.style.display = "block";
+            progressBar.style.width = "0%";
+            progressPhase.textContent = "Initializing...";
+            progressCount.textContent = "";
+            progressMessage.textContent = "";
+            progressStats.textContent = "";
+            result.style.display = "none";
+            
+            var url = document.getElementById("kbSourceUrl").value;
+            fetch(REST_URL + "/settings", {
+                method: "PUT",
+                headers: {"Content-Type": "application/json", "X-WP-Nonce": WP_NONCE},
+                body: JSON.stringify({oversee_static_kb_url: url})
+            });
+            
+            kbSyncPolling = setInterval(pollProgress, 500);
+            
+            fetch(REST_URL + "/kb/sync", {method: "POST", headers: {"X-WP-Nonce": WP_NONCE}})
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                clearInterval(kbSyncPolling);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-sync"></i> Sync Now';
+                
+                if (d.success && d.stats) {
+                    var s = d.stats;
+                    progressBar.style.width = "100%";
+                    progressPhase.textContent = "✓ Complete!";
+                    progressCount.textContent = "";
+                    
+                    var added = s.articles_added || 0;
+                    var updated = s.articles_updated || 0;
+                    var failed = s.articles_failed || 0;
+                    var total = s.total_discovered || (added + updated);
+                    
+                    progressMessage.textContent = added + " added, " + updated + " updated" + (failed > 0 ? ", " + failed + " failed" : "");
+                    progressStats.textContent = "";
+                    
+                    result.innerHTML = '<div class="success-box"><i class="fa-solid fa-check-circle"></i> Sync complete! Imported ' + (added + updated) + ' of ' + total + ' articles.</div>';
+                    result.style.display = "block";
+                } else {
+                    result.innerHTML = '<div class="error-box"><i class="fa-solid fa-times-circle"></i> Sync failed. Check console for details.</div>';
+                    result.style.display = "block";
+                }
+                loadKbSyncStatus();
+            })
+            .catch(function(err) {
+                clearInterval(kbSyncPolling);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-sync"></i> Sync Now';
+                result.innerHTML = '<div class="error-box"><i class="fa-solid fa-times-circle"></i> Error: ' + (err.message || 'Request failed') + '</div>';
+                result.style.display = "block";
+            });
+        }
+        
+        function pollProgress() {
+            fetch(REST_URL + "/kb/sync/progress", {headers: {"X-WP-Nonce": WP_NONCE}})
+            .then(function(r) { return r.json(); })
+            .then(function(p) {
+                if (!p || p.status === 'idle') return;
+                
+                var progressBar = document.getElementById("kbProgressBar");
+                var progressPhase = document.getElementById("kbProgressPhase");
+                var progressCount = document.getElementById("kbProgressCount");
+                var progressMessage = document.getElementById("kbProgressMessage");
+                var progressStats = document.getElementById("kbProgressStats");
+                var btn = document.getElementById("syncKbBtn");
+                
+                var percent = p.percent || 0;
+                progressBar.style.width = percent + "%";
+                
+                var phaseLabels = {
+                    'discovering': '🔍 Discovering Articles',
+                    'discovered': '✓ Discovery Complete',
+                    'categories': '📁 Creating Categories',
+                    'articles': '📄 Importing Articles',
+                    'retrying': '🔄 Retrying Failed',
+                    'finalizing': '⚡ Finalizing',
+                    'complete': '✓ Complete!',
+                    'error': '❌ Error'
+                };
+                progressPhase.textContent = phaseLabels[p.status] || p.status;
+                
+                if (p.current && p.total) {
+                    progressCount.textContent = p.current + " / " + p.total;
+                } else {
+                    progressCount.textContent = percent + "%";
+                }
+                
+                progressMessage.textContent = p.message || "";
+                
+                if (p.stats) {
+                    var s = p.stats;
+                    var statsText = "";
+                    if (s.articles_added > 0) statsText += "Added: " + s.articles_added;
+                    if (s.articles_updated > 0) statsText += (statsText ? " | " : "") + "Updated: " + s.articles_updated;
+                    if (s.articles_failed > 0) statsText += (statsText ? " | " : "") + "Failed: " + s.articles_failed;
+                    if (s.total_discovered > 0) statsText += (statsText ? " | " : "") + "Total: " + s.total_discovered;
+                    progressStats.textContent = statsText;
+                }
+                
+                if (p.current && p.total && p.status === 'articles') {
+                    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ' + p.current + '/' + p.total;
+                }
+            })
+            .catch(function() {});
+        }
+        
+        function clearKbData(e) {
+            if (!confirm("Delete ALL KB articles and categories? This cannot be undone.")) return;
+            
+            var btn = document.getElementById('clearKbBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Clearing...';
+            
+            fetch(REST_URL + "/kb/sync/clear", {method: "POST", headers: {"X-WP-Nonce": WP_NONCE}})
+            .then(function(r) { return r.json(); })
+            .then(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-trash"></i> Clear All KB Data';
+                document.getElementById("kbSyncResult").innerHTML = '<div class="success-box"><i class="fa-solid fa-check-circle"></i> All KB data cleared.</div>';
+                document.getElementById("kbSyncResult").style.display = "block";
+                document.getElementById("kbProgressContainer").style.display = "none";
+                loadKbSyncStatus();
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-trash"></i> Clear All KB Data';
+                alert("Failed to clear KB data");
+            });
+        }
+        
+        function loadKbSyncStatus() {
+            fetch(REST_URL + "/kb/sync/status", {headers: {"X-WP-Nonce": WP_NONCE}})
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+                var el = document.getElementById("kbSyncStatus");
+                var msg = document.getElementById("kbSyncMessage");
+                if (d.last_sync) {
+                    el.style.display = "flex";
+                    msg.innerHTML = "Last sync: " + d.last_sync + " | Articles: " + (d.total_articles || 0) + " | Categories: " + (d.total_categories || 0);
+                } else {
+                    el.style.display = "none";
+                }
+            })
+            .catch(function() {});
         }
     </script>
 </body>
