@@ -518,3 +518,40 @@ class Oversee_KB_API {
         ]);
     }
 }
+
+// KB Sync endpoint
+add_action('rest_api_init', function() {
+    register_rest_route('oversee/v1', '/kb/sync', [
+        'methods' => 'POST',
+        'callback' => function($request) {
+            $kb = new Oversee_KB();
+            $stats = $kb->sync();
+            return new WP_REST_Response(['success'=>true,'stats'=>$stats]);
+        },
+        'permission_callback' => function() {
+            return current_user_can('manage_options');
+        }
+    ]);
+    
+    register_rest_route('oversee/v1', '/kb/sync/status', [
+        'methods' => 'GET',
+        'callback' => function($request) {
+            $kb = new Oversee_KB();
+            return new WP_REST_Response($kb->get_sync_info());
+        },
+        'permission_callback' => function() {
+            return current_user_can('oversee_manage_kb');
+        }
+    ]);
+    
+    register_rest_route('oversee/v1', '/kb/sync/clear', [
+        'methods' => 'POST',
+        'callback' => function($request) {
+            Oversee_KB_Importer::clear_all_data();
+            return new WP_REST_Response(['success'=>true,'message'=>'All KB data cleared']);
+        },
+        'permission_callback' => function() {
+            return current_user_can('manage_options');
+        }
+    ]);
+});

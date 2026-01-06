@@ -94,6 +94,8 @@ final class Oversee_Support {
         require_once OVERSEE_INCLUDES_PATH . '/class-oversee-api-auth.php';
         require_once OVERSEE_INCLUDES_PATH . '/class-oversee-rewrite.php';
         require_once OVERSEE_INCLUDES_PATH . '/class-oversee-rest-api.php';
+        require_once OVERSEE_INCLUDES_PATH . '/class-oversee-kb-cpt.php';
+        require_once OVERSEE_INCLUDES_PATH . '/class-oversee-kb-importer.php';
         require_once OVERSEE_INCLUDES_PATH . '/class-oversee-kb.php';
         require_once OVERSEE_INCLUDES_PATH . '/class-oversee-kb-api.php';
         require_once OVERSEE_INCLUDES_PATH . '/class-oversee-push.php';
@@ -114,6 +116,7 @@ final class Oversee_Support {
         
         // Initialize components
         add_action('init', [$this, 'init']);
+        Oversee_KB_CPT::init();
         add_action('rest_api_init', [$this, 'init_rest_api']);
         
         // Enqueue scripts/styles
