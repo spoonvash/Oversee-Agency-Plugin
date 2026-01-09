@@ -1,4 +1,4 @@
-name: Deploy to 20i Server
+name: Deploy to 20i Serve
 
 on:
   push:
@@ -33,4 +33,16 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/public_html/wp-content/plugins/oversee-license-server/
 
       - name: Cleanup
+        run: rm -f ~/.ssh/deploy_key   steps:
+      - name: Checkout code
+ : actions/checkout@v4
+
+      - name Setup SSH
+        run: 
+          mkdi
+          echo "${{ secrets.SSH_PVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_k
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: Cleanup
         run: rm -f ~/.ssh/deploy_key
+
