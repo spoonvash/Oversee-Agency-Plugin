@@ -1,15 +1,17 @@
 <?php
 /**
  * Plugin Name: Oversee Helpdesk
- * Plugin URI: https://overseeagency.com
- * Description: Complete support ticket system with knowledge base and admin dashboard. White-label ready with license enforcement.
+ * Plugin URI: https://overseeagency.com/plugins/oversee-helpdesk
+ * Description: Complete support ticket system with knowledge base and admin dashboard. White-label ready with license enforcement. Features include ticket management, email notifications, knowledge base with search, agent assignment, and full REST API.
  * Version: 2.1.4
  * Author: Oversee Agency
  * Author URI: https://overseeagency.com
  * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: oversee-helpdesk
  * Domain Path: /languages
  * Requires at least: 5.8
+ * Tested up to: 6.7
  * Requires PHP: 7.4
  * 
  * @package Oversee_Helpdesk
@@ -17,6 +19,7 @@
  */
 
 // Prevent direct access
+if (!defined('ABSPATH')) {
 if (!defined('ABSPATH')) {
     exit;
 }
