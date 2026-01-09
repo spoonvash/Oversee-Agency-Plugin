@@ -12,7 +12,7 @@ $version = isset($_REQUEST['version']) ? $_REQUEST['version'] : '';
 
 $plugins = [
     'oversee-helpdesk' => [
-        'version' => '2.1.2',
+        'version' => '2.1.3',
         'download_url' => 'https://github.com/spoonvash/OverseeCRM/releases/latest/download/oversee-helpdesk.zip',
         'name' => 'Oversee Helpdesk',
         'author' => 'Oversee Agency',
