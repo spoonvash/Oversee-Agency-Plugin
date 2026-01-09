@@ -825,7 +825,7 @@ class Oversee_Helpdesk_Updater {
     private $plugin_slug = 'oversee-helpdesk';
     private $plugin_file;
     private $current_version;
-    private $update_server = 'https://overseeagency.com/wp-json/oversee/v1';
+    private $update_server = 'https://overseeagency.com/wp-content/plugins/oversee-license-server/update-server.php';
     
     public function __construct($plugin_file, $version) {
         $this->plugin_file = $plugin_file;
@@ -840,7 +840,7 @@ class Oversee_Helpdesk_Updater {
             return $transient;
         }
         
-        $response = wp_remote_post($this->update_server . '/update-check', [
+        $response = wp_remote_post($this->update_server . '?action=update-check', [
             'body' => [
                 'slug' => $this->plugin_slug,
                 'version' => $this->current_version
@@ -874,7 +874,7 @@ class Oversee_Helpdesk_Updater {
             return $result;
         }
         
-        $response = wp_remote_post($this->update_server . '/plugin-info', [
+        $response = wp_remote_post($this->update_server . '?action=plugin-info', [
             'body' => ['slug' => $this->plugin_slug],
             'timeout' => 10
         ]);
