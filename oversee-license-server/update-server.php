@@ -48,7 +48,7 @@ if ($action === 'plugin-info' && isset($plugins[$slug])) {
         'banners' => ['low' => $p['banner_low'], 'high' => $p['banner_high']],
         'icons' => ['1x' => $p['icon_1x'], '2x' => $p['icon_2x']],
         'sections' => [
-            'description' => '<p>Complete support ticket system with knowledge base and admin dashboard.</p><ul><li>Ticket management</li><li>Knowledge base</li><li>Agent assignment</li><li>Email notifications</li><li>White-label branding</li><li>REST API</li></ul>',
+            'description' => '<p>Professional helpdesk and support ticket system with integrated knowledge base. Fully customizable with white-label branding.</p><ul><li>Ticket management</li><li>Knowledge base</li><li>Agent assignment</li><li>Email notifications</li><li>White-label branding</li><li>REST API</li></ul>',
             'changelog' => '<h4>2.1.4</h4><ul><li>Improved update system</li><li>Bug fixes</li></ul><h4>2.1.3</h4><ul><li>Added automatic updates</li></ul>'
         ]
     ]);
