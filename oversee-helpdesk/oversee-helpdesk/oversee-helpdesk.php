@@ -3,7 +3,7 @@
  * Plugin Name: Oversee Helpdesk
  * Plugin URI: https://overseeagency.com
  * Description: Complete support ticket system with knowledge base and admin dashboard. White-label ready with license enforcement.
- * Version: 2.1.3
+ * Version: 2.1.4
  * Author: Oversee Agency
  * Author URI: https://overseeagency.com
  * License: GPL v2 or later
@@ -30,7 +30,7 @@ if (version_compare(PHP_VERSION, '7.4.0', '<')) {
 }
 
 // Plugin constants
-define('OVERSEE_VERSION', '2.1.3');
+define('OVERSEE_VERSION', '2.1.4');
 define('OVERSEE_PLUGIN_FILE', __FILE__);
 define('OVERSEE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OVERSEE_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -894,4 +894,4 @@ class Oversee_Helpdesk_Updater {
 }
 
 // Initialize updater
-new Oversee_Helpdesk_Updater(__FILE__, '2.1.3');
+new Oversee_Helpdesk_Updater(__FILE__, '2.1.4');
