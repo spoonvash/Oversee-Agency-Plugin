@@ -816,3 +816,82 @@ function oversee_kb_content($content) {
     
     return wp_kses($content, $allowed_html);
 }
+
+/**
+ * Plugin Update Checker
+ */
+class Oversee_Helpdesk_Updater {
+    
+    private $plugin_slug = 'oversee-helpdesk';
+    private $plugin_file;
+    private $current_version;
+    private $update_server = 'https://overseeagency.com/wp-json/oversee/v1';
+    
+    public function __construct($plugin_file, $version) {
+        $this->plugin_file = $plugin_file;
+        $this->current_version = $version;
+        
+        add_filter('pre_set_site_transient_update_plugins', [$this, 'check_for_update']);
+        add_filter('plugins_api', [$this, 'plugin_info'], 10, 3);
+    }
+    
+    public function check_for_update($transient) {
+        if (empty($transient->checked)) {
+            return $transient;
+        }
+        
+        $response = wp_remote_post($this->update_server . '/update-check', [
+            'body' => [
+                'slug' => $this->plugin_slug,
+                'version' => $this->current_version
+            ],
+            'timeout' => 10
+        ]);
+        
+        if (is_wp_error($response)) {
+            return $transient;
+        }
+        
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        
+        if (!empty($data['update_available'])) {
+            $plugin_basename = plugin_basename($this->plugin_file);
+            
+            $transient->response[$plugin_basename] = (object) [
+                'slug' => $this->plugin_slug,
+                'plugin' => $plugin_basename,
+                'new_version' => $data['version'],
+                'package' => $data['download_url'],
+                'url' => $data['changelog']
+            ];
+        }
+        
+        return $transient;
+    }
+    
+    public function plugin_info($result, $action, $args) {
+        if ($action !== 'plugin_information' || $args->slug !== $this->plugin_slug) {
+            return $result;
+        }
+        
+        $response = wp_remote_post($this->update_server . '/plugin-info', [
+            'body' => ['slug' => $this->plugin_slug],
+            'timeout' => 10
+        ]);
+        
+        if (is_wp_error($response)) {
+            return $result;
+        }
+        
+        $data = json_decode(wp_remote_retrieve_body($response), true);
+        
+        if ($data) {
+            return (object) $data;
+        }
+        
+        return $result;
+    }
+}
+
+// Initialize updater
+new Oversee_Helpdesk_Updater(__FILE__, '2.1.1');

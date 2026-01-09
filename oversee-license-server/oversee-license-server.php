@@ -1050,3 +1050,102 @@ class Oversee_License_Server {
 
 // Initialize
 Oversee_License_Server::instance();
+
+/**
+ * Plugin Update Server
+ * Handles update checks for Oversee plugins
+ */
+class Oversee_Update_Server {
+    
+    private static $plugins = [
+        'oversee-helpdesk' => [
+            'version' => '2.1.1',
+            'slug' => 'oversee-helpdesk',
+            'name' => 'Oversee Helpdesk',
+            'author' => 'Oversee Agency',
+            'requires' => '5.8',
+            'tested' => '6.4',
+            'requires_php' => '7.4',
+            'download_url' => 'https://overseeagency.com/plugins/oversee-helpdesk.zip',
+            'changelog' => 'https://overseeagency.com/changelog/oversee-helpdesk/',
+            'banner_low' => 'https://overseeagency.com/assets/banner-772x250.png',
+            'banner_high' => 'https://overseeagency.com/assets/banner-1544x500.png',
+        ]
+    ];
+    
+    public static function init() {
+        add_action('rest_api_init', [__CLASS__, 'register_routes']);
+    }
+    
+    public static function register_routes() {
+        register_rest_route('oversee/v1', '/update-check', [
+            'methods' => 'POST',
+            'callback' => [__CLASS__, 'check_update'],
+            'permission_callback' => '__return_true'
+        ]);
+        
+        register_rest_route('oversee/v1', '/plugin-info', [
+            'methods' => 'POST', 
+            'callback' => [__CLASS__, 'plugin_info'],
+            'permission_callback' => '__return_true'
+        ]);
+    }
+    
+    public static function check_update($request) {
+        $slug = sanitize_text_field($request->get_param('slug'));
+        $current_version = sanitize_text_field($request->get_param('version'));
+        
+        if (!isset(self::$plugins[$slug])) {
+            return new WP_Error('not_found', 'Plugin not found', ['status' => 404]);
+        }
+        
+        $plugin = self::$plugins[$slug];
+        
+        if (version_compare($current_version, $plugin['version'], '<')) {
+            return rest_ensure_response([
+                'update_available' => true,
+                'version' => $plugin['version'],
+                'download_url' => $plugin['download_url'],
+                'changelog' => $plugin['changelog']
+            ]);
+        }
+        
+        return rest_ensure_response(['update_available' => false]);
+    }
+    
+    public static function plugin_info($request) {
+        $slug = sanitize_text_field($request->get_param('slug'));
+        
+        if (!isset(self::$plugins[$slug])) {
+            return new WP_Error('not_found', 'Plugin not found', ['status' => 404]);
+        }
+        
+        $plugin = self::$plugins[$slug];
+        
+        return rest_ensure_response([
+            'name' => $plugin['name'],
+            'slug' => $plugin['slug'],
+            'version' => $plugin['version'],
+            'author' => $plugin['author'],
+            'requires' => $plugin['requires'],
+            'tested' => $plugin['tested'],
+            'requires_php' => $plugin['requires_php'],
+            'download_link' => $plugin['download_url'],
+            'sections' => [
+                'changelog' => '<p>Visit <a href="' . $plugin['changelog'] . '">changelog</a></p>'
+            ],
+            'banners' => [
+                'low' => $plugin['banner_low'],
+                'high' => $plugin['banner_high']
+            ]
+        ]);
+    }
+    
+    public static function update_plugin_version($slug, $version) {
+        if (isset(self::$plugins[$slug])) {
+            self::$plugins[$slug]['version'] = $version;
+        }
+    }
+}
+
+Oversee_Update_Server::init();
