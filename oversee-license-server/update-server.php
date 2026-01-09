@@ -16,10 +16,10 @@ $plugins = [
         'tested' => '6.7',
         'requires_php' => '7.4',
         'homepage' => 'https://overseeagency.com/plugins/oversee-helpdesk',
-        'banner_low' => 'https://overseeagency.com/wp-content/uploads/plugin-assets/banner-772x250.png',
-        'banner_high' => 'https://overseeagency.com/wp-content/uploads/plugin-assets/banner-1544x500.png',
-        'icon_1x' => 'https://overseeagency.com/wp-content/uploads/plugin-assets/icon-128x128.png',
-        'icon_2x' => 'https://overseeagency.com/wp-content/uploads/plugin-assets/icon-256x256.png'
+        'banner_low' => 'https://overseeagency.com/wp-content/plugin-assets/banner-772x250.png',
+        'banner_high' => 'https://overseeagency.com/wp-content/plugin-assets/banner-1544x500.png',
+        'icon_1x' => 'https://overseeagency.com/wp-content/plugin-assets/icon-128x128.png',
+        'icon_2x' => 'https://overseeagency.com/wp-content/plugin-assets/icon-256x256.png'
     ]
 ];
 
