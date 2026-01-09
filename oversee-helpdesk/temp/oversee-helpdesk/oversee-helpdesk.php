@@ -3,7 +3,7 @@
  * Plugin Name: Oversee Helpdesk
  * Plugin URI: https://overseeagency.com
  * Description: Complete support ticket system with knowledge base and admin dashboard. White-label ready with license enforcement.
- * Version: 2.1.2
+ * Version: 2.1.1
  * Author: Oversee Agency
  * Author URI: https://overseeagency.com
  * License: GPL v2 or later

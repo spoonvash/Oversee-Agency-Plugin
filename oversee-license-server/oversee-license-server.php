@@ -1149,3 +1149,41 @@ class Oversee_Update_Server {
 }
 
 Oversee_Update_Server::init();
+
+/**
+ * Plugin Update Server
+ */
+add_action('rest_api_init', function() {
+    register_rest_route('oversee/v1', '/update-check', [
+        'methods' => 'POST',
+        'callback' => function($request) {
+            $slug = sanitize_text_field($request->get_param('slug'));
+            $version = sanitize_text_field($request->get_param('version'));
+            
+            if ($slug === 'oversee-helpdesk' && version_compare($version, '2.1.2', '<')) {
+                return ['update_available' => true, 'version' => '2.1.2', 'download_url' => 'https://overseeagency.com/plugins/oversee-helpdesk.zip', 'changelog' => 'https://overseeagency.com/changelog/'];
+            }
+            
+            return ['update_available' => false];
+        },
+        'permission_callback' => '__return_true'
+    ]);
+    
+    register_rest_route('oversee/v1', '/plugin-info', [
+        'methods' => 'POST',
+        'callback' => function($request) {
+            return [
+                'name' => 'Oversee Helpdesk',
+                'slug' => 'oversee-helpdesk',
+                'version' => '2.1.2',
+                'author' => 'Oversee Agency',
+                'requires' => '5.8',
+                'tested' => '6.4',
+                'requires_php' => '7.4',
+                'download_link' => 'https://overseeagency.com/plugins/oversee-helpdesk.zip',
+                'sections' => ['changelog' => '<p>Version 2.1.2 - Bug fixes</p>']
+            ];
+        },
+        'permission_callback' => '__return_true'
+    ]);
+});
