@@ -25,12 +25,12 @@ jobs:
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./oversee-helpdesk/oversee-helpdesk/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/public_html/wp-content/plugins/oversee-helpdesk/
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/wp-content/plugins/oversee-helpdesk/
           
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./oversee-license-server/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/public_html/wp-content/plugins/oversee-license-server/
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/wp-content/plugins/oversee-license-server/
 
       - name: Cleanup
         run: rm -f ~/.ssh/deploy_key
