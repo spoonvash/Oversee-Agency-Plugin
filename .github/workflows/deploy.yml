@@ -1,4 +1,4 @@
-name: Deploy to 20i Server
+name: Deploy to Test Site
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Deploy plugins to server
+      - name: Deploy plugins to test site
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \

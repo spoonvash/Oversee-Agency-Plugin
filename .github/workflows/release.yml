@@ -1,0 +1,35 @@
+name: Release Plugin Update
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create plugin zip
+        run: |
+          cd oversee-helpdesk
+          zip -r oversee-helpdesk.zip oversee-helpdesk/
+
+      - name: Upload plugin zip for customer updates
+        run: |
+          rsync -avz \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./oversee-helpdesk/oversee-helpdesk.zip \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/plugins/oversee-helpdesk.zip
+
+      - name: Cleanup
+        run: rm -f ~/.ssh/deploy_key
