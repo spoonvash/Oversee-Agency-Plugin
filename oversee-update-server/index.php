@@ -14,7 +14,7 @@ $CONFIG = [
     // GitHub
     'github_user' => 'spoonvash',
     'github_repo' => 'Oversee-Agency-Plugin',
-    'webhook_secret' => 'CHANGE_ME_TO_RANDOM_STRING', // Generate: bin2hex(random_bytes(32))
+    'webhook_secret' => 'b5bb81ecd85a49acc040ec1ef36d13379bf9238b9ee0dea7b32960edbb79041f', // Generate: bin2hex(random_bytes(32))
     
     // Beta testers get pre-releases
     'beta_testers' => [
@@ -114,7 +114,7 @@ function handleWebhook($config) {
     $event = $_SERVER['HTTP_X_GITHUB_EVENT'];
     
     // Verify signature
-    if ($config['webhook_secret'] !== 'CHANGE_ME_TO_RANDOM_STRING') {
+    if ($config['webhook_secret'] !== 'b5bb81ecd85a49acc040ec1ef36d13379bf9238b9ee0dea7b32960edbb79041f') {
         $signature = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
         $expected = 'sha256=' . hash_hmac('sha256', $payload, $config['webhook_secret']);
         if (!hash_equals($expected, $signature)) {
