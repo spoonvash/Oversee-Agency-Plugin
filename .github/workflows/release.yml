@@ -16,19 +16,19 @@ jobs:
         id: version
         run: |
           VERSION=${GITHUB_REF#refs/tags/v}
+          CLEAN_VERSION=${VERSION%-beta}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "clean_version=$CLEAN_VERSION" >> $GITHUB_OUTPUT
           if [[ "$VERSION" == *"-beta"* ]]; then
-            echo "channel=beta" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
           else
-            echo "channel=stable" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Update version in plugin file
         run: |
-          VERSION=${{ steps.version.outputs.version }}
-          CLEAN_VERSION=${VERSION%-beta}
-          sed -i "s/Version: .*/Version: $CLEAN_VERSION/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
-          sed -i "s/define('FLAVOR_STARTER_VERSION', '.*')/define('FLAVOR_STARTER_VERSION', '$CLEAN_VERSION')/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+          sed -i "s/Version: .*/Version: ${{ steps.version.outputs.clean_version }}/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+          sed -i "s/define('FLAVOR_STARTER_VERSION', '.*')/define('FLAVOR_STARTER_VERSION', '${{ steps.version.outputs.clean_version }}')/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
 
       - name: Create plugin zip
         run: |
@@ -39,40 +39,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: oversee-helpdesk.zip
+          prerelease: ${{ steps.version.outputs.prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Deploy to OverseeAgency.com
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./
-          server-dir: /public_html/wp-content/uploads/plugins/
-          include: oversee-helpdesk.zip
-
-      - name: Update version manifest
-        run: |
-          VERSION=${{ steps.version.outputs.version }}
-          CHANNEL=${{ steps.version.outputs.channel }}
-          CLEAN_VERSION=${VERSION%-beta}
-          
-          # Create manifest file
-          cat > version.json << MANIFEST
-          {
-            "stable": "${{ steps.version.outputs.channel == 'stable' && steps.version.outputs.version || 'KEEP_CURRENT' }}",
-            "beta": "$CLEAN_VERSION",
-            "updated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          }
-          MANIFEST
-
-      - name: Upload manifest
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ${{ secrets.FTP_HOST }}
-          username: ${{ secrets.FTP_USER }}
-          password: ${{ secrets.FTP_PASS }}
-          local-dir: ./
-          server-dir: /public_html/wp-content/uploads/plugins/
-          include: version.json

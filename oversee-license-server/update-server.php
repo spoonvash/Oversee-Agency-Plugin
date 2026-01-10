@@ -2,32 +2,73 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
-// Beta tester domains
+// Beta tester domains (get pre-releases)
 $BETA_TESTERS = [
     'overseeagency.com',
     'www.overseeagency.com'
 ];
 
-// Fetch current versions from manifest
-$manifest_url = 'https://overseeagency.com/wp-content/uploads/plugins/version.json';
-$manifest = @json_decode(file_get_contents($manifest_url), true);
-$STABLE_VERSION = $manifest['stable'] ?? '2.1.5';
-$BETA_VERSION = $manifest['beta'] ?? '2.1.5';
+// GitHub repo info
+$GITHUB_USER = 'spoonvash';
+$GITHUB_REPO = 'Oversee-Agency-Plugin';
+
+// Fetch latest releases from GitHub
+function getLatestVersions($user, $repo) {
+    $url = "https://api.github.com/repos/{$user}/{$repo}/releases";
+    $opts = ['http' => ['header' => "User-Agent: WordPress-Plugin-Updater\r\n"]];
+    $releases = @json_decode(file_get_contents($url, false, stream_context_create($opts)), true);
+    
+    $stable = null;
+    $beta = null;
+    
+    if ($releases) {
+        foreach ($releases as $release) {
+            $version = ltrim($release['tag_name'], 'v');
+            $zip_url = null;
+            
+            foreach ($release['assets'] as $asset) {
+                if ($asset['name'] === 'oversee-helpdesk.zip') {
+                    $zip_url = $asset['browser_download_url'];
+                    break;
+                }
+            }
+            
+            if (!$zip_url) continue;
+            
+            if (!$release['prerelease'] && !$stable) {
+                $stable = ['version' => $version, 'url' => $zip_url];
+            }
+            if (!$beta) {
+                $beta = ['version' => str_replace('-beta', '', $version), 'url' => $zip_url];
+            }
+            
+            if ($stable && $beta) break;
+        }
+    }
+    
+    return [
+        'stable' => $stable ?: ['version' => '2.1.5', 'url' => ''],
+        'beta' => $beta ?: ['version' => '2.1.5', 'url' => '']
+    ];
+}
 
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 $slug = isset($_REQUEST['slug']) ? $_REQUEST['slug'] : '';
 $version = isset($_REQUEST['version']) ? $_REQUEST['version'] : '';
 $site_url = isset($_REQUEST['site_url']) ? $_REQUEST['site_url'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '');
 
+// Get versions from GitHub
+$versions = getLatestVersions($GITHUB_USER, $GITHUB_REPO);
+
 // Determine which version to serve
 $requesting_domain = parse_url($site_url, PHP_URL_HOST);
 $is_beta_tester = in_array($requesting_domain, $BETA_TESTERS);
-$serve_version = $is_beta_tester ? $BETA_VERSION : $STABLE_VERSION;
+$release = $is_beta_tester ? $versions['beta'] : $versions['stable'];
 
 $plugins = [
     'oversee-helpdesk' => [
-        'version' => $serve_version,
-        'download_url' => 'https://overseeagency.com/wp-content/uploads/plugins/oversee-helpdesk.zip',
+        'version' => $release['version'],
+        'download_url' => $release['url'],
         'name' => 'Oversee Helpdesk',
         'author' => '<a href="https://overseeagency.com">Oversee Agency</a>',
         'requires' => '5.8',
