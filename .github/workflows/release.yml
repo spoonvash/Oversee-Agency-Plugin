@@ -14,6 +14,9 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          ref: Master
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get version from tag
         id: version
@@ -32,22 +35,37 @@ jobs:
         run: |
           sed -i "s/Version: .*/Version: ${{ steps.version.outputs.clean_version }}/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
           sed -i "s/define('FLAVOR_STARTER_VERSION', '.*')/define('FLAVOR_STARTER_VERSION', '${{ steps.version.outputs.clean_version }}')/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+          
+          echo "Updated to version ${{ steps.version.outputs.clean_version }}"
+          grep "Version:" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
 
-      - name: Create plugin zip with correct structure
+      - name: Commit version back to repo
         run: |
-          # Copy to temp folder with correct structure
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+          git diff --staged --quiet || git commit -m "Bump version to ${{ steps.version.outputs.clean_version }}"
+          git push origin HEAD:Master || true
+
+      - name: Create plugin zip
+        run: |
           mkdir -p /tmp/oversee-helpdesk
           cp -r oversee-helpdesk/oversee-helpdesk/* /tmp/oversee-helpdesk/
-          
-          # Create zip from temp folder
           cd /tmp
           zip -r oversee-helpdesk.zip oversee-helpdesk/
           mv oversee-helpdesk.zip $GITHUB_WORKSPACE/
 
+      - name: Create license server zip
+        run: |
+          cd oversee-license-server
+          zip -r ../oversee-license-server.zip . -x "*.zip"
+
       - name: Upload to GitHub Release
         uses: softprops/action-gh-release@v1
         with:
-          files: oversee-helpdesk.zip
+          files: |
+            oversee-helpdesk.zip
+            oversee-license-server.zip
           prerelease: ${{ steps.version.outputs.prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

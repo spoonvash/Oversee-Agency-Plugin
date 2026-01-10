@@ -3,7 +3,7 @@
  * Plugin Name: Oversee Helpdesk
  * Plugin URI: https://overseeagency.com/plugins/oversee-helpdesk
  * Description: Professional helpdesk and support ticket system with integrated knowledge base. Features include ticket management, email notifications, searchable knowledge base, agent assignment, team dashboard, and full REST API. Fully customizable with white-label branding options.
- * Version: 2.1.6
+ * Version: 2.2.2
  * Author: Oversee Agency
  * Author URI: https://overseeagency.com
  * License: GPL v2 or later
