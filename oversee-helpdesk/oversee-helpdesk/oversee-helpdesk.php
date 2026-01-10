@@ -845,7 +845,8 @@ class Oversee_Helpdesk_Updater {
         $response = wp_remote_post($this->update_server . '?action=update-check', [
             'body' => [
                 'slug' => $this->plugin_slug,
-                'version' => $this->current_version
+                'version' => $this->current_version,
+                'site_url' => home_url()
             ],
             'timeout' => 10
         ]);
