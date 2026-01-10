@@ -17,6 +17,11 @@ define('OLS_VERSION', '1.0.0');
 define('OLS_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OLS_PLUGIN_URL', plugin_dir_url(__FILE__));
 
+// Include Release Manager Admin
+if (is_admin()) {
+    require_once OLS_PLUGIN_DIR . 'oversee-license-server-admin.php';
+}
+
 /**
  * Main License Server Class
  */
