@@ -1,35 +1,78 @@
-name: Release Plugin Update
+name: Build and Release Plugin
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - 'v*'
 
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup SSH
+      - name: Get version from tag
+        id: version
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [[ "$VERSION" == *"-beta"* ]]; then
+            echo "channel=beta" >> $GITHUB_OUTPUT
+          else
+            echo "channel=stable" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Update version in plugin file
+        run: |
+          VERSION=${{ steps.version.outputs.version }}
+          CLEAN_VERSION=${VERSION%-beta}
+          sed -i "s/Version: .*/Version: $CLEAN_VERSION/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+          sed -i "s/define('FLAVOR_STARTER_VERSION', '.*')/define('FLAVOR_STARTER_VERSION', '$CLEAN_VERSION')/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
 
       - name: Create plugin zip
         run: |
           cd oversee-helpdesk
-          zip -r oversee-helpdesk.zip oversee-helpdesk/
+          zip -r ../oversee-helpdesk.zip oversee-helpdesk/
 
-      - name: Upload plugin zip for customer updates
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: oversee-helpdesk.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to OverseeAgency.com
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./
+          server-dir: /public_html/wp-content/uploads/plugins/
+          include: oversee-helpdesk.zip
+
+      - name: Update version manifest
         run: |
-          rsync -avz \
-            -e "ssh -i ~/.ssh/deploy_key" \
-            ./oversee-helpdesk/oversee-helpdesk.zip \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/plugins/oversee-helpdesk.zip
+          VERSION=${{ steps.version.outputs.version }}
+          CHANNEL=${{ steps.version.outputs.channel }}
+          CLEAN_VERSION=${VERSION%-beta}
+          
+          # Create manifest file
+          cat > version.json << MANIFEST
+          {
+            "stable": "${{ steps.version.outputs.channel == 'stable' && steps.version.outputs.version || 'KEEP_CURRENT' }}",
+            "beta": "$CLEAN_VERSION",
+            "updated": "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          }
+          MANIFEST
 
-      - name: Cleanup
-        run: rm -f ~/.ssh/deploy_key
+      - name: Upload manifest
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_HOST }}
+          username: ${{ secrets.FTP_USER }}
+          password: ${{ secrets.FTP_PASS }}
+          local-dir: ./
+          server-dir: /public_html/wp-content/uploads/plugins/
+          include: version.json

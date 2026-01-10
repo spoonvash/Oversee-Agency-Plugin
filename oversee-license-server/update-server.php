@@ -2,13 +2,31 @@
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
+// Beta tester domains
+$BETA_TESTERS = [
+    'overseeagency.com',
+    'www.overseeagency.com'
+];
+
+// Fetch current versions from manifest
+$manifest_url = 'https://overseeagency.com/wp-content/uploads/plugins/version.json';
+$manifest = @json_decode(file_get_contents($manifest_url), true);
+$STABLE_VERSION = $manifest['stable'] ?? '2.1.5';
+$BETA_VERSION = $manifest['beta'] ?? '2.1.5';
+
 $action = isset($_REQUEST['action']) ? $_REQUEST['action'] : '';
 $slug = isset($_REQUEST['slug']) ? $_REQUEST['slug'] : '';
 $version = isset($_REQUEST['version']) ? $_REQUEST['version'] : '';
+$site_url = isset($_REQUEST['site_url']) ? $_REQUEST['site_url'] : (isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '');
+
+// Determine which version to serve
+$requesting_domain = parse_url($site_url, PHP_URL_HOST);
+$is_beta_tester = in_array($requesting_domain, $BETA_TESTERS);
+$serve_version = $is_beta_tester ? $BETA_VERSION : $STABLE_VERSION;
 
 $plugins = [
     'oversee-helpdesk' => [
-        'version' => '2.1.6',
+        'version' => $serve_version,
         'download_url' => 'https://overseeagency.com/wp-content/uploads/plugins/oversee-helpdesk.zip',
         'name' => 'Oversee Helpdesk',
         'author' => '<a href="https://overseeagency.com">Oversee Agency</a>',
@@ -48,8 +66,8 @@ if ($action === 'plugin-info' && isset($plugins[$slug])) {
         'banners' => ['low' => $p['banner_low'], 'high' => $p['banner_high']],
         'icons' => ['1x' => $p['icon_1x'], '2x' => $p['icon_2x']],
         'sections' => [
-            'description' => '<p>Professional helpdesk and support ticket system with integrated knowledge base. Fully customizable with white-label branding.</p><ul><li>Ticket management</li><li>Knowledge base</li><li>Agent assignment</li><li>Email notifications</li><li>White-label branding</li><li>REST API</li></ul>',
-            'changelog' => '<h4>2.1.4</h4><ul><li>Improved update system</li><li>Bug fixes</li></ul><h4>2.1.3</h4><ul><li>Added automatic updates</li></ul>'
+            'description' => '<p>Professional helpdesk and support ticket system with integrated knowledge base.</p>',
+            'changelog' => '<h4>' . $p['version'] . '</h4><ul><li>Latest updates and fixes</li></ul>'
         ]
     ]);
     exit;
