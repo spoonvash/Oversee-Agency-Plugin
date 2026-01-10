@@ -827,7 +827,7 @@ class Oversee_Helpdesk_Updater {
     private $plugin_slug = 'oversee-helpdesk';
     private $plugin_file;
     private $current_version;
-    private $update_server = 'https://overseeagency.com/wp-content/plugins/oversee-license-server/update-server.php';
+    private $update_server = 'https://overseeagency.com/wp-content/oversee-update-server/';
     
     public function __construct($plugin_file, $version) {
         $this->plugin_file = $plugin_file;
