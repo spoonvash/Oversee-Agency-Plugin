@@ -571,12 +571,19 @@ final class Oversee_Support {
             true
         );
 
+        // Get theme mode from branding settings
+        $theme_mode = Oversee_Branding::get('theme_mode', 'light_only');
+
         wp_localize_script('oversee-public', 'overseeData', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'restUrl' => rest_url('oversee/v1/'),
             'nonce' => wp_create_nonce('wp_rest'),
-            'homeUrl' => home_url('/support/')
+            'homeUrl' => home_url('/support/'),
+            'themeMode' => $theme_mode
         ]);
+
+        // Set theme mode early to prevent flash of wrong theme
+        wp_add_inline_script('oversee-public', 'window.overseeThemeMode = "' . esc_js($theme_mode) . '";', 'before');
         
         // Admin-specific assets
         if ($this->is_admin_page()) {
@@ -608,6 +615,9 @@ final class Oversee_Support {
                 OVERSEE_VERSION,
                 true
             );
+
+            // Set theme mode early for admin
+            wp_add_inline_script('oversee-admin', 'window.overseeThemeMode = "' . esc_js($theme_mode) . '";', 'before');
         }
     }
     

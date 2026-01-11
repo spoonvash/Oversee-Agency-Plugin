@@ -378,6 +378,11 @@ class Oversee_Template_Loader {
                 </nav>
                 
                 <div class="header-actions">
+                    <?php if (($branding['theme_mode'] ?? 'light_only') === 'user_choice'): ?>
+                    <button type="button" class="theme-toggle" onclick="OverseeTheme.toggle()" aria-label="Toggle dark mode">
+                        <span class="theme-icon"><i class="fa-solid fa-moon"></i></span>
+                    </button>
+                    <?php endif; ?>
                     <a href="<?php echo esc_url(home_url('/support/submit/')); ?>" class="btn btn-primary btn-sm">
                         <i class="fa-solid fa-plus"></i>
                         <span>Submit Ticket</span>

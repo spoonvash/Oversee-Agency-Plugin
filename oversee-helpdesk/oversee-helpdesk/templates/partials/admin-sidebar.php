@@ -17,6 +17,7 @@ $branding = Oversee_Branding::get_for_context('admin');
 $company_name = $branding['company_name'] ?: 'Support';
 $logo_url = $branding['logo_url'];
 $logo_width = intval($branding['logo_width'] ?: 120);
+$theme_mode = Oversee_Branding::get('theme_mode', 'light_only');
 
 // Get initials
 $name = $current_user->display_name ?: $current_user->user_email;
@@ -93,10 +94,17 @@ $ticket_count = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->prefix}oversee_tick
     <div class="sidebar-user">
         <div class="status-toggle-bar">
             <span class="status-label"><?php echo $is_online ? 'Online' : 'Offline'; ?></span>
-            <label class="quick-toggle">
-                <input type="checkbox" id="quickStatusToggle" <?php echo $is_online ? 'checked' : ''; ?> onchange="toggleOnlineStatus(this)">
-                <span class="quick-toggle-slider"></span>
-            </label>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <?php if ($theme_mode === 'user_choice'): ?>
+                <button type="button" class="theme-toggle" onclick="OverseeTheme.toggle()" aria-label="Toggle dark mode" style="width:32px;height:32px;padding:0;border:none;background:var(--sidebar-hover);border-radius:6px;cursor:pointer;">
+                    <span class="theme-icon" style="color:var(--sidebar-text);"><i class="fa-solid fa-moon"></i></span>
+                </button>
+                <?php endif; ?>
+                <label class="quick-toggle">
+                    <input type="checkbox" id="quickStatusToggle" <?php echo $is_online ? 'checked' : ''; ?> onchange="toggleOnlineStatus(this)">
+                    <span class="quick-toggle-slider"></span>
+                </label>
+            </div>
         </div>
         <a href="<?php echo esc_url(oversee_admin_url('profile')); ?>" class="user-info <?php echo $current_page === 'profile' ? 'active' : ''; ?>">
             <div class="user-avatar">

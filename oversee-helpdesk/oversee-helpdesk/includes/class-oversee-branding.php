@@ -27,13 +27,16 @@ class Oversee_Branding {
         'tagline' => 'We\'re here to help',
         'support_email' => '',
         'support_phone' => '',
-        
+
+        // Theme Mode
+        'theme_mode' => 'light_only',  // light_only, dark_only, auto, user_choice
+
         // Logo & Images
         'logo_url' => '',
         'logo_width' => '150',
         'logo_dark_url' => '',  // For dark backgrounds
         'favicon_url' => '',
-        
+
         // Colors
         'primary_color' => '#f97316',
         'primary_hover' => '#ea580c',
@@ -174,6 +177,7 @@ class Oversee_Branding {
             'tagline' => 'sanitize_text_field',
             'support_email' => 'sanitize_email',
             'support_phone' => 'sanitize_text_field',
+            'theme_mode' => 'sanitize_text_field',
             'logo_url' => 'esc_url_raw',
             'logo_width' => 'absint',
             'logo_dark_url' => 'esc_url_raw',
@@ -373,7 +377,31 @@ class Oversee_Branding {
                     </tr>
                 </table>
             </div>
-            
+
+            <!-- Theme Settings Section -->
+            <div class="branding-section">
+                <h3><i class="dashicons dashicons-visibility"></i> Theme Settings</h3>
+                <table class="form-table">
+                    <tr>
+                        <th><label for="theme_mode">Theme Mode</label></th>
+                        <td>
+                            <select id="theme_mode" name="theme_mode">
+                                <option value="light_only" <?php selected($b['theme_mode'], 'light_only'); ?>>Light Mode Only</option>
+                                <option value="dark_only" <?php selected($b['theme_mode'], 'dark_only'); ?>>Dark Mode Only</option>
+                                <option value="auto" <?php selected($b['theme_mode'], 'auto'); ?>>Auto (Follow System)</option>
+                                <option value="user_choice" <?php selected($b['theme_mode'], 'user_choice'); ?>>User Choice (Show Toggle)</option>
+                            </select>
+                            <p class="description">
+                                <strong>Light Only:</strong> Always use light theme.<br>
+                                <strong>Dark Only:</strong> Always use dark theme.<br>
+                                <strong>Auto:</strong> Follow user's system preference.<br>
+                                <strong>User Choice:</strong> Show a toggle button for users to switch themes.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
             <!-- Logo Section -->
             <div class="branding-section">
                 <h3><i class="dashicons dashicons-format-image"></i> Logo & Images</h3>
