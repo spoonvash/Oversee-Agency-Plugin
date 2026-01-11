@@ -2,7 +2,7 @@
 
 A complete white-label support ticket system with knowledge base for WordPress.
 
-## Version 2.1.0
+## Version 2.7.3-beta
 
 ## Features
 
@@ -12,15 +12,19 @@ A complete white-label support ticket system with knowledge base for WordPress.
 - **Admin Dashboard** - Standalone admin portal at `/support/admin/`
 - **Multi-Agent Support** - Roles, permissions, and agent management
 
-### White-Label Branding (v2.1)
-- Company name, logo, and colors
-- Dark/light logo variants for different backgrounds
-- Custom login page with split-screen design
-- Configurable background (gradient, solid color, or image)
-- Welcome message customization
-- Favicon support
-- Footer copyright with dynamic tokens (`{year}`, `{company}`)
-- Custom CSS injection
+### White-Label Branding (v2.7)
+Complete color customization for every page with live preview:
+
+- **Brand Colors** - Primary and secondary colors for buttons, links, and accents
+- **Status Colors** - Success, warning, error, and info states with auto-computed variants
+- **Public Pages** - Background, surface, text, and border colors for KB and ticket pages
+- **Hero Section** - Dedicated background and text colors for the KB hero
+- **Admin Portal** - Full color control for dashboard, cards, and navigation
+- **Sidebar** - Background, text, and active state colors
+- **Login Page** - Gradient, solid color, or image backgrounds with welcome message
+- **Logo Support** - Primary and dark variants with configurable width
+- **Live Preview** - Real-time preview across 4 contexts (General, Public, Admin, Login)
+- **Custom CSS** - Additional styling injection
 
 ### License System (v2.1)
 - License key activation/deactivation
@@ -82,14 +86,14 @@ Navigate to **Helpdesk → Settings → License**:
 
 Navigate to **Helpdesk → Settings → Branding**:
 
-| Section | Options |
-|---------|---------|
-| Company Info | Name, tagline, support email/phone |
-| Logo & Images | Primary logo, dark logo, favicon |
-| Colors | Primary, secondary, accent colors |
-| Login Page | Background style, welcome message |
-| Footer | Copyright text, additional HTML |
-| Custom | CSS injection |
+| Tab | Settings |
+|-----|----------|
+| **General** | Company info, logos, brand colors (primary, secondary), status colors (success, warning, error, info), footer, custom CSS |
+| **Public Pages** | Hero section (background, text), page colors (background, surface, text, muted, border) |
+| **Admin Portal** | Page colors (background, surface, text, muted, border), sidebar (background, text, active) |
+| **Login Page** | Background style (gradient/color/image), welcome title & message, logo visibility |
+
+All color changes show in the live preview panel on the right side of the settings page.
 
 ## REST API
 
@@ -172,6 +176,18 @@ The plugin creates the following tables:
 - `oversee_manage_settings` - Access settings
 
 ## Changelog
+
+### 2.7.3-beta
+- Simplified white-label system (reduced from 40+ to 21 essential color settings)
+- Organized settings into clear categories: Brand, Status, Public, Admin, Sidebar
+- Live preview showing all 4 contexts (General, Public, Admin, Login)
+- Auto-computed light/dark variants for status colors
+- Replaced all hardcoded colors with CSS variables
+
+### 2.7.0 - 2.7.2-beta
+- Comprehensive CSS variable system for complete color customization
+- Full color control for public pages, admin portal, and login
+- Redesigned white-label settings UI with side-by-side preview
 
 ### 2.1.0
 - Enhanced white-label branding (login page, dark logo, background options)
