@@ -90,8 +90,62 @@ class Oversee_Branding {
      * Initialize branding system
      */
     public static function init() {
+        // Run migration from old field names to new field names
+        self::maybe_migrate_settings();
+
         add_action('admin_init', [__CLASS__, 'register_settings']);
         add_action('admin_head', [__CLASS__, 'output_admin_css'], 5);
+    }
+
+    /**
+     * Migrate old settings field names to new simplified names
+     * This runs once when updating from 2.7.2 or earlier to 2.7.3+
+     */
+    public static function maybe_migrate_settings() {
+        // Check if migration already done
+        if (get_option('oversee_branding_migrated_273')) {
+            return;
+        }
+
+        // Map of old field names to new field names
+        $migrations = [
+            'oversee_public_bg_color' => 'oversee_public_bg',
+            'oversee_public_surface_color' => 'oversee_public_surface',
+            'oversee_public_text_color' => 'oversee_public_text',
+            'oversee_public_text_muted_color' => 'oversee_public_text_muted',
+            'oversee_public_border_color' => 'oversee_public_border',
+            'oversee_hero_bg_color' => 'oversee_hero_bg',
+            'oversee_hero_text_color' => 'oversee_hero_text',
+            'oversee_admin_bg_color' => 'oversee_admin_bg',
+            'oversee_admin_surface_color' => 'oversee_admin_surface',
+            'oversee_admin_text_color' => 'oversee_admin_text',
+            'oversee_admin_text_muted_color' => 'oversee_admin_text_muted',
+            'oversee_admin_border_color' => 'oversee_admin_border',
+            'oversee_sidebar_bg_color' => 'oversee_sidebar_bg',
+            'oversee_sidebar_text_color' => 'oversee_sidebar_text',
+            'oversee_sidebar_text_active_color' => 'oversee_sidebar_text_active',
+        ];
+
+        $migrated = false;
+
+        foreach ($migrations as $old_key => $new_key) {
+            $old_value = get_option($old_key);
+            if ($old_value !== false && $old_value !== '') {
+                // Only migrate if new key doesn't already have a value
+                $new_value = get_option($new_key);
+                if ($new_value === false || $new_value === '') {
+                    update_option($new_key, $old_value);
+                    $migrated = true;
+                }
+            }
+        }
+
+        // Mark migration as complete
+        update_option('oversee_branding_migrated_273', '1');
+
+        if ($migrated) {
+            error_log('Oversee Helpdesk: Migrated branding settings to v2.7.3 format');
+        }
     }
 
     /**
