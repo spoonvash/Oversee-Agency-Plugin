@@ -6,30 +6,46 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
       - name: Setup SSH
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" | base64 -d > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+
       - name: Create plugin zip
         run: |
           cd oversee-helpdesk && zip -r ../oversee-helpdesk.zip oversee-helpdesk && cd ..
+
       - name: Deploy plugins to test site
         run: |
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./oversee-helpdesk/oversee-helpdesk/ \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/wp-content/plugins/oversee-helpdesk/
-          
+
           rsync -avz --delete \
             -e "ssh -i ~/.ssh/deploy_key" \
             ./oversee-license-server/ \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/wp-content/plugins/oversee-license-server/
+
+      - name: Deploy update server
+        run: |
+          rsync -avz --delete \
+            -e "ssh -i ~/.ssh/deploy_key" \
+            ./oversee-update-server/ \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/wp-content/oversee-update-server/
+
+      - name: Clear update server cache
+        run: |
+          ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "rm -f public_html/wp-content/oversee-update-server/cache/*.json 2>/dev/null || true"
+
       - name: Deploy plugin zip for updates
         run: |
           ssh -i ~/.ssh/deploy_key ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "mkdir -p public_html/wp-content/uploads/plugins"
@@ -37,5 +53,6 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key" \
             ./oversee-helpdesk.zip \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:public_html/wp-content/uploads/plugins/
+
       - name: Cleanup
         run: rm -f ~/.ssh/deploy_key
