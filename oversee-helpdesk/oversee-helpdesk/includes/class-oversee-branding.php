@@ -55,10 +55,16 @@ class Oversee_Branding {
         // Admin Page Colors
         'admin_bg_color' => '#f1f5f9',           // Main admin background
         'admin_surface_color' => '#ffffff',      // Admin cards, panels
+        'admin_surface_hover' => '#f8fafc',      // Hover state for surfaces
+        'admin_surface_muted' => '#f8fafc',      // Muted surfaces (bulk actions, etc)
         'admin_text_color' => '#1e293b',         // Admin primary text
+        'admin_text_secondary' => '#64748b',     // Admin secondary text
+        'admin_text_muted' => '#9ca3af',         // Admin muted/disabled text
         'admin_border_color' => '#e2e8f0',       // Admin borders
+        'admin_border_light' => '#f1f5f9',       // Admin light borders/dividers
+        'admin_input_border' => '#d1d5db',       // Input field borders
 
-        // Sidebar/Admin Text Colors
+        // Sidebar/Admin Nav Colors
         'sidebar_text_color' => '#94a3b8',       // Muted text for nav items
         'sidebar_text_hover' => '#ffffff',       // Text on hover
         'sidebar_text_active' => '#ffffff',      // Active nav item text
@@ -232,8 +238,14 @@ class Oversee_Branding {
             'hero_text_color' => 'sanitize_hex_color',
             'admin_bg_color' => 'sanitize_hex_color',
             'admin_surface_color' => 'sanitize_hex_color',
+            'admin_surface_hover' => 'sanitize_hex_color',
+            'admin_surface_muted' => 'sanitize_hex_color',
             'admin_text_color' => 'sanitize_hex_color',
+            'admin_text_secondary' => 'sanitize_hex_color',
+            'admin_text_muted' => 'sanitize_hex_color',
             'admin_border_color' => 'sanitize_hex_color',
+            'admin_border_light' => 'sanitize_hex_color',
+            'admin_input_border' => 'sanitize_hex_color',
             'sidebar_text_color' => 'sanitize_hex_color',
             'sidebar_text_hover' => 'sanitize_hex_color',
             'sidebar_text_active' => 'sanitize_hex_color',
@@ -355,15 +367,26 @@ class Oversee_Branding {
     --hero-text: ' . esc_attr($b['hero_text_color'] ?: '#ffffff') . ';
     --hero-gradient: linear-gradient(135deg, ' . esc_attr($b['hero_bg_color'] ?: '#1e293b') . ' 0%, ' . esc_attr(self::darken_color($b['hero_bg_color'] ?: '#1e293b', 20)) . ' 100%);
 
-    /* Admin page colors - used by standalone admin portal */
+    /* Admin page colors - comprehensive set for admin.css */
     --admin-bg: ' . esc_attr($b['admin_bg_color'] ?: '#f1f5f9') . ';
     --admin-surface: ' . esc_attr($b['admin_surface_color'] ?: '#ffffff') . ';
+    --admin-surface-hover: ' . esc_attr($b['admin_surface_hover'] ?: '#f8fafc') . ';
+    --admin-surface-muted: ' . esc_attr($b['admin_surface_muted'] ?: '#f8fafc') . ';
     --admin-text: ' . esc_attr($b['admin_text_color'] ?: '#1e293b') . ';
+    --admin-text-secondary: ' . esc_attr($b['admin_text_secondary'] ?: '#64748b') . ';
+    --admin-text-muted: ' . esc_attr($b['admin_text_muted'] ?: '#9ca3af') . ';
     --admin-border: ' . esc_attr($b['admin_border_color'] ?: '#e2e8f0') . ';
+    --admin-border-light: ' . esc_attr($b['admin_border_light'] ?: '#f1f5f9') . ';
+    --admin-input-border: ' . esc_attr($b['admin_input_border'] ?: '#d1d5db') . ';
 
-    /* Admin body and card aliases for admin.css compatibility */
+    /* Admin body/card/text aliases for admin.css compatibility */
     --body-bg: ' . esc_attr($b['admin_bg_color'] ?: '#f1f5f9') . ';
     --card-bg: ' . esc_attr($b['admin_surface_color'] ?: '#ffffff') . ';
+    --border-color: ' . esc_attr($b['admin_border_color'] ?: '#e2e8f0') . ';
+    --border-light: ' . esc_attr($b['admin_border_light'] ?: '#f1f5f9') . ';
+    --text-primary: ' . esc_attr($b['admin_text_color'] ?: '#1e293b') . ';
+    --text-secondary: ' . esc_attr($b['admin_text_secondary'] ?: '#64748b') . ';
+    --text-muted: ' . esc_attr($b['admin_text_muted'] ?: '#9ca3af') . ';
 }
 </style>';
 
@@ -650,16 +673,63 @@ class Oversee_Branding {
                         </div>
 
                         <div class="settings-group">
-                            <h4>Text & Borders</h4>
+                            <h4>Surface Variations</h4>
                             <div class="color-row">
                                 <div class="color-field">
-                                    <label>Text Color</label>
-                                    <input type="text" name="admin_text_color" value="<?php echo esc_attr($b['admin_text_color']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
+                                    <label>Hover Background</label>
+                                    <input type="text" name="admin_surface_hover" value="<?php echo esc_attr($b['admin_surface_hover']); ?>" class="oversee-color-picker" data-default-color="#f8fafc">
+                                    <span class="color-hint">Button/row hover states</span>
                                 </div>
+                                <div class="color-field">
+                                    <label>Muted Background</label>
+                                    <input type="text" name="admin_surface_muted" value="<?php echo esc_attr($b['admin_surface_muted']); ?>" class="oversee-color-picker" data-default-color="#f8fafc">
+                                    <span class="color-hint">Toolbars, action bars</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <h4>Text Colors</h4>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Primary Text</label>
+                                    <input type="text" name="admin_text_color" value="<?php echo esc_attr($b['admin_text_color']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
+                                    <span class="color-hint">Headings, main text</span>
+                                </div>
+                                <div class="color-field">
+                                    <label>Secondary Text</label>
+                                    <input type="text" name="admin_text_secondary" value="<?php echo esc_attr($b['admin_text_secondary']); ?>" class="oversee-color-picker" data-default-color="#64748b">
+                                    <span class="color-hint">Labels, descriptions</span>
+                                </div>
+                            </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Muted Text</label>
+                                    <input type="text" name="admin_text_muted" value="<?php echo esc_attr($b['admin_text_muted']); ?>" class="oversee-color-picker" data-default-color="#9ca3af">
+                                    <span class="color-hint">Placeholders, hints</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <h4>Borders & Dividers</h4>
+                            <div class="color-row">
                                 <div class="color-field">
                                     <label>Border Color</label>
                                     <input type="text" name="admin_border_color" value="<?php echo esc_attr($b['admin_border_color']); ?>" class="oversee-color-picker" data-default-color="#e2e8f0">
-                                    <span class="color-hint">Borders and dividers</span>
+                                    <span class="color-hint">Card borders, dividers</span>
+                                </div>
+                                <div class="color-field">
+                                    <label>Light Border</label>
+                                    <input type="text" name="admin_border_light" value="<?php echo esc_attr($b['admin_border_light']); ?>" class="oversee-color-picker" data-default-color="#f1f5f9">
+                                    <span class="color-hint">Subtle separators</span>
+                                </div>
+                            </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Input Border</label>
+                                    <input type="text" name="admin_input_border" value="<?php echo esc_attr($b['admin_input_border']); ?>" class="oversee-color-picker" data-default-color="#d1d5db">
+                                    <span class="color-hint">Form fields, selects</span>
                                 </div>
                             </div>
                         </div>
