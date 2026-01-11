@@ -390,7 +390,17 @@ final class Oversee_Support {
         // Inline admin JS for media uploader
         wp_add_inline_script('wp-color-picker', '
             jQuery(function($) {
-                $(".oversee-color-picker").wpColorPicker();
+                $(".oversee-color-picker").wpColorPicker({
+                    change: function(event, ui) {
+                        // Trigger custom event for live preview
+                        $(this).trigger("colorchange", [ui.color.toString()]);
+                        // Also update the input value immediately
+                        $(this).val(ui.color.toString());
+                    },
+                    clear: function() {
+                        $(this).trigger("colorchange", [""]);
+                    }
+                });
                 
                 // Generic media upload handler
                 function setupMediaUpload(buttonId, inputId, previewId, previewStyle) {

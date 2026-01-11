@@ -790,27 +790,22 @@ class Oversee_Branding {
                 return input.value || defaultVal;
             }
 
-            // Watch for color picker changes
+            // Watch for color picker changes via custom colorchange event
+            if (typeof jQuery !== 'undefined') {
+                jQuery('.oversee-color-picker').on('colorchange', function() {
+                    setTimeout(updatePreview, 50);
+                });
+            }
+
+            // Also watch for regular input changes as fallback
             var colorInputs = document.querySelectorAll('.oversee-color-picker');
             colorInputs.forEach(function(input) {
-                // For wpColorPicker integration
-                if (typeof jQuery !== 'undefined' && jQuery.fn.wpColorPicker) {
-                    jQuery(input).wpColorPicker({
-                        change: function() {
-                            setTimeout(updatePreview, 50);
-                        },
-                        clear: function() {
-                            setTimeout(updatePreview, 50);
-                        }
-                    });
-                }
-                // Fallback for regular inputs
                 input.addEventListener('change', updatePreview);
                 input.addEventListener('input', updatePreview);
             });
 
-            // Initial update
-            setTimeout(updatePreview, 100);
+            // Initial update after color pickers are initialized
+            setTimeout(updatePreview, 500);
         });
         </script>
         <?php
