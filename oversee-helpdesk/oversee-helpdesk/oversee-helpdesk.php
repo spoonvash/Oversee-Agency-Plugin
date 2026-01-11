@@ -32,7 +32,7 @@ if (version_compare(PHP_VERSION, '7.4.0', '<')) {
 }
 
 // Plugin constants
-define('OVERSEE_VERSION', '2.1.5');
+define('OVERSEE_VERSION', '2.2.2');
 define('OVERSEE_PLUGIN_FILE', __FILE__);
 define('OVERSEE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OVERSEE_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -897,4 +897,4 @@ class Oversee_Helpdesk_Updater {
 }
 
 // Initialize updater
-new Oversee_Helpdesk_Updater(__FILE__, '2.1.5');
+new Oversee_Helpdesk_Updater(__FILE__, '2.2.2');

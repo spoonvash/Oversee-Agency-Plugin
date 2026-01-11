@@ -34,10 +34,11 @@ jobs:
       - name: Update version in plugin file
         run: |
           sed -i "s/Version: .*/Version: ${{ steps.version.outputs.clean_version }}/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
-          sed -i "s/define('FLAVOR_STARTER_VERSION', '.*')/define('FLAVOR_STARTER_VERSION', '${{ steps.version.outputs.clean_version }}')/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
-          
+          sed -i "s/define('OVERSEE_VERSION', '.*')/define('OVERSEE_VERSION', '${{ steps.version.outputs.clean_version }}')/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+          sed -i "s/new Oversee_Helpdesk_Updater(__FILE__, '.*')/new Oversee_Helpdesk_Updater(__FILE__, '${{ steps.version.outputs.clean_version }}')/" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+
           echo "Updated to version ${{ steps.version.outputs.clean_version }}"
-          grep "Version:" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
+          grep -E "Version:|OVERSEE_VERSION|Oversee_Helpdesk_Updater" oversee-helpdesk/oversee-helpdesk/oversee-helpdesk.php
 
       - name: Commit version back to repo
         run: |
