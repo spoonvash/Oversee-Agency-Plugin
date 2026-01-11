@@ -3,7 +3,7 @@
  * Plugin Name: Oversee Helpdesk
  * Plugin URI: https://overseeagency.com/plugins/oversee-helpdesk
  * Description: Professional helpdesk and support ticket system with integrated knowledge base. Features include ticket management, email notifications, searchable knowledge base, agent assignment, team dashboard, and full REST API. Fully customizable with white-label branding options.
- * Version: 2.5.0-beta
+ * Version: 2.6.0-beta
  * Author: Oversee Agency
  * Author URI: https://overseeagency.com
  * License: GPL v2 or later
@@ -32,7 +32,7 @@ if (version_compare(PHP_VERSION, '7.4.0', '<')) {
 }
 
 // Plugin constants
-define('OVERSEE_VERSION', '2.5.0-beta');
+define('OVERSEE_VERSION', '2.6.0-beta');
 define('OVERSEE_PLUGIN_FILE', __FILE__);
 define('OVERSEE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('OVERSEE_PLUGIN_URL', plugin_dir_url(__FILE__));
@@ -571,19 +571,12 @@ final class Oversee_Support {
             true
         );
 
-        // Get theme mode from branding settings
-        $theme_mode = Oversee_Branding::get('theme_mode', 'light_only');
-
         wp_localize_script('oversee-public', 'overseeData', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'restUrl' => rest_url('oversee/v1/'),
             'nonce' => wp_create_nonce('wp_rest'),
-            'homeUrl' => home_url('/support/'),
-            'themeMode' => $theme_mode
+            'homeUrl' => home_url('/support/')
         ]);
-
-        // Set theme mode early to prevent flash of wrong theme
-        wp_add_inline_script('oversee-public', 'window.overseeThemeMode = "' . esc_js($theme_mode) . '";', 'before');
         
         // Admin-specific assets
         if ($this->is_admin_page()) {
@@ -615,9 +608,6 @@ final class Oversee_Support {
                 OVERSEE_VERSION,
                 true
             );
-
-            // Set theme mode early for admin
-            wp_add_inline_script('oversee-admin', 'window.overseeThemeMode = "' . esc_js($theme_mode) . '";', 'before');
         }
     }
     

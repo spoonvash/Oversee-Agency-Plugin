@@ -28,9 +28,6 @@ class Oversee_Branding {
         'support_email' => '',
         'support_phone' => '',
 
-        // Theme Mode
-        'theme_mode' => 'light_only',  // light_only, dark_only, auto, user_choice
-
         // Logo & Images
         'logo_url' => '',
         'logo_width' => '150',
@@ -177,7 +174,6 @@ class Oversee_Branding {
             'tagline' => 'sanitize_text_field',
             'support_email' => 'sanitize_email',
             'support_phone' => 'sanitize_text_field',
-            'theme_mode' => 'sanitize_text_field',
             'logo_url' => 'esc_url_raw',
             'logo_width' => 'absint',
             'logo_dark_url' => 'esc_url_raw',
@@ -378,30 +374,6 @@ class Oversee_Branding {
                 </table>
             </div>
 
-            <!-- Theme Settings Section -->
-            <div class="branding-section">
-                <h3><i class="dashicons dashicons-visibility"></i> Theme Settings</h3>
-                <table class="form-table">
-                    <tr>
-                        <th><label for="theme_mode">Theme Mode</label></th>
-                        <td>
-                            <select id="theme_mode" name="theme_mode">
-                                <option value="light_only" <?php selected($b['theme_mode'], 'light_only'); ?>>Light Mode Only</option>
-                                <option value="dark_only" <?php selected($b['theme_mode'], 'dark_only'); ?>>Dark Mode Only</option>
-                                <option value="auto" <?php selected($b['theme_mode'], 'auto'); ?>>Auto (Follow System)</option>
-                                <option value="user_choice" <?php selected($b['theme_mode'], 'user_choice'); ?>>User Choice (Show Toggle)</option>
-                            </select>
-                            <p class="description">
-                                <strong>Light Only:</strong> Always use light theme.<br>
-                                <strong>Dark Only:</strong> Always use dark theme.<br>
-                                <strong>Auto:</strong> Follow user's system preference.<br>
-                                <strong>User Choice:</strong> Show a toggle button for users to switch themes.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
-            </div>
-
             <!-- Logo Section -->
             <div class="branding-section">
                 <h3><i class="dashicons dashicons-format-image"></i> Logo & Images</h3>
@@ -532,7 +504,75 @@ class Oversee_Branding {
                     </tr>
                 </table>
             </div>
-            
+
+            <!-- Live Preview Section -->
+            <div class="branding-section">
+                <h3><i class="dashicons dashicons-visibility"></i> Live Preview</h3>
+                <p class="section-description">See how your branding will look before saving.</p>
+
+                <div class="preview-container">
+                    <!-- Public Header Preview -->
+                    <div class="preview-panel">
+                        <h4>Public Header</h4>
+                        <div class="preview-box preview-header" id="preview-header">
+                            <div class="preview-header-inner">
+                                <div class="preview-logo" id="preview-logo">
+                                    <?php if ($b['logo_url']): ?>
+                                        <img src="<?php echo esc_url($b['logo_url']); ?>" alt="Logo">
+                                    <?php else: ?>
+                                        <span class="preview-logo-text"><?php echo esc_html($b['company_name']); ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="preview-nav">
+                                    <span class="preview-nav-link">Home</span>
+                                    <span class="preview-nav-link">Articles</span>
+                                    <button class="preview-btn preview-btn-primary" id="preview-btn">Submit Ticket</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Button Styles Preview -->
+                    <div class="preview-panel">
+                        <h4>Buttons & Links</h4>
+                        <div class="preview-box preview-buttons">
+                            <button class="preview-btn preview-btn-primary" id="preview-btn-primary">Primary Button</button>
+                            <button class="preview-btn preview-btn-secondary" id="preview-btn-secondary">Secondary</button>
+                            <a href="#" class="preview-link" id="preview-link" onclick="return false;">Link Text</a>
+                            <span class="preview-badge preview-badge-success">Open</span>
+                            <span class="preview-badge preview-badge-warning">Pending</span>
+                            <span class="preview-badge preview-badge-error">Closed</span>
+                        </div>
+                    </div>
+
+                    <!-- Admin Sidebar Preview -->
+                    <div class="preview-panel">
+                        <h4>Admin Sidebar</h4>
+                        <div class="preview-box preview-sidebar" id="preview-sidebar">
+                            <div class="preview-sidebar-header" id="preview-sidebar-header">
+                                <?php if ($b['logo_dark_url'] ?: $b['logo_url']): ?>
+                                    <img src="<?php echo esc_url($b['logo_dark_url'] ?: $b['logo_url']); ?>" alt="Logo">
+                                <?php else: ?>
+                                    <span><?php echo esc_html($b['company_name']); ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="preview-sidebar-nav">
+                                <div class="preview-sidebar-section" id="preview-sidebar-heading">Main</div>
+                                <a href="#" class="preview-sidebar-item active" id="preview-sidebar-active" onclick="return false;">
+                                    <i class="dashicons dashicons-dashboard"></i> Dashboard
+                                </a>
+                                <a href="#" class="preview-sidebar-item" id="preview-sidebar-item" onclick="return false;">
+                                    <i class="dashicons dashicons-tickets-alt"></i> Tickets
+                                </a>
+                                <a href="#" class="preview-sidebar-item hover" id="preview-sidebar-hover" onclick="return false;">
+                                    <i class="dashicons dashicons-book"></i> Articles (Hover)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Login Page Section -->
             <div class="branding-section">
                 <h3><i class="dashicons dashicons-lock"></i> Login Page Customization</h3>
@@ -637,10 +677,12 @@ class Oversee_Branding {
         </div>
         
         <style>
-            .oversee-branding-form { max-width: 800px; }
+            .oversee-branding-form { max-width: 900px; }
             .branding-section { background: #fff; padding: 20px; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 20px; }
             .branding-section h3 { margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 1px solid #eee; display: flex; align-items: center; gap: 8px; }
             .branding-section h3 .dashicons { color: #666; }
+            .branding-section h4 { margin: 0 0 10px 0; font-size: 13px; color: #555; }
+            .section-description { margin: 0 0 15px 0; color: #666; font-size: 13px; }
             .image-preview { width: 200px; height: 80px; border: 1px dashed #ccc; border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px; background: #f9f9f9; overflow: hidden; }
             .image-preview.dark-bg { background: #1e293b; }
             .image-preview.dark-bg .no-image { color: #fff; }
@@ -648,8 +690,44 @@ class Oversee_Branding {
             .image-preview.wide { width: 300px; height: 150px; }
             .image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
             .image-preview .no-image { font-size: 12px; color: #999; text-align: center; }
+
+            /* Live Preview Styles */
+            .preview-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+            .preview-panel { background: #f9fafb; border-radius: 8px; padding: 15px; }
+            .preview-box { border-radius: 6px; overflow: hidden; }
+
+            /* Header Preview */
+            .preview-header { background: #fff; border: 1px solid #e5e7eb; }
+            .preview-header-inner { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; }
+            .preview-logo img { max-height: 32px; width: auto; }
+            .preview-logo-text { font-weight: 600; font-size: 16px; color: #1f2937; }
+            .preview-nav { display: flex; align-items: center; gap: 16px; }
+            .preview-nav-link { font-size: 13px; color: #6b7280; }
+
+            /* Button Preview */
+            .preview-buttons { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 20px; background: #fff; border: 1px solid #e5e7eb; }
+            .preview-btn { padding: 8px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: default; border: none; }
+            .preview-btn-primary { background: <?php echo esc_attr($b['primary_color']); ?>; color: #fff; }
+            .preview-btn-secondary { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
+            .preview-link { color: <?php echo esc_attr($b['primary_color']); ?>; font-size: 13px; text-decoration: none; }
+            .preview-badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; }
+            .preview-badge-success { background: #d1fae5; color: #047857; }
+            .preview-badge-warning { background: #fef3c7; color: #b45309; }
+            .preview-badge-error { background: #fee2e2; color: #dc2626; }
+
+            /* Sidebar Preview */
+            .preview-sidebar { background: <?php echo esc_attr($b['secondary_color']); ?>; min-height: 200px; width: 180px; }
+            .preview-sidebar-header { padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+            .preview-sidebar-header img { max-height: 28px; width: auto; }
+            .preview-sidebar-header span { color: #fff; font-weight: 600; font-size: 14px; }
+            .preview-sidebar-nav { padding: 12px 8px; }
+            .preview-sidebar-section { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: <?php echo esc_attr($b['sidebar_heading_color'] ?: '#64748b'); ?>; padding: 8px 10px 4px; }
+            .preview-sidebar-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; font-size: 13px; color: <?php echo esc_attr($b['sidebar_text_color'] ?: '#94a3b8'); ?>; text-decoration: none; margin-bottom: 2px; }
+            .preview-sidebar-item .dashicons { font-size: 16px; width: 16px; height: 16px; }
+            .preview-sidebar-item.active { background: <?php echo esc_attr($b['primary_color']); ?>; color: <?php echo esc_attr($b['sidebar_text_active'] ?: '#ffffff'); ?>; }
+            .preview-sidebar-item.hover { background: rgba(255,255,255,0.05); color: <?php echo esc_attr($b['sidebar_text_hover'] ?: '#ffffff'); ?>; }
         </style>
-        
+
         <script>
         function toggleLoginBgOptions() {
             var type = document.getElementById('login_bg_type').value;
@@ -657,6 +735,83 @@ class Oversee_Branding {
             document.getElementById('login-bg-gradient-row').style.display = (type === 'gradient') ? '' : 'none';
             document.getElementById('login-bg-image-row').style.display = (type === 'image') ? '' : 'none';
         }
+
+        // Live Preview Updates
+        document.addEventListener('DOMContentLoaded', function() {
+            // Color picker change handler
+            function updatePreview() {
+                var primary = getColorValue('primary_color', '#f97316');
+                var secondary = getColorValue('secondary_color', '#1e293b');
+                var sidebarText = getColorValue('sidebar_text_color', '#94a3b8');
+                var sidebarHover = getColorValue('sidebar_text_hover', '#ffffff');
+                var sidebarActive = getColorValue('sidebar_text_active', '#ffffff');
+                var sidebarHeading = getColorValue('sidebar_heading_color', '#64748b');
+
+                // Update primary button
+                var primaryBtns = document.querySelectorAll('.preview-btn-primary');
+                primaryBtns.forEach(function(btn) {
+                    btn.style.backgroundColor = primary;
+                });
+
+                // Update link color
+                var links = document.querySelectorAll('.preview-link');
+                links.forEach(function(link) {
+                    link.style.color = primary;
+                });
+
+                // Update sidebar background
+                var sidebar = document.getElementById('preview-sidebar');
+                if (sidebar) sidebar.style.backgroundColor = secondary;
+
+                // Update sidebar text colors
+                var sidebarItems = document.querySelectorAll('.preview-sidebar-item:not(.active):not(.hover)');
+                sidebarItems.forEach(function(item) {
+                    item.style.color = sidebarText;
+                });
+
+                var sidebarActiveItem = document.querySelector('.preview-sidebar-item.active');
+                if (sidebarActiveItem) {
+                    sidebarActiveItem.style.backgroundColor = primary;
+                    sidebarActiveItem.style.color = sidebarActive;
+                }
+
+                var sidebarHoverItem = document.querySelector('.preview-sidebar-item.hover');
+                if (sidebarHoverItem) {
+                    sidebarHoverItem.style.color = sidebarHover;
+                }
+
+                var sidebarHeadingEl = document.getElementById('preview-sidebar-heading');
+                if (sidebarHeadingEl) sidebarHeadingEl.style.color = sidebarHeading;
+            }
+
+            function getColorValue(name, defaultVal) {
+                var input = document.querySelector('input[name="' + name + '"]');
+                if (!input) return defaultVal;
+                return input.value || defaultVal;
+            }
+
+            // Watch for color picker changes
+            var colorInputs = document.querySelectorAll('.oversee-color-picker');
+            colorInputs.forEach(function(input) {
+                // For wpColorPicker integration
+                if (typeof jQuery !== 'undefined' && jQuery.fn.wpColorPicker) {
+                    jQuery(input).wpColorPicker({
+                        change: function() {
+                            setTimeout(updatePreview, 50);
+                        },
+                        clear: function() {
+                            setTimeout(updatePreview, 50);
+                        }
+                    });
+                }
+                // Fallback for regular inputs
+                input.addEventListener('change', updatePreview);
+                input.addEventListener('input', updatePreview);
+            });
+
+            // Initial update
+            setTimeout(updatePreview, 100);
+        });
         </script>
         <?php
     }
