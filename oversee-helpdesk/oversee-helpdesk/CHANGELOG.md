@@ -5,6 +5,29 @@ All notable changes to Oversee Helpdesk will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.3-beta] - 2026-01-11
+
+### Changed
+- **Simplified White-Label System**
+  - Reduced color settings from 40+ to 21 essential options for easier configuration
+  - Organized settings into clear categories: Brand, Status, Public, Admin, Sidebar
+  - Simplified field names (e.g., `public_bg` instead of `public_bg_color`)
+
+### Improved
+- **Live Preview**
+  - Preview now shows all 4 contexts: General, Public, Admin, Login
+  - Real-time updates as colors are changed
+  - Preview panel sized appropriately (max-width 700px)
+
+- **CSS Variable System**
+  - Replaced remaining hardcoded hex colors in admin.css and public.css
+  - Auto-computed light/dark variants for status colors
+  - Added legacy aliases for backward compatibility
+
+### Fixed
+- Template loader updated to use new simplified field names
+- Consistent variable naming between branding class and CSS files
+
 ## [2.7.2-beta] - 2026-01-11
 
 ### Added
