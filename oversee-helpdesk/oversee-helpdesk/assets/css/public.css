@@ -7,11 +7,16 @@
    CSS DESIGN SYSTEM - All colors controlled via white-label settings
    ========================================================================== */
 :root {
-    /* ===== PRIMARY COLORS (overridden by white-label) ===== */
+    /* ===== BRAND COLORS (overridden by white-label) ===== */
     --primary: #f97316;
     --primary-hover: #ea580c;
     --primary-light: #ffedd5;
     --secondary: #1e293b;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-light: #dbeafe;
+    --link: #2563eb;
+    --link-hover: #1d4ed8;
 
     /* ===== STATUS COLORS (overridden by white-label) ===== */
     --success: #10b981;
@@ -34,13 +39,15 @@
     --public-text: #1f2937;
     --public-text-muted: #6b7280;
     --public-border: #e5e7eb;
+    --public-input-bg: #ffffff;
 
     /* ===== HERO COLORS (overridden by white-label) ===== */
     --hero-bg: #1e293b;
     --hero-text: #ffffff;
 
-    /* ===== COMPUTED/UTILITY ===== */
-    --text-inverse: #ffffff;
+    /* ===== GLOBAL (overridden by white-label) ===== */
+    --text-on-dark: #ffffff;
+    --text-inverse: var(--text-on-dark);
     --input-border: #d1d5db;
 
     /* ===== LEGACY ALIASES (for backward compatibility) ===== */
@@ -2575,10 +2582,10 @@ textarea.form-control {
     padding: 48px 24px; 
 }
 
-.ls-empty-icon { 
-    width: 80px; 
-    height: 80px; 
-    background: linear-gradient(135deg, #f1f5f9, #e2e8f0); 
+.ls-empty-icon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--public-surface-hover), var(--public-border));
     border-radius: 50%; 
     display: flex; 
     align-items: center; 
@@ -2900,10 +2907,10 @@ textarea.form-control {
     padding: 48px 24px; 
 }
 
-.success-icon { 
-    width: 72px; 
-    height: 72px; 
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); 
+.success-icon {
+    width: 72px;
+    height: 72px;
+    background: linear-gradient(135deg, var(--success-light) 0%, var(--success) 100%);
     border-radius: 50%; 
     display: flex; 
     align-items: center; 

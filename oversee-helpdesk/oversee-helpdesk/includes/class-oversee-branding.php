@@ -34,8 +34,10 @@ class Oversee_Branding {
         'favicon_url' => '',
 
         // ===== BRAND COLORS =====
-        'primary_color' => '#f97316',     // Primary brand color (buttons, links, accents)
-        'secondary_color' => '#1e293b',   // Secondary color (sidebar, dark areas)
+        'primary_color' => '#f97316',     // Primary brand color (buttons, CTAs)
+        'secondary_color' => '#1e293b',   // Secondary color (dark areas)
+        'accent_color' => '#3b82f6',      // Accent color (highlights, badges, special elements)
+        'link_color' => '#2563eb',        // Text link color
 
         // ===== STATUS COLORS =====
         'success_color' => '#10b981',     // Success states
@@ -46,9 +48,11 @@ class Oversee_Branding {
         // ===== PUBLIC PAGE COLORS =====
         'public_bg' => '#f9fafb',         // Page background
         'public_surface' => '#ffffff',    // Cards, panels
+        'public_surface_hover' => '#f8fafc', // Card hover state
         'public_text' => '#1f2937',       // Primary text
         'public_text_muted' => '#6b7280', // Secondary/muted text
         'public_border' => '#e5e7eb',     // Borders
+        'public_input_bg' => '#ffffff',   // Input field backgrounds
 
         // ===== PUBLIC HERO SECTION =====
         'hero_bg' => '#1e293b',           // Hero background
@@ -57,14 +61,20 @@ class Oversee_Branding {
         // ===== ADMIN PAGE COLORS =====
         'admin_bg' => '#f1f5f9',          // Page background
         'admin_surface' => '#ffffff',     // Cards, panels
+        'admin_surface_hover' => '#f8fafc', // Card hover state
         'admin_text' => '#1e293b',        // Primary text
         'admin_text_muted' => '#64748b',  // Secondary/muted text
         'admin_border' => '#e2e8f0',      // Borders
+        'admin_input_bg' => '#ffffff',    // Input field backgrounds
 
         // ===== SIDEBAR COLORS =====
         'sidebar_bg' => '#1e293b',        // Sidebar background
         'sidebar_text' => '#94a3b8',      // Nav item text
         'sidebar_text_active' => '#ffffff', // Active/hover text
+        'sidebar_heading' => '#64748b',   // Section headings
+
+        // ===== GLOBAL =====
+        'text_on_dark' => '#ffffff',      // Text on dark backgrounds
 
         // ===== LOGIN PAGE =====
         'login_bg_type' => 'gradient',
@@ -340,6 +350,15 @@ class Oversee_Branding {
         $primary_light = self::lighten_color($primary, 35);
         $primary_rgb = self::hex_to_rgb($primary);
 
+        // Accent color variants
+        $accent = $b['accent_color'];
+        $accent_hover = self::darken_color($accent, 10);
+        $accent_light = self::lighten_color($accent, 35);
+
+        // Link color variants
+        $link = $b['link_color'];
+        $link_hover = self::darken_color($link, 15);
+
         // Status color variants
         $success = $b['success_color'];
         $success_light = self::lighten_color($success, 40);
@@ -357,19 +376,22 @@ class Oversee_Branding {
         $info_light = self::lighten_color($info, 40);
         $info_dark = self::darken_color($info, 20);
 
-        // Surface variants
-        $admin_surface_hover = self::darken_color($b['admin_surface'], 2);
+        // Computed variants for backward compatibility
         $admin_border_light = self::lighten_color($b['admin_border'], 5);
-        $public_surface_hover = self::darken_color($b['public_surface'], 2);
 
         $css = '<style id="oversee-branding-vars">
 :root {
-    /* ===== PRIMARY COLORS ===== */
+    /* ===== BRAND COLORS ===== */
     --primary: ' . esc_attr($primary) . ';
     --primary-hover: ' . esc_attr($primary_hover) . ';
     --primary-light: ' . esc_attr($primary_light) . ';
     --primary-rgb: ' . $primary_rgb . ';
     --secondary: ' . esc_attr($b['secondary_color']) . ';
+    --accent: ' . esc_attr($accent) . ';
+    --accent-hover: ' . esc_attr($accent_hover) . ';
+    --accent-light: ' . esc_attr($accent_light) . ';
+    --link: ' . esc_attr($link) . ';
+    --link-hover: ' . esc_attr($link_hover) . ';
 
     /* ===== STATUS COLORS ===== */
     --success: ' . esc_attr($success) . ';
@@ -388,10 +410,11 @@ class Oversee_Branding {
     /* ===== PUBLIC PAGE COLORS ===== */
     --public-bg: ' . esc_attr($b['public_bg']) . ';
     --public-surface: ' . esc_attr($b['public_surface']) . ';
-    --public-surface-hover: ' . esc_attr($public_surface_hover) . ';
+    --public-surface-hover: ' . esc_attr($b['public_surface_hover']) . ';
     --public-text: ' . esc_attr($b['public_text']) . ';
     --public-text-muted: ' . esc_attr($b['public_text_muted']) . ';
     --public-border: ' . esc_attr($b['public_border']) . ';
+    --public-input-bg: ' . esc_attr($b['public_input_bg']) . ';
 
     /* ===== PUBLIC HERO ===== */
     --hero-bg: ' . esc_attr($b['hero_bg']) . ';
@@ -400,22 +423,27 @@ class Oversee_Branding {
     /* ===== ADMIN PAGE COLORS ===== */
     --admin-bg: ' . esc_attr($b['admin_bg']) . ';
     --admin-surface: ' . esc_attr($b['admin_surface']) . ';
-    --admin-surface-hover: ' . esc_attr($admin_surface_hover) . ';
+    --admin-surface-hover: ' . esc_attr($b['admin_surface_hover']) . ';
     --admin-text: ' . esc_attr($b['admin_text']) . ';
     --admin-text-muted: ' . esc_attr($b['admin_text_muted']) . ';
     --admin-border: ' . esc_attr($b['admin_border']) . ';
     --admin-border-light: ' . esc_attr($admin_border_light) . ';
+    --admin-input-bg: ' . esc_attr($b['admin_input_bg']) . ';
 
     /* ===== SIDEBAR COLORS ===== */
     --sidebar-bg: ' . esc_attr($b['sidebar_bg']) . ';
     --sidebar-text: ' . esc_attr($b['sidebar_text']) . ';
     --sidebar-text-active: ' . esc_attr($b['sidebar_text_active']) . ';
+    --sidebar-heading: ' . esc_attr($b['sidebar_heading']) . ';
+    --sidebar-hover: rgba(255, 255, 255, 0.05);
 
-    /* ===== COMPUTED VARIANTS ===== */
-    --text-inverse: #ffffff;
+    /* ===== GLOBAL ===== */
+    --text-on-dark: ' . esc_attr($b['text_on_dark']) . ';
+    --text-inverse: ' . esc_attr($b['text_on_dark']) . ';
     --shadow-color: rgba(0, 0, 0, 0.1);
     --shadow-primary: rgba(' . $primary_rgb . ', 0.25);
     --focus-ring: 0 0 0 3px rgba(' . $primary_rgb . ', 0.15);
+    --input-border: ' . esc_attr($b['admin_border']) . ';
 
     /* ===== LEGACY ALIASES (for backward compatibility) ===== */
     --color-primary: var(--primary);
@@ -592,12 +620,31 @@ class Oversee_Branding {
                                 <div class="color-field">
                                     <label>Primary Color</label>
                                     <input type="text" name="primary_color" value="<?php echo esc_attr($b['primary_color']); ?>" class="oversee-color-picker" data-default-color="#f97316">
-                                    <span class="color-hint">Buttons, links, active states</span>
+                                    <span class="color-hint">Buttons, CTAs, active states</span>
                                 </div>
                                 <div class="color-field">
                                     <label>Secondary Color</label>
                                     <input type="text" name="secondary_color" value="<?php echo esc_attr($b['secondary_color']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
-                                    <span class="color-hint">Dark areas, sidebar</span>
+                                    <span class="color-hint">Dark areas, headers</span>
+                                </div>
+                            </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Accent Color</label>
+                                    <input type="text" name="accent_color" value="<?php echo esc_attr($b['accent_color']); ?>" class="oversee-color-picker" data-default-color="#3b82f6">
+                                    <span class="color-hint">Highlights, badges, special elements</span>
+                                </div>
+                                <div class="color-field">
+                                    <label>Link Color</label>
+                                    <input type="text" name="link_color" value="<?php echo esc_attr($b['link_color']); ?>" class="oversee-color-picker" data-default-color="#2563eb">
+                                    <span class="color-hint">Text links (not buttons)</span>
+                                </div>
+                            </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Text on Dark</label>
+                                    <input type="text" name="text_on_dark" value="<?php echo esc_attr($b['text_on_dark']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
+                                    <span class="color-hint">Text color on dark backgrounds</span>
                                 </div>
                             </div>
                         </div>
@@ -674,6 +721,18 @@ class Oversee_Branding {
                                     <input type="text" name="public_surface" value="<?php echo esc_attr($b['public_surface']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
                                 </div>
                             </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Card Hover</label>
+                                    <input type="text" name="public_surface_hover" value="<?php echo esc_attr($b['public_surface_hover']); ?>" class="oversee-color-picker" data-default-color="#f8fafc">
+                                    <span class="color-hint">Card hover state</span>
+                                </div>
+                                <div class="color-field">
+                                    <label>Input Background</label>
+                                    <input type="text" name="public_input_bg" value="<?php echo esc_attr($b['public_input_bg']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
+                                    <span class="color-hint">Form fields</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="settings-group">
@@ -715,6 +774,18 @@ class Oversee_Branding {
                                 <div class="color-field">
                                     <label>Card Background</label>
                                     <input type="text" name="admin_surface" value="<?php echo esc_attr($b['admin_surface']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
+                                </div>
+                            </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Card Hover</label>
+                                    <input type="text" name="admin_surface_hover" value="<?php echo esc_attr($b['admin_surface_hover']); ?>" class="oversee-color-picker" data-default-color="#f8fafc">
+                                    <span class="color-hint">Card hover state</span>
+                                </div>
+                                <div class="color-field">
+                                    <label>Input Background</label>
+                                    <input type="text" name="admin_input_bg" value="<?php echo esc_attr($b['admin_input_bg']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
+                                    <span class="color-hint">Form fields</span>
                                 </div>
                             </div>
                         </div>
@@ -761,6 +832,11 @@ class Oversee_Branding {
                                 <div class="color-field">
                                     <label>Active/Hover Text</label>
                                     <input type="text" name="sidebar_text_active" value="<?php echo esc_attr($b['sidebar_text_active']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
+                                </div>
+                                <div class="color-field">
+                                    <label>Section Headings</label>
+                                    <input type="text" name="sidebar_heading" value="<?php echo esc_attr($b['sidebar_heading']); ?>" class="oversee-color-picker" data-default-color="#64748b">
+                                    <span class="color-hint">Nav section titles</span>
                                 </div>
                             </div>
                         </div>

@@ -8,11 +8,16 @@
    CSS DESIGN SYSTEM - All colors controlled via white-label settings
    ========================================================================== */
 :root {
-    /* ===== PRIMARY COLORS (overridden by white-label) ===== */
+    /* ===== BRAND COLORS (overridden by white-label) ===== */
     --primary: #f97316;
     --primary-hover: #ea580c;
     --primary-light: #ffedd5;
     --secondary: #1e293b;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-light: #dbeafe;
+    --link: #2563eb;
+    --link-hover: #1d4ed8;
 
     /* ===== STATUS COLORS (overridden by white-label) ===== */
     --success: #10b981;
@@ -36,17 +41,19 @@
     --admin-text-muted: #64748b;
     --admin-border: #e2e8f0;
     --admin-border-light: #f1f5f9;
+    --admin-input-bg: #ffffff;
 
     /* ===== SIDEBAR COLORS (overridden by white-label) ===== */
     --sidebar-bg: #1e293b;
     --sidebar-hover: rgba(255, 255, 255, 0.05);
     --sidebar-text: #94a3b8;
-    --sidebar-text-hover: #ffffff;
-    --sidebar-text-active: #ffffff;
+    --sidebar-text-hover: var(--text-on-dark);
+    --sidebar-text-active: var(--text-on-dark);
     --sidebar-heading: #64748b;
 
-    /* ===== COMPUTED/UTILITY ===== */
-    --text-inverse: #ffffff;
+    /* ===== GLOBAL (overridden by white-label) ===== */
+    --text-on-dark: #ffffff;
+    --text-inverse: var(--text-on-dark);
     --input-border: #d1d5db;
     --toggle-off: #cbd5e1;
 
@@ -1888,7 +1895,7 @@ tr:hover td {
 .feature-box h4 {
     font-size: 13px;
     font-weight: 600;
-    color: #c2410c;
+    color: var(--primary-hover);
     margin-bottom: 8px;
     display: flex;
     align-items: center;
@@ -1897,7 +1904,7 @@ tr:hover td {
 
 .feature-box p {
     font-size: 12px;
-    color: #9a3412;
+    color: var(--admin-text-muted);
     line-height: 1.6;
 }
 
@@ -2142,7 +2149,7 @@ tr:hover td {
    Login Page
    ========================================================================== */
 body.login-page {
-    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+    background: linear-gradient(135deg, var(--secondary) 0%, var(--sidebar-bg) 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -2737,7 +2744,7 @@ body.login-page {
 
 /* Embed Card */
 .embed-card {
-    background: linear-gradient(135deg, #fafbfc 0%, #f5f7f9 100%);
+    background: linear-gradient(135deg, var(--admin-surface-hover) 0%, var(--admin-bg) 100%);
     border: 1px solid var(--border-light);
     border-radius: 12px;
     overflow: hidden;
@@ -3681,7 +3688,7 @@ input.input-sm {
     align-items: center;
     gap: 20px;
     padding: 24px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: linear-gradient(135deg, var(--admin-surface-hover) 0%, var(--admin-bg) 100%);
     border: 1px solid var(--border-light);
     border-radius: 12px;
     margin-bottom: 20px;
@@ -4204,8 +4211,8 @@ input[type="number"].input-small { width: 80px; }
     color: var(--color-primary-hover);
 }
 .overview-stat-icon.icon-purple {
-    background: linear-gradient(135deg, #e9d5ff 0%, #d8b4fe 100%);
-    color: #9333ea;
+    background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+    color: var(--accent-hover);
 }
 .overview-stat-content {
     display: flex;
@@ -4313,11 +4320,11 @@ input[type="number"].input-small { width: 80px; }
 }
 .role-badge.admin {
     background: var(--warning-bg);
-    color: #b45309;
+    color: var(--warning-dark);
 }
 .role-badge.agent {
     background: var(--info-bg);
-    color: #1d4ed8;
+    color: var(--info-dark);
 }
 
 /* Status Indicator */
@@ -4553,7 +4560,7 @@ input[type="number"].input-small { width: 80px; }
     align-items: center;
     gap: 20px;
     padding: 24px;
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    background: linear-gradient(135deg, var(--admin-surface-hover) 0%, var(--admin-bg) 100%);
     border: 1px solid var(--border-light);
     border-radius: 12px;
     margin-bottom: 24px;
@@ -4764,11 +4771,11 @@ input[type="number"].input-small { width: 80px; }
    ========================================================================== */
 
 .avatar-color-0 { background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%); }
-.avatar-color-1 { background: linear-gradient(135deg, var(--info) 0%, var(--info) 100%); }
-.avatar-color-2 { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
-.avatar-color-3 { background: linear-gradient(135deg, var(--success) 0%, #059669 100%); }
-.avatar-color-4 { background: linear-gradient(135deg, var(--error) 0%, var(--error-text) 100%); }
-.avatar-color-5 { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); }
+.avatar-color-1 { background: linear-gradient(135deg, var(--info) 0%, var(--info-dark) 100%); }
+.avatar-color-2 { background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%); }
+.avatar-color-3 { background: linear-gradient(135deg, var(--success) 0%, var(--success-dark) 100%); }
+.avatar-color-4 { background: linear-gradient(135deg, var(--error) 0%, var(--error-dark) 100%); }
+.avatar-color-5 { background: linear-gradient(135deg, var(--secondary) 0%, var(--sidebar-bg) 100%); }
 
 /* ==========================================================================
    ADDITIONAL TABLE FIXES
@@ -5128,7 +5135,7 @@ select:focus,
 
 /* Main toggle item */
 .toggle-item-main {
-    background: linear-gradient(135deg, #fafbfc 0%, #f5f7f9 100%);
+    background: linear-gradient(135deg, var(--admin-surface-hover) 0%, var(--admin-bg) 100%);
     border-radius: 12px;
     padding: 20px !important;
     margin-bottom: 24px;

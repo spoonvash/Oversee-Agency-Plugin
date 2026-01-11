@@ -319,15 +319,25 @@ class Oversee_Template_Loader {
     $error_dark = Oversee_Branding::darken_color($branding['error_color'], 20);
     $info_light = Oversee_Branding::lighten_color($branding['info_color'], 40);
     $info_dark = Oversee_Branding::darken_color($branding['info_color'], 20);
-    $public_surface_hover = Oversee_Branding::darken_color($branding['public_surface'], 2);
+    // Accent and link color variants
+    $accent = $branding['accent_color'];
+    $accent_hover = Oversee_Branding::darken_color($accent, 10);
+    $accent_light = Oversee_Branding::lighten_color($accent, 35);
+    $link = $branding['link_color'];
+    $link_hover = Oversee_Branding::darken_color($link, 15);
     ?>
     <style id="oversee-branding-vars">
         :root {
-            /* Primary colors */
+            /* Brand colors */
             --primary: <?php echo esc_attr($primary); ?>;
             --primary-hover: <?php echo esc_attr($primary_hover); ?>;
             --primary-light: <?php echo esc_attr($primary_light); ?>;
             --secondary: <?php echo esc_attr($branding['secondary_color']); ?>;
+            --accent: <?php echo esc_attr($accent); ?>;
+            --accent-hover: <?php echo esc_attr($accent_hover); ?>;
+            --accent-light: <?php echo esc_attr($accent_light); ?>;
+            --link: <?php echo esc_attr($link); ?>;
+            --link-hover: <?php echo esc_attr($link_hover); ?>;
 
             /* Status colors */
             --success: <?php echo esc_attr($branding['success_color']); ?>;
@@ -346,18 +356,20 @@ class Oversee_Template_Loader {
             /* Public page colors */
             --public-bg: <?php echo esc_attr($branding['public_bg']); ?>;
             --public-surface: <?php echo esc_attr($branding['public_surface']); ?>;
-            --public-surface-hover: <?php echo esc_attr($public_surface_hover); ?>;
+            --public-surface-hover: <?php echo esc_attr($branding['public_surface_hover']); ?>;
             --public-text: <?php echo esc_attr($branding['public_text']); ?>;
             --public-text-muted: <?php echo esc_attr($branding['public_text_muted']); ?>;
             --public-border: <?php echo esc_attr($branding['public_border']); ?>;
+            --public-input-bg: <?php echo esc_attr($branding['public_input_bg']); ?>;
 
             /* Hero colors */
             --hero-bg: <?php echo esc_attr($branding['hero_bg']); ?>;
             --hero-text: <?php echo esc_attr($branding['hero_text']); ?>;
 
-            /* Utility */
-            --text-inverse: #ffffff;
-            --input-border: #d1d5db;
+            /* Global */
+            --text-on-dark: <?php echo esc_attr($branding['text_on_dark']); ?>;
+            --text-inverse: var(--text-on-dark);
+            --input-border: <?php echo esc_attr($branding['public_border']); ?>;
 
             /* Legacy aliases */
             --bg-body: var(--public-bg);
@@ -530,12 +542,18 @@ class Oversee_Template_Loader {
             'warning_color' => Oversee_Branding::get('warning_color', '#f59e0b'),
             'error_color' => Oversee_Branding::get('error_color', '#ef4444'),
             'info_color' => Oversee_Branding::get('info_color', '#3b82f6'),
+            // Brand colors
+            'accent_color' => Oversee_Branding::get('accent_color', '#3b82f6'),
+            'link_color' => Oversee_Branding::get('link_color', '#2563eb'),
+            'text_on_dark' => Oversee_Branding::get('text_on_dark', '#ffffff'),
             // Public page colors (simplified names)
             'public_bg' => Oversee_Branding::get('public_bg', '#f9fafb'),
             'public_surface' => Oversee_Branding::get('public_surface', '#ffffff'),
+            'public_surface_hover' => Oversee_Branding::get('public_surface_hover', '#f8fafc'),
             'public_text' => Oversee_Branding::get('public_text', '#1f2937'),
             'public_text_muted' => Oversee_Branding::get('public_text_muted', '#6b7280'),
             'public_border' => Oversee_Branding::get('public_border', '#e5e7eb'),
+            'public_input_bg' => Oversee_Branding::get('public_input_bg', '#ffffff'),
             // Hero colors
             'hero_bg' => Oversee_Branding::get('hero_bg', '#1e293b'),
             'hero_text' => Oversee_Branding::get('hero_text', '#ffffff'),
