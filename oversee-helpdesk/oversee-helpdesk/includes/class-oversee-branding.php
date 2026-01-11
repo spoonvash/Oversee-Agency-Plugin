@@ -103,27 +103,32 @@ class Oversee_Branding {
      */
     public static function maybe_migrate_settings() {
         // Check if migration already done
-        if (get_option('oversee_branding_migrated_273')) {
+        if (get_option('oversee_branding_migrated_274')) {
             return;
         }
 
-        // Map of old field names to new field names
+        // Map of old field names to new field names (from v2.7.2 and earlier)
         $migrations = [
+            // Public page colors
             'oversee_public_bg_color' => 'oversee_public_bg',
             'oversee_public_surface_color' => 'oversee_public_surface',
             'oversee_public_text_color' => 'oversee_public_text',
-            'oversee_public_text_muted_color' => 'oversee_public_text_muted',
+            'oversee_public_text_muted' => 'oversee_public_text_muted',  // Was NOT _color suffix
             'oversee_public_border_color' => 'oversee_public_border',
+            // Hero section
             'oversee_hero_bg_color' => 'oversee_hero_bg',
             'oversee_hero_text_color' => 'oversee_hero_text',
+            // Admin page colors
             'oversee_admin_bg_color' => 'oversee_admin_bg',
             'oversee_admin_surface_color' => 'oversee_admin_surface',
             'oversee_admin_text_color' => 'oversee_admin_text',
-            'oversee_admin_text_muted_color' => 'oversee_admin_text_muted',
+            'oversee_admin_text_secondary' => 'oversee_admin_text_muted',  // Was text_secondary
+            'oversee_admin_text_muted' => 'oversee_admin_text_muted',      // Also check this
             'oversee_admin_border_color' => 'oversee_admin_border',
-            'oversee_sidebar_bg_color' => 'oversee_sidebar_bg',
+            // Sidebar - use secondary_color as sidebar_bg (there was no sidebar_bg before)
+            'oversee_secondary_color' => 'oversee_sidebar_bg',
             'oversee_sidebar_text_color' => 'oversee_sidebar_text',
-            'oversee_sidebar_text_active_color' => 'oversee_sidebar_text_active',
+            'oversee_sidebar_text_active' => 'oversee_sidebar_text_active',  // Was NOT _color suffix
         ];
 
         $migrated = false;
@@ -141,7 +146,7 @@ class Oversee_Branding {
         }
 
         // Mark migration as complete
-        update_option('oversee_branding_migrated_273', '1');
+        update_option('oversee_branding_migrated_274', '1');
 
         if ($migrated) {
             error_log('Oversee Helpdesk: Migrated branding settings to v2.7.3 format');
