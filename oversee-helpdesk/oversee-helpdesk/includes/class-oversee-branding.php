@@ -1,12 +1,11 @@
 <?php
 /**
- * Branding Management - Enhanced
+ * Branding Management - Simplified White-Label System
  *
  * Handles comprehensive white-label branding for:
  * - Public support pages (header, footer, colors)
  * - Standalone admin portal (sidebar, colors)
  * - Login page customization
- * - Email templates
  *
  * @package Oversee_Helpdesk
  * @since 2.1.0
@@ -19,7 +18,7 @@ if (!defined('ABSPATH')) {
 class Oversee_Branding {
 
     /**
-     * Default branding values organized by section
+     * Default branding values - Simplified color system
      */
     private static $defaults = [
         // Company Info
@@ -31,59 +30,56 @@ class Oversee_Branding {
         // Logo & Images
         'logo_url' => '',
         'logo_width' => '150',
-        'logo_dark_url' => '',  // For dark backgrounds
+        'logo_dark_url' => '',
         'favicon_url' => '',
 
-        // Brand Colors
-        'primary_color' => '#f97316',
-        'primary_hover' => '#ea580c',
-        'secondary_color' => '#1e293b',
-        'accent_color' => '#3b82f6',
-        'success_color' => '#10b981',
-        'warning_color' => '#f59e0b',
-        'error_color' => '#ef4444',
+        // ===== BRAND COLORS =====
+        'primary_color' => '#f97316',     // Primary brand color (buttons, links, accents)
+        'secondary_color' => '#1e293b',   // Secondary color (sidebar, dark areas)
 
-        // Public/KB Page Colors
-        'public_bg_color' => '#f9fafb',          // Main page background
-        'public_surface_color' => '#ffffff',     // Cards, panels
-        'public_text_color' => '#1f2937',        // Primary text
-        'public_text_muted' => '#6b7280',        // Secondary text
-        'public_border_color' => '#e5e7eb',      // Borders
-        'hero_bg_color' => '#1e293b',            // Hero section background
-        'hero_text_color' => '#ffffff',          // Hero text
+        // ===== STATUS COLORS =====
+        'success_color' => '#10b981',     // Success states
+        'warning_color' => '#f59e0b',     // Warning states
+        'error_color' => '#ef4444',       // Error states
+        'info_color' => '#3b82f6',        // Info states
 
-        // Admin Page Colors
-        'admin_bg_color' => '#f1f5f9',           // Main admin background
-        'admin_surface_color' => '#ffffff',      // Admin cards, panels
-        'admin_surface_hover' => '#f8fafc',      // Hover state for surfaces
-        'admin_surface_muted' => '#f8fafc',      // Muted surfaces (bulk actions, etc)
-        'admin_text_color' => '#1e293b',         // Admin primary text
-        'admin_text_secondary' => '#64748b',     // Admin secondary text
-        'admin_text_muted' => '#9ca3af',         // Admin muted/disabled text
-        'admin_border_color' => '#e2e8f0',       // Admin borders
-        'admin_border_light' => '#f1f5f9',       // Admin light borders/dividers
-        'admin_input_border' => '#d1d5db',       // Input field borders
+        // ===== PUBLIC PAGE COLORS =====
+        'public_bg' => '#f9fafb',         // Page background
+        'public_surface' => '#ffffff',    // Cards, panels
+        'public_text' => '#1f2937',       // Primary text
+        'public_text_muted' => '#6b7280', // Secondary/muted text
+        'public_border' => '#e5e7eb',     // Borders
 
-        // Sidebar/Admin Nav Colors
-        'sidebar_text_color' => '#94a3b8',       // Muted text for nav items
-        'sidebar_text_hover' => '#ffffff',       // Text on hover
-        'sidebar_text_active' => '#ffffff',      // Active nav item text
-        'sidebar_heading_color' => '#64748b',    // Section headings
+        // ===== PUBLIC HERO SECTION =====
+        'hero_bg' => '#1e293b',           // Hero background
+        'hero_text' => '#ffffff',         // Hero text
 
-        // Login Page
-        'login_bg_type' => 'gradient',  // gradient, color, image
+        // ===== ADMIN PAGE COLORS =====
+        'admin_bg' => '#f1f5f9',          // Page background
+        'admin_surface' => '#ffffff',     // Cards, panels
+        'admin_text' => '#1e293b',        // Primary text
+        'admin_text_muted' => '#64748b',  // Secondary/muted text
+        'admin_border' => '#e2e8f0',      // Borders
+
+        // ===== SIDEBAR COLORS =====
+        'sidebar_bg' => '#1e293b',        // Sidebar background
+        'sidebar_text' => '#94a3b8',      // Nav item text
+        'sidebar_text_active' => '#ffffff', // Active/hover text
+
+        // ===== LOGIN PAGE =====
+        'login_bg_type' => 'gradient',
         'login_bg_color' => '#1e293b',
         'login_bg_gradient' => 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)',
         'login_bg_image' => '',
         'login_welcome_title' => 'Welcome Back',
         'login_welcome_message' => 'Sign in to access your support dashboard.',
         'login_show_logo' => '1',
-        'login_logo_position' => 'both',  // form, sidebar, both
+        'login_logo_position' => 'both',
 
         // Footer
         'footer_text' => '',
         'footer_copyright' => '© {year} {company}. All rights reserved.',
-        'footer_links' => '',  // JSON array of {label, url}
+        'footer_links' => '',
 
         // Custom
         'custom_css' => '',
@@ -95,9 +91,6 @@ class Oversee_Branding {
      */
     public static function init() {
         add_action('admin_init', [__CLASS__, 'register_settings']);
-
-        // Don't output CSS via wp_head - Template Loader handles public pages
-        // Only output for WP admin pages where plugin is active
         add_action('admin_head', [__CLASS__, 'output_admin_css'], 5);
     }
 
@@ -147,10 +140,9 @@ class Oversee_Branding {
                     'logo_width' => $all['logo_width'],
                     'primary_color' => $all['primary_color'],
                     'secondary_color' => $all['secondary_color'],
-                    'sidebar_text_color' => $all['sidebar_text_color'],
-                    'sidebar_text_hover' => $all['sidebar_text_hover'],
+                    'sidebar_bg' => $all['sidebar_bg'],
+                    'sidebar_text' => $all['sidebar_text'],
                     'sidebar_text_active' => $all['sidebar_text_active'],
-                    'sidebar_heading_color' => $all['sidebar_heading_color'],
                 ];
             case 'login':
                 return [
@@ -223,33 +215,26 @@ class Oversee_Branding {
             'logo_dark_url' => 'esc_url_raw',
             'favicon_url' => 'esc_url_raw',
             'primary_color' => 'sanitize_hex_color',
-            'primary_hover' => 'sanitize_hex_color',
             'secondary_color' => 'sanitize_hex_color',
-            'accent_color' => 'sanitize_hex_color',
             'success_color' => 'sanitize_hex_color',
             'warning_color' => 'sanitize_hex_color',
             'error_color' => 'sanitize_hex_color',
-            'public_bg_color' => 'sanitize_hex_color',
-            'public_surface_color' => 'sanitize_hex_color',
-            'public_text_color' => 'sanitize_hex_color',
+            'info_color' => 'sanitize_hex_color',
+            'public_bg' => 'sanitize_hex_color',
+            'public_surface' => 'sanitize_hex_color',
+            'public_text' => 'sanitize_hex_color',
             'public_text_muted' => 'sanitize_hex_color',
-            'public_border_color' => 'sanitize_hex_color',
-            'hero_bg_color' => 'sanitize_hex_color',
-            'hero_text_color' => 'sanitize_hex_color',
-            'admin_bg_color' => 'sanitize_hex_color',
-            'admin_surface_color' => 'sanitize_hex_color',
-            'admin_surface_hover' => 'sanitize_hex_color',
-            'admin_surface_muted' => 'sanitize_hex_color',
-            'admin_text_color' => 'sanitize_hex_color',
-            'admin_text_secondary' => 'sanitize_hex_color',
+            'public_border' => 'sanitize_hex_color',
+            'hero_bg' => 'sanitize_hex_color',
+            'hero_text' => 'sanitize_hex_color',
+            'admin_bg' => 'sanitize_hex_color',
+            'admin_surface' => 'sanitize_hex_color',
+            'admin_text' => 'sanitize_hex_color',
             'admin_text_muted' => 'sanitize_hex_color',
-            'admin_border_color' => 'sanitize_hex_color',
-            'admin_border_light' => 'sanitize_hex_color',
-            'admin_input_border' => 'sanitize_hex_color',
-            'sidebar_text_color' => 'sanitize_hex_color',
-            'sidebar_text_hover' => 'sanitize_hex_color',
+            'admin_border' => 'sanitize_hex_color',
+            'sidebar_bg' => 'sanitize_hex_color',
+            'sidebar_text' => 'sanitize_hex_color',
             'sidebar_text_active' => 'sanitize_hex_color',
-            'sidebar_heading_color' => 'sanitize_hex_color',
             'login_bg_type' => 'sanitize_text_field',
             'login_bg_color' => 'sanitize_hex_color',
             'login_bg_gradient' => 'sanitize_text_field',
@@ -271,122 +256,121 @@ class Oversee_Branding {
                 update_option('oversee_' . $key, $value);
             }
         }
-
-        // Auto-generate primary_hover if not set
-        if (!empty($data['primary_color'])) {
-            $hover = self::darken_color($data['primary_color'], 10);
-            update_option('oversee_primary_hover', $hover);
-        }
     }
 
     /**
      * Output CSS for WP admin pages
      */
     public static function output_admin_css() {
-        // Only on our plugin pages
         $screen = get_current_screen();
         if (!$screen || strpos($screen->id, 'oversee') === false) {
             return;
         }
-
         echo self::get_css_variables();
     }
 
     /**
-     * Get CSS variables block
+     * Get CSS variables block - Comprehensive variable system
      */
     public static function get_css_variables() {
         $b = self::get_all();
-        $primary = $b['primary_color'];
-        $primary_hover = $b['primary_hover'] ?: self::darken_color($primary, 10);
-        $primary_light = self::lighten_color($primary, 35);
-        $primary_lighter = self::lighten_color($primary, 42);
 
-        // Convert hex to RGB for shadow/transparency support
+        // Primary color variants
+        $primary = $b['primary_color'];
+        $primary_hover = self::darken_color($primary, 10);
+        $primary_light = self::lighten_color($primary, 35);
         $primary_rgb = self::hex_to_rgb($primary);
+
+        // Status color variants
+        $success = $b['success_color'];
+        $success_light = self::lighten_color($success, 40);
+        $success_dark = self::darken_color($success, 20);
+
+        $warning = $b['warning_color'];
+        $warning_light = self::lighten_color($warning, 40);
+        $warning_dark = self::darken_color($warning, 20);
+
+        $error = $b['error_color'];
+        $error_light = self::lighten_color($error, 40);
+        $error_dark = self::darken_color($error, 20);
+
+        $info = $b['info_color'];
+        $info_light = self::lighten_color($info, 40);
+        $info_dark = self::darken_color($info, 20);
+
+        // Surface variants
+        $admin_surface_hover = self::darken_color($b['admin_surface'], 2);
+        $admin_border_light = self::lighten_color($b['admin_border'], 5);
+        $public_surface_hover = self::darken_color($b['public_surface'], 2);
 
         $css = '<style id="oversee-branding-vars">
 :root {
-    /* Primary color system */
-    --color-primary: ' . esc_attr($primary) . ';
-    --color-primary-hover: ' . esc_attr($primary_hover) . ';
-    --color-primary-active: ' . esc_attr(self::darken_color($primary, 20)) . ';
-    --color-primary-light: ' . esc_attr($primary_light) . ';
-    --color-primary-lighter: ' . esc_attr($primary_lighter) . ';
+    /* ===== PRIMARY COLORS ===== */
+    --primary: ' . esc_attr($primary) . ';
+    --primary-hover: ' . esc_attr($primary_hover) . ';
+    --primary-light: ' . esc_attr($primary_light) . ';
+    --primary-rgb: ' . $primary_rgb . ';
+    --secondary: ' . esc_attr($b['secondary_color']) . ';
 
-    /* Primary shadows and focus rings */
-    --shadow-primary-sm: 0 2px 4px rgba(' . $primary_rgb . ', 0.25);
-    --shadow-primary: 0 4px 12px rgba(' . $primary_rgb . ', 0.3);
-    --shadow-primary-lg: 0 8px 24px rgba(' . $primary_rgb . ', 0.2);
-    --focus-ring-primary: 0 0 0 3px rgba(' . $primary_rgb . ', 0.15);
+    /* ===== STATUS COLORS ===== */
+    --success: ' . esc_attr($success) . ';
+    --success-light: ' . esc_attr($success_light) . ';
+    --success-dark: ' . esc_attr($success_dark) . ';
+    --warning: ' . esc_attr($warning) . ';
+    --warning-light: ' . esc_attr($warning_light) . ';
+    --warning-dark: ' . esc_attr($warning_dark) . ';
+    --error: ' . esc_attr($error) . ';
+    --error-light: ' . esc_attr($error_light) . ';
+    --error-dark: ' . esc_attr($error_dark) . ';
+    --info: ' . esc_attr($info) . ';
+    --info-light: ' . esc_attr($info_light) . ';
+    --info-dark: ' . esc_attr($info_dark) . ';
 
-    /* Legacy aliases */
-    --oversee-primary: var(--color-primary);
-    --oversee-primary-hover: var(--color-primary-hover);
-    --primary: var(--color-primary);
-    --primary-hover: var(--color-primary-hover);
-    --primary-light: var(--color-primary-lighter);
+    /* ===== PUBLIC PAGE COLORS ===== */
+    --public-bg: ' . esc_attr($b['public_bg']) . ';
+    --public-surface: ' . esc_attr($b['public_surface']) . ';
+    --public-surface-hover: ' . esc_attr($public_surface_hover) . ';
+    --public-text: ' . esc_attr($b['public_text']) . ';
+    --public-text-muted: ' . esc_attr($b['public_text_muted']) . ';
+    --public-border: ' . esc_attr($b['public_border']) . ';
 
-    /* Secondary/Sidebar colors */
-    --oversee-secondary: ' . esc_attr($b['secondary_color']) . ';
-    --oversee-accent: ' . esc_attr($b['accent_color']) . ';
-    --secondary: var(--oversee-secondary);
-    --accent: var(--oversee-accent);
-    --sidebar-bg: var(--oversee-secondary);
+    /* ===== PUBLIC HERO ===== */
+    --hero-bg: ' . esc_attr($b['hero_bg']) . ';
+    --hero-text: ' . esc_attr($b['hero_text']) . ';
 
-    /* Sidebar text colors */
-    --sidebar-text: ' . esc_attr($b['sidebar_text_color'] ?: '#94a3b8') . ';
-    --sidebar-text-hover: ' . esc_attr($b['sidebar_text_hover'] ?: '#ffffff') . ';
-    --sidebar-text-active: ' . esc_attr($b['sidebar_text_active'] ?: '#ffffff') . ';
-    --sidebar-heading: ' . esc_attr($b['sidebar_heading_color'] ?: '#64748b') . ';
+    /* ===== ADMIN PAGE COLORS ===== */
+    --admin-bg: ' . esc_attr($b['admin_bg']) . ';
+    --admin-surface: ' . esc_attr($b['admin_surface']) . ';
+    --admin-surface-hover: ' . esc_attr($admin_surface_hover) . ';
+    --admin-text: ' . esc_attr($b['admin_text']) . ';
+    --admin-text-muted: ' . esc_attr($b['admin_text_muted']) . ';
+    --admin-border: ' . esc_attr($b['admin_border']) . ';
+    --admin-border-light: ' . esc_attr($admin_border_light) . ';
 
-    /* Status colors */
-    --oversee-success: ' . esc_attr($b['success_color']) . ';
-    --oversee-warning: ' . esc_attr($b['warning_color']) . ';
-    --oversee-error: ' . esc_attr($b['error_color']) . ';
-    --success: var(--oversee-success);
-    --warning: var(--oversee-warning);
-    --error: var(--oversee-error);
+    /* ===== SIDEBAR COLORS ===== */
+    --sidebar-bg: ' . esc_attr($b['sidebar_bg']) . ';
+    --sidebar-text: ' . esc_attr($b['sidebar_text']) . ';
+    --sidebar-text-active: ' . esc_attr($b['sidebar_text_active']) . ';
 
-    /* Public/KB page colors */
-    --color-background: ' . esc_attr($b['public_bg_color'] ?: '#f9fafb') . ';
-    --color-surface: ' . esc_attr($b['public_surface_color'] ?: '#ffffff') . ';
-    --color-text-primary: ' . esc_attr($b['public_text_color'] ?: '#1f2937') . ';
-    --color-text-secondary: ' . esc_attr($b['public_text_muted'] ?: '#6b7280') . ';
-    --color-border: ' . esc_attr($b['public_border_color'] ?: '#e5e7eb') . ';
-    --bg-light: var(--color-background);
-    --bg-white: var(--color-surface);
-    --text-primary: var(--color-text-primary);
-    --text-secondary: var(--color-text-secondary);
-    --text-muted: var(--color-text-secondary);
-    --border: var(--color-border);
-    --border-color: var(--color-border);
+    /* ===== COMPUTED VARIANTS ===== */
+    --text-inverse: #ffffff;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --shadow-primary: rgba(' . $primary_rgb . ', 0.25);
+    --focus-ring: 0 0 0 3px rgba(' . $primary_rgb . ', 0.15);
 
-    /* Hero section */
-    --hero-bg: ' . esc_attr($b['hero_bg_color'] ?: '#1e293b') . ';
-    --hero-text: ' . esc_attr($b['hero_text_color'] ?: '#ffffff') . ';
-    --hero-gradient: linear-gradient(135deg, ' . esc_attr($b['hero_bg_color'] ?: '#1e293b') . ' 0%, ' . esc_attr(self::darken_color($b['hero_bg_color'] ?: '#1e293b', 20)) . ' 100%);
-
-    /* Admin page colors - comprehensive set for admin.css */
-    --admin-bg: ' . esc_attr($b['admin_bg_color'] ?: '#f1f5f9') . ';
-    --admin-surface: ' . esc_attr($b['admin_surface_color'] ?: '#ffffff') . ';
-    --admin-surface-hover: ' . esc_attr($b['admin_surface_hover'] ?: '#f8fafc') . ';
-    --admin-surface-muted: ' . esc_attr($b['admin_surface_muted'] ?: '#f8fafc') . ';
-    --admin-text: ' . esc_attr($b['admin_text_color'] ?: '#1e293b') . ';
-    --admin-text-secondary: ' . esc_attr($b['admin_text_secondary'] ?: '#64748b') . ';
-    --admin-text-muted: ' . esc_attr($b['admin_text_muted'] ?: '#9ca3af') . ';
-    --admin-border: ' . esc_attr($b['admin_border_color'] ?: '#e2e8f0') . ';
-    --admin-border-light: ' . esc_attr($b['admin_border_light'] ?: '#f1f5f9') . ';
-    --admin-input-border: ' . esc_attr($b['admin_input_border'] ?: '#d1d5db') . ';
-
-    /* Admin body/card/text aliases for admin.css compatibility */
-    --body-bg: ' . esc_attr($b['admin_bg_color'] ?: '#f1f5f9') . ';
-    --card-bg: ' . esc_attr($b['admin_surface_color'] ?: '#ffffff') . ';
-    --border-color: ' . esc_attr($b['admin_border_color'] ?: '#e2e8f0') . ';
-    --border-light: ' . esc_attr($b['admin_border_light'] ?: '#f1f5f9') . ';
-    --text-primary: ' . esc_attr($b['admin_text_color'] ?: '#1e293b') . ';
-    --text-secondary: ' . esc_attr($b['admin_text_secondary'] ?: '#64748b') . ';
-    --text-muted: ' . esc_attr($b['admin_text_muted'] ?: '#9ca3af') . ';
+    /* ===== LEGACY ALIASES (for backward compatibility) ===== */
+    --color-primary: var(--primary);
+    --color-primary-hover: var(--primary-hover);
+    --oversee-primary: var(--primary);
+    --oversee-secondary: var(--secondary);
+    --oversee-success: var(--success);
+    --oversee-warning: var(--warning);
+    --oversee-error: var(--error);
+    --body-bg: var(--admin-bg);
+    --card-bg: var(--admin-surface);
+    --border-color: var(--admin-border);
+    --text-primary: var(--admin-text);
+    --text-secondary: var(--admin-text-muted);
 }
 </style>';
 
@@ -444,7 +428,7 @@ class Oversee_Branding {
     }
 
     /**
-     * Render the branding settings form (for WP admin Settings page)
+     * Render the branding settings form
      */
     public static function render_settings_form() {
         $b = self::get_all();
@@ -455,16 +439,16 @@ class Oversee_Branding {
                 <div class="branding-controls">
                     <!-- Section Tabs -->
                     <div class="section-tabs">
-                        <button type="button" class="section-tab active" data-section="general">
+                        <button type="button" class="section-tab active" data-section="general" data-preview="general">
                             <i class="dashicons dashicons-admin-settings"></i> General
                         </button>
-                        <button type="button" class="section-tab" data-section="kb">
-                            <i class="dashicons dashicons-welcome-widgets-menus"></i> Knowledge Base
+                        <button type="button" class="section-tab" data-section="public" data-preview="public">
+                            <i class="dashicons dashicons-welcome-widgets-menus"></i> Public Pages
                         </button>
-                        <button type="button" class="section-tab" data-section="admin">
+                        <button type="button" class="section-tab" data-section="admin" data-preview="admin">
                             <i class="dashicons dashicons-dashboard"></i> Admin Portal
                         </button>
-                        <button type="button" class="section-tab" data-section="login">
+                        <button type="button" class="section-tab" data-section="login" data-preview="login">
                             <i class="dashicons dashicons-lock"></i> Login Page
                         </button>
                     </div>
@@ -522,9 +506,6 @@ class Oversee_Branding {
                                         <?php endif; ?>
                                     </div>
                                     <button type="button" class="button button-small" id="upload-logo-dark-btn">Upload</button>
-                                    <?php if ($b['logo_dark_url']): ?>
-                                        <button type="button" class="button button-small" id="remove-logo-dark-btn">Remove</button>
-                                    <?php endif; ?>
                                 </div>
                                 <div class="logo-upload-item">
                                     <label>Favicon</label>
@@ -547,23 +528,25 @@ class Oversee_Branding {
 
                         <div class="settings-group">
                             <h4>Brand Colors</h4>
+                            <p class="group-description">These colors are used across all pages for buttons, links, and accents.</p>
                             <div class="color-row">
                                 <div class="color-field">
-                                    <label>Primary</label>
+                                    <label>Primary Color</label>
                                     <input type="text" name="primary_color" value="<?php echo esc_attr($b['primary_color']); ?>" class="oversee-color-picker" data-default-color="#f97316">
-                                    <span class="color-hint">Buttons, links</span>
+                                    <span class="color-hint">Buttons, links, active states</span>
                                 </div>
                                 <div class="color-field">
-                                    <label>Accent</label>
-                                    <input type="text" name="accent_color" value="<?php echo esc_attr($b['accent_color']); ?>" class="oversee-color-picker" data-default-color="#3b82f6">
-                                    <span class="color-hint">Info, secondary</span>
+                                    <label>Secondary Color</label>
+                                    <input type="text" name="secondary_color" value="<?php echo esc_attr($b['secondary_color']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
+                                    <span class="color-hint">Dark areas, sidebar</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="settings-group">
                             <h4>Status Colors</h4>
-                            <div class="color-row three-col">
+                            <p class="group-description">Used for alerts, badges, and status indicators.</p>
+                            <div class="color-row">
                                 <div class="color-field">
                                     <label>Success</label>
                                     <input type="text" name="success_color" value="<?php echo esc_attr($b['success_color']); ?>" class="oversee-color-picker" data-default-color="#10b981">
@@ -572,9 +555,15 @@ class Oversee_Branding {
                                     <label>Warning</label>
                                     <input type="text" name="warning_color" value="<?php echo esc_attr($b['warning_color']); ?>" class="oversee-color-picker" data-default-color="#f59e0b">
                                 </div>
+                            </div>
+                            <div class="color-row">
                                 <div class="color-field">
                                     <label>Error</label>
                                     <input type="text" name="error_color" value="<?php echo esc_attr($b['error_color']); ?>" class="oversee-color-picker" data-default-color="#ef4444">
+                                </div>
+                                <div class="color-field">
+                                    <label>Info</label>
+                                    <input type="text" name="info_color" value="<?php echo esc_attr($b['info_color']); ?>" class="oversee-color-picker" data-default-color="#3b82f6">
                                 </div>
                             </div>
                         </div>
@@ -586,10 +575,6 @@ class Oversee_Branding {
                                 <input type="text" name="footer_copyright" value="<?php echo esc_attr($b['footer_copyright']); ?>" class="regular-text">
                                 <span class="field-hint">Use {year} and {company} as placeholders</span>
                             </div>
-                            <div class="form-row">
-                                <label>Additional Footer HTML</label>
-                                <textarea name="footer_text" rows="2" class="regular-text"><?php echo esc_textarea($b['footer_text']); ?></textarea>
-                            </div>
                         </div>
 
                         <div class="settings-group">
@@ -600,32 +585,34 @@ class Oversee_Branding {
                         </div>
                     </div>
 
-                    <!-- Knowledge Base Section -->
-                    <div class="section-content" id="section-kb">
+                    <!-- Public Pages Section -->
+                    <div class="section-content" id="section-public">
                         <div class="settings-group">
                             <h4>Hero Section</h4>
+                            <p class="group-description">The hero appears at the top of the knowledge base.</p>
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Background</label>
-                                    <input type="text" name="hero_bg_color" value="<?php echo esc_attr($b['hero_bg_color']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
+                                    <input type="text" name="hero_bg" value="<?php echo esc_attr($b['hero_bg']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
                                 </div>
                                 <div class="color-field">
                                     <label>Text Color</label>
-                                    <input type="text" name="hero_text_color" value="<?php echo esc_attr($b['hero_text_color']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
+                                    <input type="text" name="hero_text" value="<?php echo esc_attr($b['hero_text']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
                                 </div>
                             </div>
                         </div>
 
                         <div class="settings-group">
-                            <h4>Page Background</h4>
+                            <h4>Page Colors</h4>
+                            <p class="group-description">Background and surface colors for public pages.</p>
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Page Background</label>
-                                    <input type="text" name="public_bg_color" value="<?php echo esc_attr($b['public_bg_color']); ?>" class="oversee-color-picker" data-default-color="#f9fafb">
+                                    <input type="text" name="public_bg" value="<?php echo esc_attr($b['public_bg']); ?>" class="oversee-color-picker" data-default-color="#f9fafb">
                                 </div>
                                 <div class="color-field">
                                     <label>Card Background</label>
-                                    <input type="text" name="public_surface_color" value="<?php echo esc_attr($b['public_surface_color']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
+                                    <input type="text" name="public_surface" value="<?php echo esc_attr($b['public_surface']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
                                 </div>
                             </div>
                         </div>
@@ -635,7 +622,7 @@ class Oversee_Branding {
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Primary Text</label>
-                                    <input type="text" name="public_text_color" value="<?php echo esc_attr($b['public_text_color']); ?>" class="oversee-color-picker" data-default-color="#1f2937">
+                                    <input type="text" name="public_text" value="<?php echo esc_attr($b['public_text']); ?>" class="oversee-color-picker" data-default-color="#1f2937">
                                 </div>
                                 <div class="color-field">
                                     <label>Muted Text</label>
@@ -645,12 +632,12 @@ class Oversee_Branding {
                         </div>
 
                         <div class="settings-group">
-                            <h4>Borders & Dividers</h4>
+                            <h4>Borders</h4>
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Border Color</label>
-                                    <input type="text" name="public_border_color" value="<?php echo esc_attr($b['public_border_color']); ?>" class="oversee-color-picker" data-default-color="#e5e7eb">
-                                    <span class="color-hint">Used for borders and dividers</span>
+                                    <input type="text" name="public_border" value="<?php echo esc_attr($b['public_border']); ?>" class="oversee-color-picker" data-default-color="#e5e7eb">
+                                    <span class="color-hint">Cards, dividers, inputs</span>
                                 </div>
                             </div>
                         </div>
@@ -659,31 +646,16 @@ class Oversee_Branding {
                     <!-- Admin Portal Section -->
                     <div class="section-content" id="section-admin">
                         <div class="settings-group">
-                            <h4>Page Background</h4>
+                            <h4>Page Colors</h4>
+                            <p class="group-description">Background and surface colors for the admin portal.</p>
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Page Background</label>
-                                    <input type="text" name="admin_bg_color" value="<?php echo esc_attr($b['admin_bg_color']); ?>" class="oversee-color-picker" data-default-color="#f1f5f9">
+                                    <input type="text" name="admin_bg" value="<?php echo esc_attr($b['admin_bg']); ?>" class="oversee-color-picker" data-default-color="#f1f5f9">
                                 </div>
                                 <div class="color-field">
                                     <label>Card Background</label>
-                                    <input type="text" name="admin_surface_color" value="<?php echo esc_attr($b['admin_surface_color']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="settings-group">
-                            <h4>Surface Variations</h4>
-                            <div class="color-row">
-                                <div class="color-field">
-                                    <label>Hover Background</label>
-                                    <input type="text" name="admin_surface_hover" value="<?php echo esc_attr($b['admin_surface_hover']); ?>" class="oversee-color-picker" data-default-color="#f8fafc">
-                                    <span class="color-hint">Button/row hover states</span>
-                                </div>
-                                <div class="color-field">
-                                    <label>Muted Background</label>
-                                    <input type="text" name="admin_surface_muted" value="<?php echo esc_attr($b['admin_surface_muted']); ?>" class="oversee-color-picker" data-default-color="#f8fafc">
-                                    <span class="color-hint">Toolbars, action bars</span>
+                                    <input type="text" name="admin_surface" value="<?php echo esc_attr($b['admin_surface']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
                                 </div>
                             </div>
                         </div>
@@ -693,73 +665,43 @@ class Oversee_Branding {
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Primary Text</label>
-                                    <input type="text" name="admin_text_color" value="<?php echo esc_attr($b['admin_text_color']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
-                                    <span class="color-hint">Headings, main text</span>
+                                    <input type="text" name="admin_text" value="<?php echo esc_attr($b['admin_text']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
                                 </div>
-                                <div class="color-field">
-                                    <label>Secondary Text</label>
-                                    <input type="text" name="admin_text_secondary" value="<?php echo esc_attr($b['admin_text_secondary']); ?>" class="oversee-color-picker" data-default-color="#64748b">
-                                    <span class="color-hint">Labels, descriptions</span>
-                                </div>
-                            </div>
-                            <div class="color-row">
                                 <div class="color-field">
                                     <label>Muted Text</label>
-                                    <input type="text" name="admin_text_muted" value="<?php echo esc_attr($b['admin_text_muted']); ?>" class="oversee-color-picker" data-default-color="#9ca3af">
-                                    <span class="color-hint">Placeholders, hints</span>
+                                    <input type="text" name="admin_text_muted" value="<?php echo esc_attr($b['admin_text_muted']); ?>" class="oversee-color-picker" data-default-color="#64748b">
                                 </div>
                             </div>
                         </div>
 
                         <div class="settings-group">
-                            <h4>Borders & Dividers</h4>
+                            <h4>Borders</h4>
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Border Color</label>
-                                    <input type="text" name="admin_border_color" value="<?php echo esc_attr($b['admin_border_color']); ?>" class="oversee-color-picker" data-default-color="#e2e8f0">
-                                    <span class="color-hint">Card borders, dividers</span>
-                                </div>
-                                <div class="color-field">
-                                    <label>Light Border</label>
-                                    <input type="text" name="admin_border_light" value="<?php echo esc_attr($b['admin_border_light']); ?>" class="oversee-color-picker" data-default-color="#f1f5f9">
-                                    <span class="color-hint">Subtle separators</span>
-                                </div>
-                            </div>
-                            <div class="color-row">
-                                <div class="color-field">
-                                    <label>Input Border</label>
-                                    <input type="text" name="admin_input_border" value="<?php echo esc_attr($b['admin_input_border']); ?>" class="oversee-color-picker" data-default-color="#d1d5db">
-                                    <span class="color-hint">Form fields, selects</span>
+                                    <input type="text" name="admin_border" value="<?php echo esc_attr($b['admin_border']); ?>" class="oversee-color-picker" data-default-color="#e2e8f0">
+                                    <span class="color-hint">Cards, dividers, inputs</span>
                                 </div>
                             </div>
                         </div>
 
                         <div class="settings-group">
                             <h4>Sidebar</h4>
+                            <p class="group-description">Navigation sidebar appearance.</p>
                             <div class="color-row">
                                 <div class="color-field">
                                     <label>Background</label>
-                                    <input type="text" name="secondary_color" value="<?php echo esc_attr($b['secondary_color']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
+                                    <input type="text" name="sidebar_bg" value="<?php echo esc_attr($b['sidebar_bg']); ?>" class="oversee-color-picker" data-default-color="#1e293b">
                                 </div>
                                 <div class="color-field">
-                                    <label>Nav Text</label>
-                                    <input type="text" name="sidebar_text_color" value="<?php echo esc_attr($b['sidebar_text_color']); ?>" class="oversee-color-picker" data-default-color="#94a3b8">
+                                    <label>Text Color</label>
+                                    <input type="text" name="sidebar_text" value="<?php echo esc_attr($b['sidebar_text']); ?>" class="oversee-color-picker" data-default-color="#94a3b8">
                                 </div>
                             </div>
                             <div class="color-row">
                                 <div class="color-field">
-                                    <label>Hover Text</label>
-                                    <input type="text" name="sidebar_text_hover" value="<?php echo esc_attr($b['sidebar_text_hover']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
-                                </div>
-                                <div class="color-field">
-                                    <label>Active Text</label>
+                                    <label>Active/Hover Text</label>
                                     <input type="text" name="sidebar_text_active" value="<?php echo esc_attr($b['sidebar_text_active']); ?>" class="oversee-color-picker" data-default-color="#ffffff">
-                                </div>
-                            </div>
-                            <div class="color-row">
-                                <div class="color-field">
-                                    <label>Section Headings</label>
-                                    <input type="text" name="sidebar_heading_color" value="<?php echo esc_attr($b['sidebar_heading_color']); ?>" class="oversee-color-picker" data-default-color="#64748b">
                                 </div>
                             </div>
                         </div>
@@ -771,7 +713,7 @@ class Oversee_Branding {
                             <h4>Background</h4>
                             <div class="form-row">
                                 <label>Background Style</label>
-                                <select name="login_bg_type" id="login_bg_type" onchange="toggleLoginBgOptions(); updatePreview();">
+                                <select name="login_bg_type" id="login_bg_type">
                                     <option value="gradient" <?php selected($b['login_bg_type'], 'gradient'); ?>>Gradient</option>
                                     <option value="color" <?php selected($b['login_bg_type'], 'color'); ?>>Solid Color</option>
                                     <option value="image" <?php selected($b['login_bg_type'], 'image'); ?>>Background Image</option>
@@ -825,38 +767,63 @@ class Oversee_Branding {
                     <div class="preview-sticky">
                         <div class="preview-header">
                             <span class="preview-title">Live Preview</span>
-                            <span class="preview-hint">Changes update in real-time</span>
+                            <span class="preview-hint">Updates as you change colors</span>
                         </div>
 
-                        <!-- KB Preview -->
-                        <div class="preview-frame active" id="preview-frame-kb">
-                            <div class="preview-kb-page" id="preview-kb-page">
-                                <div class="preview-hero" id="preview-hero">
+                        <!-- General Preview -->
+                        <div class="preview-frame active" id="preview-general">
+                            <div class="preview-container">
+                                <div class="preview-section-label">Brand Colors & Status</div>
+                                <div class="preview-general-demo">
+                                    <div class="demo-buttons">
+                                        <button class="demo-btn demo-btn-primary">Primary Button</button>
+                                        <button class="demo-btn demo-btn-secondary">Secondary</button>
+                                    </div>
+                                    <div class="demo-badges">
+                                        <span class="demo-badge demo-badge-success">Success</span>
+                                        <span class="demo-badge demo-badge-warning">Warning</span>
+                                        <span class="demo-badge demo-badge-error">Error</span>
+                                        <span class="demo-badge demo-badge-info">Info</span>
+                                    </div>
+                                    <div class="demo-alerts">
+                                        <div class="demo-alert demo-alert-success">Success message</div>
+                                        <div class="demo-alert demo-alert-warning">Warning message</div>
+                                        <div class="demo-alert demo-alert-error">Error message</div>
+                                        <div class="demo-alert demo-alert-info">Info message</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Public Preview -->
+                        <div class="preview-frame" id="preview-public">
+                            <div class="preview-public-page">
+                                <div class="preview-hero">
                                     <div class="preview-hero-content">
                                         <div class="preview-hero-logo">
                                             <?php if ($b['logo_dark_url'] ?: $b['logo_url']): ?>
                                                 <img src="<?php echo esc_url($b['logo_dark_url'] ?: $b['logo_url']); ?>" alt="Logo">
                                             <?php else: ?>
-                                                <span><?php echo esc_html($b['company_name']); ?></span>
+                                                <span class="logo-text"><?php echo esc_html($b['company_name']); ?></span>
                                             <?php endif; ?>
                                         </div>
-                                        <h2 id="preview-hero-title">How can we help?</h2>
+                                        <h2>How can we help?</h2>
                                         <div class="preview-search-box">
                                             <input type="text" placeholder="Search for answers..." disabled>
                                             <button class="preview-search-btn">Search</button>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="preview-kb-content" id="preview-kb-content">
-                                    <div class="preview-kb-cards">
-                                        <div class="preview-kb-card">
+                                <div class="preview-public-content">
+                                    <div class="preview-cards">
+                                        <div class="preview-card">
                                             <div class="preview-card-icon"><i class="dashicons dashicons-book"></i></div>
                                             <div class="preview-card-body">
                                                 <h4>Getting Started</h4>
                                                 <p>Learn the basics quickly.</p>
                                             </div>
                                         </div>
-                                        <div class="preview-kb-card">
+                                        <div class="preview-card">
                                             <div class="preview-card-icon"><i class="dashicons dashicons-admin-tools"></i></div>
                                             <div class="preview-card-body">
                                                 <h4>Troubleshooting</h4>
@@ -864,28 +831,28 @@ class Oversee_Branding {
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="preview-divider" id="preview-kb-divider"></div>
-                                    <div class="preview-status-row">
-                                        <span class="preview-badge preview-badge-success">Resolved</span>
-                                        <span class="preview-badge preview-badge-warning">Pending</span>
-                                        <span class="preview-badge preview-badge-error">Closed</span>
+                                    <div class="preview-divider"></div>
+                                    <div class="preview-badges">
+                                        <span class="demo-badge demo-badge-success">Resolved</span>
+                                        <span class="demo-badge demo-badge-warning">Pending</span>
+                                        <span class="demo-badge demo-badge-error">Closed</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Admin Preview -->
-                        <div class="preview-frame" id="preview-frame-admin">
-                            <div class="preview-admin-page" id="preview-admin-page">
-                                <div class="preview-sidebar" id="preview-sidebar">
+                        <div class="preview-frame" id="preview-admin">
+                            <div class="preview-admin-page">
+                                <div class="preview-sidebar">
                                     <div class="preview-sidebar-header">
                                         <?php if ($b['logo_dark_url'] ?: $b['logo_url']): ?>
                                             <img src="<?php echo esc_url($b['logo_dark_url'] ?: $b['logo_url']); ?>" alt="Logo">
                                         <?php else: ?>
-                                            <span><?php echo esc_html($b['company_name']); ?></span>
+                                            <span class="logo-text"><?php echo esc_html($b['company_name']); ?></span>
                                         <?php endif; ?>
                                     </div>
-                                    <div class="preview-sidebar-divider" id="preview-sidebar-divider"></div>
+                                    <div class="preview-sidebar-divider"></div>
                                     <div class="preview-sidebar-nav">
                                         <div class="preview-sidebar-section">Main</div>
                                         <a href="#" class="preview-sidebar-item active" onclick="return false;">
@@ -899,25 +866,25 @@ class Oversee_Branding {
                                         </a>
                                     </div>
                                 </div>
-                                <div class="preview-admin-content" id="preview-admin-content">
-                                    <div class="preview-admin-header" id="preview-admin-header">
+                                <div class="preview-admin-content">
+                                    <div class="preview-admin-header">
                                         <h3>Dashboard</h3>
                                     </div>
                                     <div class="preview-admin-body">
-                                        <div class="preview-admin-card" id="preview-admin-card">
+                                        <div class="preview-admin-card">
                                             <div class="preview-admin-card-header">Recent Tickets</div>
-                                            <div class="preview-admin-card-divider" id="preview-admin-card-divider"></div>
+                                            <div class="preview-admin-card-divider"></div>
                                             <div class="preview-admin-card-body">
                                                 <div class="preview-ticket-row">
                                                     <span class="ticket-id">#1234</span>
-                                                    <span>Need help with login</span>
-                                                    <span class="preview-badge preview-badge-warning">Open</span>
+                                                    <span class="ticket-title">Need help with login</span>
+                                                    <span class="demo-badge demo-badge-warning">Open</span>
                                                 </div>
-                                                <div class="preview-ticket-row-divider" id="preview-ticket-divider"></div>
+                                                <div class="preview-ticket-divider"></div>
                                                 <div class="preview-ticket-row">
                                                     <span class="ticket-id">#1233</span>
-                                                    <span>Billing question</span>
-                                                    <span class="preview-badge preview-badge-success">Resolved</span>
+                                                    <span class="ticket-title">Billing question</span>
+                                                    <span class="demo-badge demo-badge-success">Resolved</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -927,18 +894,18 @@ class Oversee_Branding {
                         </div>
 
                         <!-- Login Preview -->
-                        <div class="preview-frame" id="preview-frame-login">
-                            <div class="preview-login-page" id="preview-login-page">
-                                <div class="preview-login-sidebar" id="preview-login-sidebar">
+                        <div class="preview-frame" id="preview-login">
+                            <div class="preview-login-page">
+                                <div class="preview-login-sidebar">
                                     <div class="preview-login-brand">
                                         <?php if ($b['logo_dark_url'] ?: $b['logo_url']): ?>
                                             <img src="<?php echo esc_url($b['logo_dark_url'] ?: $b['logo_url']); ?>" alt="Logo">
                                         <?php else: ?>
-                                            <span><?php echo esc_html($b['company_name']); ?></span>
+                                            <span class="logo-text"><?php echo esc_html($b['company_name']); ?></span>
                                         <?php endif; ?>
                                     </div>
-                                    <h3 id="preview-login-title"><?php echo esc_html($b['login_welcome_title']); ?></h3>
-                                    <p id="preview-login-msg"><?php echo esc_html($b['login_welcome_message']); ?></p>
+                                    <h3 class="login-title"><?php echo esc_html($b['login_welcome_title']); ?></h3>
+                                    <p class="login-message"><?php echo esc_html($b['login_welcome_message']); ?></p>
                                 </div>
                                 <div class="preview-login-form">
                                     <div class="preview-login-card">
@@ -951,38 +918,7 @@ class Oversee_Branding {
                                             <label>Password</label>
                                             <input type="password" placeholder="********" disabled>
                                         </div>
-                                        <button class="preview-btn preview-btn-primary preview-btn-full">Sign In</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- General Preview (shows KB by default) -->
-                        <div class="preview-frame" id="preview-frame-general">
-                            <div class="preview-general-page">
-                                <div class="preview-general-header">
-                                    <div class="preview-general-logo">
-                                        <?php if ($b['logo_url']): ?>
-                                            <img src="<?php echo esc_url($b['logo_url']); ?>" alt="Logo">
-                                        <?php else: ?>
-                                            <span><?php echo esc_html($b['company_name']); ?></span>
-                                        <?php endif; ?>
-                                    </div>
-                                    <div class="preview-general-nav">
-                                        <span>Home</span>
-                                        <span>Articles</span>
-                                        <button class="preview-btn preview-btn-primary">Submit Ticket</button>
-                                    </div>
-                                </div>
-                                <div class="preview-general-content">
-                                    <div class="preview-general-card">
-                                        <h4>Sample Content</h4>
-                                        <p>This shows your brand colors in action.</p>
-                                        <div class="preview-status-row" style="margin-top: 12px;">
-                                            <span class="preview-badge preview-badge-success">Success</span>
-                                            <span class="preview-badge preview-badge-warning">Warning</span>
-                                            <span class="preview-badge preview-badge-error">Error</span>
-                                        </div>
+                                        <button class="demo-btn demo-btn-primary demo-btn-full">Sign In</button>
                                     </div>
                                 </div>
                             </div>
@@ -993,27 +929,28 @@ class Oversee_Branding {
         </div>
 
         <style>
-            /* Main Layout */
-            .oversee-branding-form { max-width: 1600px; }
-            .branding-layout { display: flex; gap: 40px; align-items: flex-start; }
-            .branding-controls { flex: 1; min-width: 0; max-width: 580px; }
-            .branding-preview { width: 560px; flex-shrink: 0; }
+            /* ===== MAIN LAYOUT ===== */
+            .oversee-branding-form { max-width: 1400px; }
+            .branding-layout { display: flex; gap: 32px; align-items: flex-start; }
+            .branding-controls { flex: 0 0 480px; min-width: 0; }
+            .branding-preview { flex: 1; min-width: 400px; max-width: 700px; }
 
-            /* Section Tabs */
+            /* ===== SECTION TABS ===== */
             .section-tabs { display: flex; gap: 4px; background: #f1f5f9; padding: 4px; border-radius: 10px; margin-bottom: 24px; }
             .section-tab { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 8px; border: none; background: transparent; border-radius: 8px; font-size: 13px; font-weight: 500; color: #64748b; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
             .section-tab:hover { color: #1e293b; background: rgba(255,255,255,0.5); }
             .section-tab.active { background: #fff; color: #1e293b; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
             .section-tab .dashicons { font-size: 16px; width: 16px; height: 16px; }
-
             .section-content { display: none; }
             .section-content.active { display: block; }
 
-            /* Settings Groups */
+            /* ===== SETTINGS GROUPS ===== */
             .settings-group { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-            .settings-group h4 { margin: 0 0 16px 0; font-size: 14px; font-weight: 600; color: #1e293b; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+            .settings-group h4 { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #1e293b; }
+            .settings-group .group-description { margin: 0 0 16px 0; font-size: 12px; color: #64748b; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9; }
+            .settings-group h4 + .color-row, .settings-group h4 + .form-row { margin-top: 16px; }
 
-            /* Form Rows */
+            /* ===== FORM ELEMENTS ===== */
             .form-row { margin-bottom: 14px; }
             .form-row:last-child { margin-bottom: 0; }
             .form-row label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
@@ -1025,15 +962,14 @@ class Oversee_Branding {
             .checkbox-label { display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; }
             .checkbox-label input { width: auto; }
 
-            /* Color Fields */
+            /* ===== COLOR FIELDS ===== */
             .color-row { display: flex; gap: 16px; margin-bottom: 14px; }
             .color-row:last-child { margin-bottom: 0; }
-            .color-row.three-col .color-field { flex: 1; }
             .color-field { flex: 1; }
             .color-field label { display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 6px; }
             .color-hint { display: block; font-size: 10px; color: #9ca3af; margin-top: 4px; }
 
-            /* Logo Uploads */
+            /* ===== LOGO UPLOADS ===== */
             .logo-uploads { display: flex; gap: 16px; flex-wrap: wrap; }
             .logo-upload-item { flex: 1; min-width: 120px; }
             .logo-upload-item label { display: block; font-size: 12px; font-weight: 500; color: #374151; margin-bottom: 8px; }
@@ -1045,265 +981,265 @@ class Oversee_Branding {
             .image-preview img { max-width: 100%; max-height: 100%; object-fit: contain; }
             .image-preview .no-image { font-size: 11px; color: #94a3b8; }
 
-            /* Preview Panel */
-            .preview-sticky { position: sticky; top: 32px; max-height: calc(100vh - 64px); overflow-y: auto; }
+            /* ===== PREVIEW PANEL ===== */
+            .preview-sticky { position: sticky; top: 32px; }
             .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding: 0 4px; }
             .preview-title { font-size: 15px; font-weight: 600; color: #1e293b; }
             .preview-hint { font-size: 12px; color: #64748b; }
-
-            .preview-frame { display: none; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+            .preview-frame { display: none; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
             .preview-frame.active { display: block; }
+            .preview-section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 16px; }
 
-            /* KB Preview */
-            .preview-kb-page { background: #fff; }
-            .preview-hero { background: <?php echo esc_attr($b['hero_bg_color'] ?? '#1e293b'); ?>; padding: 32px 20px; text-align: center; }
-            .preview-hero-content { max-width: 380px; margin: 0 auto; }
-            .preview-hero-logo img { max-height: 36px; margin-bottom: 16px; }
-            .preview-hero-logo span { color: #fff; font-size: 16px; font-weight: 600; display: block; margin-bottom: 16px; }
-            .preview-hero h2 { color: <?php echo esc_attr($b['hero_text_color'] ?? '#ffffff'); ?>; font-size: 20px; font-weight: 600; margin: 0 0 16px 0; }
-            .preview-search-box { display: flex; background: rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; }
-            .preview-search-box input { flex: 1; padding: 12px 14px; border: none; background: transparent; color: #fff; font-size: 14px; }
+            /* ===== GENERAL PREVIEW ===== */
+            .preview-container { padding: 24px; background: #f8fafc; }
+            .preview-general-demo { background: #fff; border-radius: 10px; padding: 20px; border: 1px solid #e2e8f0; }
+            .demo-buttons { display: flex; gap: 12px; margin-bottom: 20px; }
+            .demo-btn { padding: 10px 20px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: default; border: none; transition: all 0.2s; }
+            .demo-btn-primary { background: <?php echo esc_attr($b['primary_color']); ?>; color: #fff; }
+            .demo-btn-secondary { background: <?php echo esc_attr($b['secondary_color']); ?>; color: #fff; }
+            .demo-btn-full { width: 100%; padding: 14px; }
+            .demo-badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+            .demo-badge { padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+            .demo-badge-success { background: <?php echo esc_attr($b['success_color']); ?>20; color: <?php echo esc_attr($b['success_color']); ?>; }
+            .demo-badge-warning { background: <?php echo esc_attr($b['warning_color']); ?>20; color: <?php echo esc_attr($b['warning_color']); ?>; }
+            .demo-badge-error { background: <?php echo esc_attr($b['error_color']); ?>20; color: <?php echo esc_attr($b['error_color']); ?>; }
+            .demo-badge-info { background: <?php echo esc_attr($b['info_color']); ?>20; color: <?php echo esc_attr($b['info_color']); ?>; }
+            .demo-alerts { display: flex; flex-direction: column; gap: 8px; }
+            .demo-alert { padding: 10px 14px; border-radius: 8px; font-size: 12px; font-weight: 500; }
+            .demo-alert-success { background: <?php echo esc_attr($b['success_color']); ?>15; color: <?php echo esc_attr($b['success_color']); ?>; border-left: 3px solid <?php echo esc_attr($b['success_color']); ?>; }
+            .demo-alert-warning { background: <?php echo esc_attr($b['warning_color']); ?>15; color: <?php echo esc_attr($b['warning_color']); ?>; border-left: 3px solid <?php echo esc_attr($b['warning_color']); ?>; }
+            .demo-alert-error { background: <?php echo esc_attr($b['error_color']); ?>15; color: <?php echo esc_attr($b['error_color']); ?>; border-left: 3px solid <?php echo esc_attr($b['error_color']); ?>; }
+            .demo-alert-info { background: <?php echo esc_attr($b['info_color']); ?>15; color: <?php echo esc_attr($b['info_color']); ?>; border-left: 3px solid <?php echo esc_attr($b['info_color']); ?>; }
+
+            /* ===== PUBLIC PREVIEW ===== */
+            .preview-public-page { background: #fff; }
+            .preview-hero { background: <?php echo esc_attr($b['hero_bg']); ?>; padding: 28px 20px; text-align: center; }
+            .preview-hero-content { max-width: 100%; }
+            .preview-hero-logo img { max-height: 32px; margin-bottom: 14px; }
+            .preview-hero-logo .logo-text { color: <?php echo esc_attr($b['hero_text']); ?>; font-size: 16px; font-weight: 600; display: block; margin-bottom: 14px; }
+            .preview-hero h2 { color: <?php echo esc_attr($b['hero_text']); ?>; font-size: 18px; font-weight: 600; margin: 0 0 14px 0; }
+            .preview-search-box { display: flex; background: rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden; max-width: 360px; margin: 0 auto; }
+            .preview-search-box input { flex: 1; padding: 12px 14px; border: none; background: transparent; color: #fff; font-size: 13px; min-width: 0; }
             .preview-search-box input::placeholder { color: rgba(255,255,255,0.6); }
-            .preview-search-btn { padding: 12px 18px; background: <?php echo esc_attr($b['primary_color']); ?>; color: #fff; border: none; font-size: 14px; font-weight: 500; }
-            .preview-kb-content { background: <?php echo esc_attr($b['public_bg_color'] ?? '#f9fafb'); ?>; padding: 20px; }
-            .preview-kb-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
-            .preview-kb-card { display: flex; gap: 14px; padding: 16px; background: <?php echo esc_attr($b['public_surface_color'] ?? '#ffffff'); ?>; border: 1px solid <?php echo esc_attr($b['public_border_color'] ?? '#e5e7eb'); ?>; border-radius: 10px; }
+            .preview-search-btn { padding: 12px 18px; background: <?php echo esc_attr($b['primary_color']); ?>; color: #fff; border: none; font-size: 13px; font-weight: 500; white-space: nowrap; }
+            .preview-public-content { background: <?php echo esc_attr($b['public_bg']); ?>; padding: 20px; }
+            .preview-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+            .preview-card { display: flex; gap: 12px; padding: 14px; background: <?php echo esc_attr($b['public_surface']); ?>; border: 1px solid <?php echo esc_attr($b['public_border']); ?>; border-radius: 10px; }
             .preview-card-icon { width: 36px; height: 36px; background: <?php echo esc_attr($b['primary_color']); ?>15; color: <?php echo esc_attr($b['primary_color']); ?>; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-            .preview-card-icon .dashicons { font-size: 18px; width: 18px; height: 18px; }
-            .preview-card-body h4 { margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: <?php echo esc_attr($b['public_text_color'] ?? '#1f2937'); ?>; }
-            .preview-card-body p { margin: 0; font-size: 12px; color: <?php echo esc_attr($b['public_text_muted'] ?? '#6b7280'); ?>; }
-            .preview-divider { height: 1px; background: <?php echo esc_attr($b['public_border_color'] ?? '#e5e7eb'); ?>; margin: 16px 0; }
-            .preview-status-row { display: flex; gap: 8px; }
+            .preview-card-icon .dashicons { font-size: 16px; width: 16px; height: 16px; }
+            .preview-card-body h4 { margin: 0 0 4px 0; font-size: 13px; font-weight: 600; color: <?php echo esc_attr($b['public_text']); ?>; }
+            .preview-card-body p { margin: 0; font-size: 11px; color: <?php echo esc_attr($b['public_text_muted']); ?>; }
+            .preview-divider { height: 1px; background: <?php echo esc_attr($b['public_border']); ?>; margin: 16px 0; }
+            .preview-badges { display: flex; gap: 8px; }
 
-            /* Admin Preview */
-            .preview-admin-page { display: flex; min-height: 340px; }
-            .preview-sidebar { background: <?php echo esc_attr($b['secondary_color']); ?>; width: 160px; flex-shrink: 0; }
-            .preview-sidebar-header { padding: 16px; }
-            .preview-sidebar-header img { max-height: 24px; }
-            .preview-sidebar-header span { color: #fff; font-weight: 600; font-size: 14px; }
-            .preview-sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0 16px; }
-            .preview-sidebar-nav { padding: 12px 8px; }
-            .preview-sidebar-section { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: <?php echo esc_attr($b['sidebar_heading_color'] ?: '#64748b'); ?>; padding: 8px 10px 6px; }
-            .preview-sidebar-item { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 6px; font-size: 13px; color: <?php echo esc_attr($b['sidebar_text_color'] ?: '#94a3b8'); ?>; text-decoration: none; margin-bottom: 4px; }
+            /* ===== ADMIN PREVIEW ===== */
+            .preview-admin-page { display: flex; min-height: 320px; }
+            .preview-sidebar { background: <?php echo esc_attr($b['sidebar_bg']); ?>; width: 140px; flex-shrink: 0; }
+            .preview-sidebar-header { padding: 14px; }
+            .preview-sidebar-header img { max-height: 22px; }
+            .preview-sidebar-header .logo-text { color: #fff; font-weight: 600; font-size: 13px; }
+            .preview-sidebar-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 0 14px; }
+            .preview-sidebar-nav { padding: 10px 8px; }
+            .preview-sidebar-section { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: <?php echo esc_attr($b['admin_text_muted']); ?>; padding: 8px 10px 6px; }
+            .preview-sidebar-item { display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 6px; font-size: 12px; color: <?php echo esc_attr($b['sidebar_text']); ?>; text-decoration: none; margin-bottom: 3px; }
             .preview-sidebar-item .dashicons { font-size: 14px; width: 14px; height: 14px; }
-            .preview-sidebar-item.active { background: <?php echo esc_attr($b['primary_color']); ?>; color: <?php echo esc_attr($b['sidebar_text_active'] ?: '#ffffff'); ?>; }
-            .preview-sidebar-item.hover { background: rgba(255,255,255,0.05); color: <?php echo esc_attr($b['sidebar_text_hover'] ?: '#ffffff'); ?>; }
-            .preview-admin-content { flex: 1; background: <?php echo esc_attr($b['admin_bg_color'] ?? '#f1f5f9'); ?>; display: flex; flex-direction: column; }
-            .preview-admin-header { padding: 16px 18px; background: <?php echo esc_attr($b['admin_surface_color'] ?? '#ffffff'); ?>; border-bottom: 1px solid <?php echo esc_attr($b['admin_border_color'] ?? '#e2e8f0'); ?>; }
-            .preview-admin-header h3 { margin: 0; font-size: 16px; color: <?php echo esc_attr($b['admin_text_color'] ?? '#1e293b'); ?>; }
-            .preview-admin-body { padding: 18px; flex: 1; }
-            .preview-admin-card { background: <?php echo esc_attr($b['admin_surface_color'] ?? '#ffffff'); ?>; border: 1px solid <?php echo esc_attr($b['admin_border_color'] ?? '#e2e8f0'); ?>; border-radius: 10px; overflow: hidden; }
-            .preview-admin-card-header { padding: 14px 16px; font-size: 13px; font-weight: 600; color: <?php echo esc_attr($b['admin_text_color'] ?? '#1e293b'); ?>; }
-            .preview-admin-card-divider { height: 1px; background: <?php echo esc_attr($b['admin_border_color'] ?? '#e2e8f0'); ?>; }
-            .preview-admin-card-body { padding: 8px 0; }
-            .preview-ticket-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; font-size: 12px; color: <?php echo esc_attr($b['admin_text_color'] ?? '#1e293b'); ?>; }
-            .preview-ticket-row .ticket-id { color: <?php echo esc_attr($b['primary_color']); ?>; font-weight: 600; min-width: 50px; }
-            .preview-ticket-row span:nth-child(2) { flex: 1; }
-            .preview-ticket-row-divider { height: 1px; background: <?php echo esc_attr($b['admin_border_color'] ?? '#e2e8f0'); ?>; margin: 0 16px; }
+            .preview-sidebar-item.active { background: <?php echo esc_attr($b['primary_color']); ?>; color: <?php echo esc_attr($b['sidebar_text_active']); ?>; }
+            .preview-sidebar-item.hover { background: rgba(255,255,255,0.05); color: <?php echo esc_attr($b['sidebar_text_active']); ?>; }
+            .preview-admin-content { flex: 1; background: <?php echo esc_attr($b['admin_bg']); ?>; display: flex; flex-direction: column; }
+            .preview-admin-header { padding: 14px 16px; background: <?php echo esc_attr($b['admin_surface']); ?>; border-bottom: 1px solid <?php echo esc_attr($b['admin_border']); ?>; }
+            .preview-admin-header h3 { margin: 0; font-size: 15px; color: <?php echo esc_attr($b['admin_text']); ?>; }
+            .preview-admin-body { padding: 16px; flex: 1; }
+            .preview-admin-card { background: <?php echo esc_attr($b['admin_surface']); ?>; border: 1px solid <?php echo esc_attr($b['admin_border']); ?>; border-radius: 10px; overflow: hidden; }
+            .preview-admin-card-header { padding: 12px 14px; font-size: 12px; font-weight: 600; color: <?php echo esc_attr($b['admin_text']); ?>; }
+            .preview-admin-card-divider { height: 1px; background: <?php echo esc_attr($b['admin_border']); ?>; }
+            .preview-admin-card-body { padding: 6px 0; }
+            .preview-ticket-row { display: flex; align-items: center; gap: 8px; padding: 10px 14px; font-size: 11px; color: <?php echo esc_attr($b['admin_text']); ?>; }
+            .preview-ticket-row .ticket-id { color: <?php echo esc_attr($b['primary_color']); ?>; font-weight: 600; min-width: 40px; }
+            .preview-ticket-row .ticket-title { flex: 1; color: <?php echo esc_attr($b['admin_text_muted']); ?>; }
+            .preview-ticket-divider { height: 1px; background: <?php echo esc_attr($b['admin_border']); ?>; margin: 0 14px; }
 
-            /* Login Preview */
-            .preview-login-page { display: flex; min-height: 340px; }
-            .preview-login-sidebar { width: 220px; background: <?php echo esc_attr($b['login_bg_gradient'] ?: 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)'); ?>; padding: 32px 20px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-            .preview-login-brand img { max-height: 36px; margin-bottom: 20px; }
-            .preview-login-brand span { color: #fff; font-size: 16px; font-weight: 600; display: block; margin-bottom: 20px; }
-            .preview-login-sidebar h3 { color: #fff; font-size: 18px; margin: 0 0 8px 0; }
-            .preview-login-sidebar p { color: rgba(255,255,255,0.7); font-size: 13px; margin: 0; line-height: 1.5; }
-            .preview-login-form { flex: 1; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 24px; }
-            .preview-login-card { background: #fff; padding: 28px; border-radius: 12px; width: 100%; max-width: 260px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-            .preview-login-card h4 { margin: 0 0 20px 0; font-size: 18px; text-align: center; }
-            .preview-form-group { margin-bottom: 16px; }
-            .preview-form-group label { display: block; font-size: 13px; font-weight: 500; color: #374151; margin-bottom: 6px; }
-            .preview-form-group input { width: 100%; padding: 12px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13px; box-sizing: border-box; }
+            /* ===== LOGIN PREVIEW ===== */
+            .preview-login-page { display: flex; min-height: 320px; }
+            .preview-login-sidebar { width: 200px; background: <?php echo esc_attr($b['login_bg_gradient']); ?>; padding: 28px 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+            .preview-login-brand img { max-height: 32px; margin-bottom: 18px; }
+            .preview-login-brand .logo-text { color: #fff; font-size: 15px; font-weight: 600; display: block; margin-bottom: 18px; }
+            .preview-login-sidebar h3 { color: #fff; font-size: 16px; margin: 0 0 8px 0; }
+            .preview-login-sidebar p { color: rgba(255,255,255,0.7); font-size: 12px; margin: 0; line-height: 1.5; }
+            .preview-login-form { flex: 1; background: #f8fafc; display: flex; align-items: center; justify-content: center; padding: 20px; }
+            .preview-login-card { background: #fff; padding: 24px; border-radius: 12px; width: 100%; max-width: 240px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+            .preview-login-card h4 { margin: 0 0 18px 0; font-size: 16px; text-align: center; color: <?php echo esc_attr($b['admin_text']); ?>; }
+            .preview-form-group { margin-bottom: 14px; }
+            .preview-form-group label { display: block; font-size: 12px; font-weight: 500; color: <?php echo esc_attr($b['admin_text_muted']); ?>; margin-bottom: 5px; }
+            .preview-form-group input { width: 100%; padding: 10px 12px; border: 1px solid <?php echo esc_attr($b['admin_border']); ?>; border-radius: 8px; font-size: 12px; box-sizing: border-box; }
 
-            /* General Preview */
-            .preview-general-page { background: <?php echo esc_attr($b['public_bg_color'] ?? '#f9fafb'); ?>; min-height: 300px; }
-            .preview-general-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: <?php echo esc_attr($b['public_surface_color'] ?? '#ffffff'); ?>; border-bottom: 1px solid <?php echo esc_attr($b['public_border_color'] ?? '#e5e7eb'); ?>; }
-            .preview-general-logo img { max-height: 28px; }
-            .preview-general-logo span { font-weight: 600; font-size: 16px; color: <?php echo esc_attr($b['public_text_color'] ?? '#1f2937'); ?>; }
-            .preview-general-nav { display: flex; align-items: center; gap: 16px; font-size: 14px; color: <?php echo esc_attr($b['public_text_muted'] ?? '#6b7280'); ?>; }
-            .preview-general-content { padding: 20px; }
-            .preview-general-card { background: <?php echo esc_attr($b['public_surface_color'] ?? '#ffffff'); ?>; border: 1px solid <?php echo esc_attr($b['public_border_color'] ?? '#e5e7eb'); ?>; border-radius: 10px; padding: 20px; }
-            .preview-general-card h4 { margin: 0 0 10px 0; font-size: 16px; color: <?php echo esc_attr($b['public_text_color'] ?? '#1f2937'); ?>; }
-            .preview-general-card p { margin: 0; font-size: 14px; color: <?php echo esc_attr($b['public_text_muted'] ?? '#6b7280'); ?>; }
-
-            /* Shared Preview Styles */
-            .preview-btn { padding: 10px 16px; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: default; border: none; }
-            .preview-btn-primary { background: <?php echo esc_attr($b['primary_color']); ?>; color: #fff; }
-            .preview-btn-full { width: 100%; padding: 14px; }
-            .preview-badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 500; }
-            .preview-badge-success { background: <?php echo esc_attr($b['success_color']); ?>20; color: <?php echo esc_attr($b['success_color']); ?>; }
-            .preview-badge-warning { background: <?php echo esc_attr($b['warning_color']); ?>20; color: <?php echo esc_attr($b['warning_color']); ?>; }
-            .preview-badge-error { background: <?php echo esc_attr($b['error_color']); ?>20; color: <?php echo esc_attr($b['error_color']); ?>; }
-
-            /* Responsive */
-            @media (max-width: 1200px) {
+            /* ===== RESPONSIVE ===== */
+            @media (max-width: 1100px) {
                 .branding-layout { flex-direction: column; }
-                .branding-controls { max-width: none; }
+                .branding-controls { flex: none; width: 100%; max-width: 600px; }
                 .branding-preview { width: 100%; max-width: 600px; }
                 .preview-sticky { position: static; }
             }
         </style>
 
         <script>
-        function toggleLoginBgOptions() {
-            var type = document.getElementById('login_bg_type').value;
-            document.getElementById('login-bg-color-row').style.display = (type === 'color' || type === 'image') ? '' : 'none';
-            document.getElementById('login-bg-gradient-row').style.display = (type === 'gradient') ? '' : 'none';
-            document.getElementById('login-bg-image-row').style.display = (type === 'image') ? '' : 'none';
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
+            // Toggle login background options
+            var loginBgType = document.getElementById('login_bg_type');
+            if (loginBgType) {
+                loginBgType.addEventListener('change', function() {
+                    var type = this.value;
+                    document.getElementById('login-bg-color-row').style.display = (type === 'color' || type === 'image') ? '' : 'none';
+                    document.getElementById('login-bg-gradient-row').style.display = (type === 'gradient') ? '' : 'none';
+                    document.getElementById('login-bg-image-row').style.display = (type === 'image') ? '' : 'none';
+                    updatePreview();
+                });
+            }
+
             // Section tab switching
             document.querySelectorAll('.section-tab').forEach(function(tab) {
                 tab.addEventListener('click', function() {
-                    var section = tab.dataset.section;
+                    var section = this.dataset.section;
+                    var preview = this.dataset.preview;
 
                     // Update tabs
                     document.querySelectorAll('.section-tab').forEach(function(t) { t.classList.remove('active'); });
                     document.querySelectorAll('.section-content').forEach(function(c) { c.classList.remove('active'); });
-                    tab.classList.add('active');
+                    this.classList.add('active');
                     document.getElementById('section-' + section).classList.add('active');
 
                     // Update preview frame
                     document.querySelectorAll('.preview-frame').forEach(function(f) { f.classList.remove('active'); });
-                    var previewMap = { general: 'general', kb: 'kb', admin: 'admin', login: 'login' };
-                    document.getElementById('preview-frame-' + previewMap[section]).classList.add('active');
+                    document.getElementById('preview-' + preview).classList.add('active');
                 });
             });
 
-            // Live preview update
-            window.updatePreview = function() {
+            // Live preview update function
+            function updatePreview() {
                 var colors = {
                     primary: getColorValue('primary_color', '#f97316'),
-                    accent: getColorValue('accent_color', '#3b82f6'),
+                    secondary: getColorValue('secondary_color', '#1e293b'),
                     success: getColorValue('success_color', '#10b981'),
                     warning: getColorValue('warning_color', '#f59e0b'),
                     error: getColorValue('error_color', '#ef4444'),
-                    secondary: getColorValue('secondary_color', '#1e293b'),
-                    publicBg: getColorValue('public_bg_color', '#f9fafb'),
-                    publicSurface: getColorValue('public_surface_color', '#ffffff'),
-                    publicText: getColorValue('public_text_color', '#1f2937'),
-                    publicMuted: getColorValue('public_text_muted', '#6b7280'),
-                    publicBorder: getColorValue('public_border_color', '#e5e7eb'),
-                    heroBg: getColorValue('hero_bg_color', '#1e293b'),
-                    heroText: getColorValue('hero_text_color', '#ffffff'),
-                    adminBg: getColorValue('admin_bg_color', '#f1f5f9'),
-                    adminSurface: getColorValue('admin_surface_color', '#ffffff'),
-                    adminText: getColorValue('admin_text_color', '#1e293b'),
-                    adminBorder: getColorValue('admin_border_color', '#e2e8f0'),
-                    sidebarText: getColorValue('sidebar_text_color', '#94a3b8'),
-                    sidebarHover: getColorValue('sidebar_text_hover', '#ffffff'),
-                    sidebarActive: getColorValue('sidebar_text_active', '#ffffff'),
-                    sidebarHeading: getColorValue('sidebar_heading_color', '#64748b'),
+                    info: getColorValue('info_color', '#3b82f6'),
+                    publicBg: getColorValue('public_bg', '#f9fafb'),
+                    publicSurface: getColorValue('public_surface', '#ffffff'),
+                    publicText: getColorValue('public_text', '#1f2937'),
+                    publicTextMuted: getColorValue('public_text_muted', '#6b7280'),
+                    publicBorder: getColorValue('public_border', '#e5e7eb'),
+                    heroBg: getColorValue('hero_bg', '#1e293b'),
+                    heroText: getColorValue('hero_text', '#ffffff'),
+                    adminBg: getColorValue('admin_bg', '#f1f5f9'),
+                    adminSurface: getColorValue('admin_surface', '#ffffff'),
+                    adminText: getColorValue('admin_text', '#1e293b'),
+                    adminTextMuted: getColorValue('admin_text_muted', '#64748b'),
+                    adminBorder: getColorValue('admin_border', '#e2e8f0'),
+                    sidebarBg: getColorValue('sidebar_bg', '#1e293b'),
+                    sidebarText: getColorValue('sidebar_text', '#94a3b8'),
+                    sidebarTextActive: getColorValue('sidebar_text_active', '#ffffff'),
                     loginGradient: getTextValue('login_bg_gradient', 'linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%)'),
                     loginBgColor: getColorValue('login_bg_color', '#1e293b')
                 };
 
+                // ===== GENERAL PREVIEW =====
                 // Primary buttons
-                document.querySelectorAll('.preview-btn-primary, .preview-search-btn').forEach(function(el) {
+                document.querySelectorAll('.demo-btn-primary, .preview-search-btn').forEach(function(el) {
                     el.style.backgroundColor = colors.primary;
                 });
-
+                // Secondary buttons
+                document.querySelectorAll('.demo-btn-secondary').forEach(function(el) {
+                    el.style.backgroundColor = colors.secondary;
+                });
                 // Status badges
-                updateBadge('preview-badge-success', colors.success);
-                updateBadge('preview-badge-warning', colors.warning);
-                updateBadge('preview-badge-error', colors.error);
+                updateBadge('demo-badge-success', colors.success);
+                updateBadge('demo-badge-warning', colors.warning);
+                updateBadge('demo-badge-error', colors.error);
+                updateBadge('demo-badge-info', colors.info);
+                // Status alerts
+                updateAlert('demo-alert-success', colors.success);
+                updateAlert('demo-alert-warning', colors.warning);
+                updateAlert('demo-alert-error', colors.error);
+                updateAlert('demo-alert-info', colors.info);
 
-                // KB Preview
-                var hero = document.getElementById('preview-hero');
-                if (hero) hero.style.background = colors.heroBg;
-                var heroTitle = document.getElementById('preview-hero-title');
-                if (heroTitle) heroTitle.style.color = colors.heroText;
-
-                var kbContent = document.getElementById('preview-kb-content');
-                if (kbContent) kbContent.style.backgroundColor = colors.publicBg;
-
-                document.querySelectorAll('.preview-kb-card').forEach(function(card) {
-                    card.style.backgroundColor = colors.publicSurface;
-                    card.style.borderColor = colors.publicBorder;
+                // ===== PUBLIC PREVIEW =====
+                // Hero
+                document.querySelectorAll('.preview-hero').forEach(function(el) {
+                    el.style.background = colors.heroBg;
                 });
-
-                document.querySelectorAll('.preview-card-icon').forEach(function(icon) {
-                    icon.style.backgroundColor = colors.primary + '15';
-                    icon.style.color = colors.primary;
+                document.querySelectorAll('.preview-hero h2, .preview-hero-logo .logo-text').forEach(function(el) {
+                    el.style.color = colors.heroText;
                 });
-
-                document.querySelectorAll('.preview-card-body h4').forEach(function(h4) {
-                    h4.style.color = colors.publicText;
+                // Content area
+                document.querySelectorAll('.preview-public-content').forEach(function(el) {
+                    el.style.backgroundColor = colors.publicBg;
                 });
-
-                document.querySelectorAll('.preview-card-body p').forEach(function(p) {
-                    p.style.color = colors.publicMuted;
+                // Cards
+                document.querySelectorAll('.preview-card').forEach(function(el) {
+                    el.style.backgroundColor = colors.publicSurface;
+                    el.style.borderColor = colors.publicBorder;
                 });
-
-                // KB Dividers
-                document.querySelectorAll('.preview-divider, #preview-kb-divider').forEach(function(el) {
+                document.querySelectorAll('.preview-card-icon').forEach(function(el) {
+                    el.style.backgroundColor = colors.primary + '15';
+                    el.style.color = colors.primary;
+                });
+                document.querySelectorAll('.preview-card-body h4').forEach(function(el) {
+                    el.style.color = colors.publicText;
+                });
+                document.querySelectorAll('.preview-card-body p').forEach(function(el) {
+                    el.style.color = colors.publicTextMuted;
+                });
+                document.querySelectorAll('.preview-divider').forEach(function(el) {
                     el.style.backgroundColor = colors.publicBorder;
                 });
 
-                // Admin Preview
-                var sidebar = document.getElementById('preview-sidebar');
-                if (sidebar) sidebar.style.backgroundColor = colors.secondary;
-
-                document.querySelectorAll('.preview-sidebar-section').forEach(function(el) {
-                    el.style.color = colors.sidebarHeading;
+                // ===== ADMIN PREVIEW =====
+                // Sidebar
+                document.querySelectorAll('.preview-sidebar').forEach(function(el) {
+                    el.style.backgroundColor = colors.sidebarBg;
                 });
-
                 document.querySelectorAll('.preview-sidebar-item:not(.active):not(.hover)').forEach(function(el) {
                     el.style.color = colors.sidebarText;
                 });
-
                 document.querySelectorAll('.preview-sidebar-item.active').forEach(function(el) {
                     el.style.backgroundColor = colors.primary;
-                    el.style.color = colors.sidebarActive;
+                    el.style.color = colors.sidebarTextActive;
                 });
-
                 document.querySelectorAll('.preview-sidebar-item.hover').forEach(function(el) {
-                    el.style.color = colors.sidebarHover;
+                    el.style.color = colors.sidebarTextActive;
                 });
-
-                var adminContent = document.getElementById('preview-admin-content');
-                if (adminContent) adminContent.style.backgroundColor = colors.adminBg;
-
-                var adminHeader = document.getElementById('preview-admin-header');
-                if (adminHeader) {
-                    adminHeader.style.backgroundColor = colors.adminSurface;
-                    adminHeader.style.borderColor = colors.adminBorder;
-                }
-
+                // Admin content
+                document.querySelectorAll('.preview-admin-content').forEach(function(el) {
+                    el.style.backgroundColor = colors.adminBg;
+                });
+                document.querySelectorAll('.preview-admin-header').forEach(function(el) {
+                    el.style.backgroundColor = colors.adminSurface;
+                    el.style.borderColor = colors.adminBorder;
+                });
                 document.querySelectorAll('.preview-admin-header h3').forEach(function(el) {
                     el.style.color = colors.adminText;
                 });
-
-                var adminCard = document.getElementById('preview-admin-card');
-                if (adminCard) {
-                    adminCard.style.backgroundColor = colors.adminSurface;
-                    adminCard.style.borderColor = colors.adminBorder;
-                }
-
+                document.querySelectorAll('.preview-admin-card').forEach(function(el) {
+                    el.style.backgroundColor = colors.adminSurface;
+                    el.style.borderColor = colors.adminBorder;
+                });
                 document.querySelectorAll('.preview-admin-card-header').forEach(function(el) {
                     el.style.color = colors.adminText;
                 });
-
-                // Admin Dividers
-                document.querySelectorAll('.preview-admin-card-divider, .preview-ticket-row-divider, #preview-sidebar-divider').forEach(function(el) {
-                    if (el.id === 'preview-sidebar-divider') {
-                        el.style.backgroundColor = 'rgba(255,255,255,0.1)';
-                    } else {
-                        el.style.backgroundColor = colors.adminBorder;
-                    }
+                document.querySelectorAll('.preview-admin-card-divider, .preview-ticket-divider').forEach(function(el) {
+                    el.style.backgroundColor = colors.adminBorder;
                 });
-
                 document.querySelectorAll('.preview-ticket-row').forEach(function(el) {
                     el.style.color = colors.adminText;
                 });
-
                 document.querySelectorAll('.preview-ticket-row .ticket-id').forEach(function(el) {
                     el.style.color = colors.primary;
                 });
+                document.querySelectorAll('.preview-ticket-row .ticket-title').forEach(function(el) {
+                    el.style.color = colors.adminTextMuted;
+                });
 
-                // Login Preview
-                var loginSidebar = document.getElementById('preview-login-sidebar');
+                // ===== LOGIN PREVIEW =====
+                var loginSidebar = document.querySelector('.preview-login-sidebar');
                 if (loginSidebar) {
                     var loginType = document.getElementById('login_bg_type');
                     if (loginType && loginType.value === 'color') {
@@ -1312,37 +1248,29 @@ class Oversee_Branding {
                         loginSidebar.style.background = colors.loginGradient;
                     }
                 }
-
-                // General Preview
-                document.querySelectorAll('.preview-general-header').forEach(function(el) {
-                    el.style.backgroundColor = colors.publicSurface;
-                    el.style.borderColor = colors.publicBorder;
+                document.querySelectorAll('.preview-login-card h4').forEach(function(el) {
+                    el.style.color = colors.adminText;
                 });
-                document.querySelectorAll('.preview-general-page').forEach(function(el) {
-                    el.style.backgroundColor = colors.publicBg;
+                document.querySelectorAll('.preview-form-group label').forEach(function(el) {
+                    el.style.color = colors.adminTextMuted;
                 });
-                document.querySelectorAll('.preview-general-card').forEach(function(el) {
-                    el.style.backgroundColor = colors.publicSurface;
-                    el.style.borderColor = colors.publicBorder;
+                document.querySelectorAll('.preview-form-group input').forEach(function(el) {
+                    el.style.borderColor = colors.adminBorder;
                 });
-                document.querySelectorAll('.preview-general-card h4').forEach(function(el) {
-                    el.style.color = colors.publicText;
-                });
-                document.querySelectorAll('.preview-general-card p').forEach(function(el) {
-                    el.style.color = colors.publicMuted;
-                });
-                document.querySelectorAll('.preview-general-logo span').forEach(function(el) {
-                    el.style.color = colors.publicText;
-                });
-                document.querySelectorAll('.preview-general-nav').forEach(function(el) {
-                    el.style.color = colors.publicMuted;
-                });
-            };
+            }
 
             function updateBadge(className, color) {
                 document.querySelectorAll('.' + className).forEach(function(badge) {
                     badge.style.backgroundColor = color + '20';
                     badge.style.color = color;
+                });
+            }
+
+            function updateAlert(className, color) {
+                document.querySelectorAll('.' + className).forEach(function(alert) {
+                    alert.style.backgroundColor = color + '15';
+                    alert.style.color = color;
+                    alert.style.borderLeftColor = color;
                 });
             }
 
@@ -1360,7 +1288,7 @@ class Oversee_Branding {
 
             // Watch for color picker changes
             if (typeof jQuery !== 'undefined') {
-                jQuery('.oversee-color-picker').on('colorchange', function() {
+                jQuery('.oversee-color-picker').on('change input colorchange', function() {
                     setTimeout(updatePreview, 50);
                 });
             }
@@ -1371,8 +1299,11 @@ class Oversee_Branding {
                 input.addEventListener('input', updatePreview);
             });
 
+            // Make updatePreview globally available
+            window.updatePreview = updatePreview;
+
             // Initial update
-            setTimeout(updatePreview, 500);
+            setTimeout(updatePreview, 300);
         });
         </script>
         <?php
