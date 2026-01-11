@@ -308,26 +308,52 @@ class Oversee_Template_Loader {
     <style id="oversee-branding-vars">
         :root {
             /* Brand colors */
+            --color-primary: <?php echo esc_attr($branding['primary_color']); ?>;
+            --color-primary-hover: <?php echo esc_attr(Oversee_Branding::darken_color($branding['primary_color'], 10)); ?>;
+            --color-primary-active: <?php echo esc_attr(Oversee_Branding::darken_color($branding['primary_color'], 20)); ?>;
+            --color-primary-light: <?php echo esc_attr(Oversee_Branding::lighten_color($branding['primary_color'], 35)); ?>;
+            --color-primary-lighter: <?php echo esc_attr(Oversee_Branding::lighten_color($branding['primary_color'], 42)); ?>;
             --primary: <?php echo esc_attr($branding['primary_color']); ?>;
             --primary-hover: <?php echo esc_attr(Oversee_Branding::darken_color($branding['primary_color'], 10)); ?>;
-            --primary-light: <?php echo esc_attr($branding['primary_color']); ?>15;
+            --primary-light: <?php echo esc_attr(Oversee_Branding::lighten_color($branding['primary_color'], 42)); ?>;
             --secondary: <?php echo esc_attr($branding['secondary_color']); ?>;
             --accent: <?php echo esc_attr($branding['accent_color']); ?>;
+
             /* Status colors */
+            --color-success: <?php echo esc_attr($branding['success_color']); ?>;
+            --color-warning: <?php echo esc_attr($branding['warning_color']); ?>;
+            --color-danger: <?php echo esc_attr($branding['error_color']); ?>;
             --success: <?php echo esc_attr($branding['success_color']); ?>;
             --warning: <?php echo esc_attr($branding['warning_color']); ?>;
             --error: <?php echo esc_attr($branding['error_color']); ?>;
-            /* Page colors */
+
+            /* Page background and surface colors */
+            --color-background: <?php echo esc_attr($branding['public_surface_color']); ?>;
+            --color-background-alt: <?php echo esc_attr($branding['public_bg_color']); ?>;
+            --color-surface: <?php echo esc_attr($branding['public_surface_color']); ?>;
+            --bg-body: <?php echo esc_attr($branding['public_surface_color']); ?>;
             --bg-light: <?php echo esc_attr($branding['public_bg_color']); ?>;
             --bg-white: <?php echo esc_attr($branding['public_surface_color']); ?>;
+
+            /* Text colors */
+            --color-text-primary: <?php echo esc_attr($branding['public_text_color']); ?>;
+            --color-text-secondary: <?php echo esc_attr($branding['public_text_muted']); ?>;
+            --color-text-muted: <?php echo esc_attr($branding['public_text_muted']); ?>;
             --text-primary: <?php echo esc_attr($branding['public_text_color']); ?>;
             --text-secondary: <?php echo esc_attr($branding['public_text_muted']); ?>;
             --text-muted: <?php echo esc_attr($branding['public_text_muted']); ?>;
+            --text-light: <?php echo esc_attr($branding['public_text_muted']); ?>;
+
+            /* Border colors */
+            --color-border: <?php echo esc_attr($branding['public_border_color']); ?>;
+            --border: <?php echo esc_attr($branding['public_border_color']); ?>;
             --border-color: <?php echo esc_attr($branding['public_border_color']); ?>;
+
             /* Hero colors */
             --hero-bg: <?php echo esc_attr($branding['hero_bg_color']); ?>;
             --hero-text: <?php echo esc_attr($branding['hero_text_color']); ?>;
             --hero-gradient: linear-gradient(135deg, <?php echo esc_attr($branding['hero_bg_color']); ?> 0%, <?php echo esc_attr(Oversee_Branding::darken_color($branding['hero_bg_color'], 20)); ?> 100%);
+
             /* Primary shadows */
             <?php $primary_rgb = Oversee_Branding::hex_to_rgb($branding['primary_color']); ?>
             --shadow-primary-sm: 0 2px 4px rgba(<?php echo $primary_rgb; ?>, 0.25);
