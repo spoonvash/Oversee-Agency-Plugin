@@ -5,6 +5,40 @@ All notable changes to Oversee Helpdesk will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.0-beta] - 2026-01-11
+
+### Added
+- **Comprehensive White-Label Customization**
+  - Full color customization for Knowledge Base pages (background, surface, text, borders, hero section)
+  - Full color customization for Admin Portal pages (background, surface, text, borders)
+  - Login page color customization with dedicated preview
+  - All pages now respect brand colors for complete visual consistency
+
+- **Redesigned White-Label Settings UI**
+  - Side-by-side layout with controls on left and live preview on right
+  - Section tabs: General, Knowledge Base, Admin Portal, Login Page
+  - Sticky preview panel that stays visible while scrolling
+  - Real-time preview updates as colors are changed
+  - Dividers in previews that update with border color changes
+  - Responsive design that stacks on smaller screens
+
+- **CSS Design System**
+  - Dynamic CSS variables generated from brand colors
+  - RGB color values for RGBA shadow support
+  - Automatic color calculations (darken/lighten variants)
+  - Consistent styling across all public and admin pages
+
+### Changed
+- Removed dark mode in favor of full color customization
+- Removed all hardcoded orange colors from templates
+- Reorganized branding settings into logical sections
+- Improved color picker interactions with instant preview feedback
+
+### Fixed
+- Template loader now outputs all custom color variables
+- Hero section properly respects custom gradient colors
+- Border and divider colors now consistent across components
+
 ## [2.1.0] - 2025-01-09
 
 ### Added
