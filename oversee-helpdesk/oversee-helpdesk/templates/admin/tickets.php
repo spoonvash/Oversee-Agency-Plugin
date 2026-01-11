@@ -250,35 +250,11 @@ $favicon = Oversee_Branding::get('favicon_url');
         let lastTotalTickets = 0;
         let lastReplyCount = 0;
         
-        // Notification audio - initialized on first user click
-        let notificationAudio = null;
-        
         // ============================================================
         // NOTIFICATION SYSTEM - SIMPLE AND BULLETPROOF
         // ============================================================
-        
-        // Initialize sound (called on first click)
-        function initSound() {
-            if (notificationAudio) return;
-            try {
-                // Simple beep sound
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                oscillator.frequency.value = 800;
-                gainNode.gain.value = 0.3;
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.2);
-                notificationAudio = audioCtx;
-                console.log('[Notifications] Sound initialized');
-            } catch (e) {
-                console.log('[Notifications] Sound init failed:', e);
-            }
-        }
-        
-        // Play notification sound
+
+        // Play notification sound for new tickets/replies
         function playSound() {
             try {
                 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -316,7 +292,10 @@ $favicon = Oversee_Branding::get('favicon_url');
             titleEl.textContent = title;
             bodyEl.textContent = message;
             banner.classList.add('show');
-            
+
+            // Play notification sound
+            playSound();
+
             // Flash browser title
             flashBrowserTitle(title);
             
@@ -446,11 +425,7 @@ $favicon = Oversee_Branding::get('favicon_url');
         
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('[Init] Page loaded');
-            
-            // Enable sound on first interaction
-            document.addEventListener('click', initSound, { once: true });
-            document.addEventListener('keydown', initSound, { once: true });
-            
+
             // Request notification permission
             if ('Notification' in window) {
                 if (Notification.permission === 'default') {

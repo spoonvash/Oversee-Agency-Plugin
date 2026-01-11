@@ -252,14 +252,22 @@ img { max-width: 100%; height: auto; }
     border: 2px solid var(--primary); 
 }
 
-.btn-sm { 
-    padding: 8px 14px; 
-    font-size: 13px; 
+/* Button Sizes - Consistent 4-level system (sm, md, lg, xl) */
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 12px;
 }
 
-.btn-lg { 
-    padding: 14px 28px; 
-    font-size: 16px; 
+/* .btn (medium) is the default - defined above */
+
+.btn-lg {
+    padding: 12px 24px;
+    font-size: 15px;
+}
+
+.btn-xl {
+    padding: 14px 28px;
+    font-size: 16px;
 }
 
 /* ==========================================================================
@@ -1896,8 +1904,8 @@ textarea.form-control {
     gap: 1px; 
 }
 
-.detail-label { 
-    font-size: 9px; 
+.detail-label {
+    font-size: 11px; 
     font-weight: 600; 
     color: var(--text-light); 
     text-transform: uppercase; 
@@ -1919,9 +1927,9 @@ textarea.form-control {
 .ticket-info-card .status-badge,
 .ticket-info-card .priority-badge { 
     display: inline-block; 
-    padding: 2px 6px; 
-    border-radius: var(--radius-full); 
-    font-size: 9px; 
+    padding: 2px 6px;
+    border-radius: var(--radius-full);
+    font-size: 11px; 
     font-weight: 600; 
 }
 
@@ -2055,8 +2063,8 @@ textarea.form-control {
 }
 
 .chat-message__author,
-.chat-message__time { 
-    font-size: 9px; 
+.chat-message__time {
+    font-size: 11px; 
     font-weight: 600; 
 }
 
@@ -2134,13 +2142,13 @@ textarea.form-control {
     transform: scale(1.02); 
 }
 
-.chat-attachment-file { 
-    display: inline-flex; 
-    align-items: center; 
-    gap: 3px; 
-    padding: 3px 6px; 
-    border-radius: var(--radius-sm); 
-    font-size: 9px; 
+.chat-attachment-file {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 3px 6px;
+    border-radius: var(--radius-sm);
+    font-size: 11px; 
     text-decoration: none; 
 }
 
@@ -3339,49 +3347,346 @@ textarea.form-control {
 }
 
 /* ==========================================================================
+   LIVE SUPPORT PAGE
+   ========================================================================== */
+.zoom-section {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px;
+}
+
+.zoom-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.zoom-header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 12px;
+}
+
+.zoom-header p {
+    font-size: 16px;
+    color: var(--text-muted);
+}
+
+.agents-container {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 32px;
+    margin-bottom: 40px;
+}
+
+.zoom-section .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 24px;
+}
+
+.zoom-section .agent-card {
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.zoom-section .agent-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+}
+
+.zoom-section .agent-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 auto 16px;
+}
+
+.zoom-section .agent-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.zoom-section .agent-role {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+.zoom-section .agent-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--success);
+    margin-bottom: 16px;
+}
+
+.zoom-section .agent-status .dot {
+    width: 8px;
+    height: 8px;
+    background: var(--success);
+    border-radius: 50%;
+    animation: statusPulse 2s infinite;
+}
+
+.btn-book {
+    width: 100%;
+    padding: 12px 20px;
+    background: var(--primary);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-book:hover {
+    background: var(--primary-hover);
+}
+
+/* No agents state */
+.no-agents {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.no-agents-icon {
+    width: 80px;
+    height: 80px;
+    background: var(--bg-light);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.no-agents-icon i {
+    font-size: 32px;
+    color: var(--text-light);
+}
+
+.no-agents h3 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.no-agents p {
+    color: var(--text-muted);
+    margin-bottom: 20px;
+}
+
+/* How it works section */
+.how-it-works {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.how-it-works h2 {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 32px;
+}
+
+.steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 32px;
+}
+
+.step {
+    text-align: center;
+}
+
+.step-icon {
+    width: 60px;
+    height: 60px;
+    background: var(--primary-light);
+    border-radius: var(--radius-xl);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.step-icon i {
+    font-size: 24px;
+    color: var(--primary);
+}
+
+.step h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+}
+
+.step p {
+    font-size: 14px;
+    color: var(--text-muted);
+}
+
+/* Calendar Lightbox Modal */
+.calendar-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 10000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.calendar-modal.show {
+    display: flex;
+}
+
+.calendar-modal-content {
+    background: var(--bg-white);
+    border-radius: var(--radius-xl);
+    width: 100%;
+    max-width: 700px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: modalIn 0.2s ease-out;
+}
+
+.calendar-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.calendar-modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.calendar-modal-close {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text-muted);
+    transition: all 0.15s;
+}
+
+.calendar-modal-close:hover {
+    background: var(--border);
+    color: var(--text-primary);
+}
+
+.calendar-modal-body {
+    padding: 0;
+    min-height: 500px;
+}
+
+.calendar-modal-body iframe {
+    width: 100%;
+    height: 500px;
+    border: none;
+}
+
+@keyframes modalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes statusPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* ==========================================================================
    RESPONSIVE
    ========================================================================== */
 @media (max-width: 900px) {
-    .categories-grid { 
-        grid-template-columns: repeat(2, 1fr); 
+    .categories-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
-    
-    .article-layout { 
-        grid-template-columns: 1fr; 
-        gap: 24px; 
-    }
-    
-    .article-sidebar {
-        position: static;
-    }
-    
-    .sidebar { 
-        order: -1; 
-        flex-direction: row; 
-        flex-wrap: wrap; 
-    }
-    
-    .sidebar-card { 
-        flex: 1; 
-        min-width: 280px; 
-    }
-    
-    .form-row { 
-        grid-template-columns: 1fr; 
+
+    .form-row {
+        grid-template-columns: 1fr;
     }
 }
 
 @media (max-width: 768px) {
-    .ticket-layout { 
-        grid-template-columns: 1fr; 
+    /* Article layout - sidebar beside article until tablet */
+    .article-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
     }
-    
-    .ticket-sidebar { 
-        position: static; 
+
+    .article-sidebar {
+        position: static;
     }
-    
-    .ticket-view-section { 
-        padding: 10px; 
+
+    .sidebar {
+        order: -1;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .sidebar-card {
+        flex: 1;
+        min-width: 280px;
+    }
+
+    .ticket-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .ticket-sidebar {
+        position: static;
+    }
+
+    .ticket-view-section {
+        padding: 10px;
     }
     
     .chat-message { 
@@ -3407,16 +3712,33 @@ textarea.form-control {
 }
 
 @media (max-width: 640px) {
-    .hero { 
-        padding: 40px 20px 50px; 
+    .hero {
+        padding: 40px 20px 50px;
     }
-    
-    .hero h1 { 
-        font-size: 28px; 
+
+    .hero h1 {
+        font-size: 28px;
     }
-    
-    .categories-grid { 
-        grid-template-columns: 1fr; 
+
+    .categories-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Live Support Mobile */
+    .zoom-header h1 {
+        font-size: 24px;
+    }
+
+    .zoom-section .agents-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-modal-content {
+        max-height: 95vh;
+    }
+
+    .calendar-modal-body iframe {
+        height: 400px;
     }
     
     .search-box input { 
