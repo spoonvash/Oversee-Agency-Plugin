@@ -5,6 +5,28 @@ All notable changes to Oversee Helpdesk will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.2-beta] - 2026-01-11
+
+### Added
+- **Complete CSS Variable System**
+  - 90+ hardcoded colors replaced with CSS variables in admin.css
+  - All backgrounds, text colors, borders, and status colors now customizable
+  - New admin color options: surface hover, surface muted, text secondary, text muted
+  - New border options: light border, input border
+  - Descriptive hints for each color option in settings
+
+### Improved
+- **Admin Portal Settings**
+  - Expanded color customization with Surface Variations section
+  - Separate Text Colors section (primary, secondary, muted)
+  - Dedicated Borders & Dividers section
+  - All color fields include helpful descriptions
+
+### Fixed
+- Circular reference issues in CSS variable definitions
+- Public CSS hardcoded colors now use variables
+- Consistent status color usage across admin and public pages
+
 ## [2.7.1-beta] - 2026-01-11
 
 ### Fixed
