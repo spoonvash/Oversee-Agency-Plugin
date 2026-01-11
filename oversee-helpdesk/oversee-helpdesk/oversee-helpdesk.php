@@ -909,4 +909,4 @@ class Oversee_Helpdesk_Updater {
 }
 
 // Initialize updater
-new Oversee_Helpdesk_Updater(__FILE__, '2.5.0-beta');
+new Oversee_Helpdesk_Updater(__FILE__, '2.6.0-beta');
