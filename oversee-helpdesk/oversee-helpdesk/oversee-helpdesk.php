@@ -876,22 +876,25 @@ class Oversee_Helpdesk_Updater {
         if ($action !== 'plugin_information' || $args->slug !== $this->plugin_slug) {
             return $result;
         }
-        
+
         $response = wp_remote_post($this->update_server . '?action=plugin-info', [
-            'body' => ['slug' => $this->plugin_slug],
+            'body' => [
+                'slug' => $this->plugin_slug,
+                'site_url' => home_url()
+            ],
             'timeout' => 10
         ]);
-        
+
         if (is_wp_error($response)) {
             return $result;
         }
-        
+
         $data = json_decode(wp_remote_retrieve_body($response), true);
-        
+
         if ($data) {
             return (object) $data;
         }
-        
+
         return $result;
     }
 }

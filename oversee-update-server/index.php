@@ -1,9 +1,10 @@
 <?php
 /**
  * Oversee Plugin Update Server
- * Version: 1.0.0
- * 
- * Upload to: https://overseeagency.com/wp-content/uploads/update-server/
+ * Version: 2.0.0
+ *
+ * Production-grade update server with proper beta/stable channel separation.
+ * Pulls releases dynamically from GitHub.
  */
 
 // ============================================================================
@@ -14,21 +15,21 @@ $CONFIG = [
     // GitHub
     'github_user' => 'spoonvash',
     'github_repo' => 'Oversee-Agency-Plugin',
-    'webhook_secret' => 'b5bb81ecd85a49acc040ec1ef36d13379bf9238b9ee0dea7b32960edbb79041f', // Generate: bin2hex(random_bytes(32))
-    
-    // Beta testers get pre-releases
+
+    // Beta testers get pre-releases (domain list)
     'beta_testers' => [
         'overseeagency.com',
-        'www.overseeagency.com'
+        'www.overseeagency.com',
+        'developer.overseeagency.com'
     ],
-    
-    // License validation endpoint (your existing system)
-    'license_api' => 'https://overseeagency.com/wp-content/plugins/oversee-license-server/oversee-license-server.php',
-    
-    // Forced rollback - uncomment and edit to force all sites to downgrade
+
+    // Cache TTL in seconds (5 minutes)
+    'cache_ttl' => 300,
+
+    // Forced rollback - uncomment to force all sites to downgrade
     // 'force_rollback' => [
-    //     'affected_versions' => ['2.1.8', '2.1.9'],
-    //     'safe_version' => '2.1.7',
+    //     'affected_versions' => ['2.3.1', '2.3.1-beta'],
+    //     'safe_version' => '2.3.0',
     //     'reason' => 'Critical bug discovered'
     // ]
 ];
@@ -67,21 +68,14 @@ $PLUGIN = [
 error_reporting(0);
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
+header('X-Update-Server-Version: 2.0.0');
 
 define('CACHE_DIR', __DIR__ . '/cache');
-define('PACKAGES_DIR', __DIR__ . '/packages');
 define('LOGS_DIR', __DIR__ . '/logs');
-define('CACHE_TTL', 300);
 
 // Ensure directories exist
-foreach ([CACHE_DIR, PACKAGES_DIR, LOGS_DIR] as $dir) {
+foreach ([CACHE_DIR, LOGS_DIR] as $dir) {
     if (!is_dir($dir)) mkdir($dir, 0755, true);
-}
-
-// Handle GitHub webhook
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SERVER['HTTP_X_GITHUB_EVENT'])) {
-    handleWebhook($CONFIG);
-    exit;
 }
 
 // Handle API requests
@@ -95,353 +89,388 @@ switch ($action) {
     case 'get_metadata':
         handlePluginInfo($CONFIG, $PLUGIN);
         break;
-    case 'download':
-        handleDownload($CONFIG, $PLUGIN);
-        break;
     case 'status':
         handleStatus($CONFIG);
         break;
+    case 'clear-cache':
+        handleClearCache();
+        break;
     default:
-        respond(['error' => 'Invalid action', 'valid_actions' => ['update-check', 'plugin-info', 'download', 'status']]);
+        respond(['error' => 'Invalid action', 'valid_actions' => ['update-check', 'plugin-info', 'status', 'clear-cache']]);
 }
 
 // ============================================================================
-// WEBHOOK HANDLER
-// ============================================================================
-
-function handleWebhook($config) {
-    $payload = file_get_contents('php://input');
-    $event = $_SERVER['HTTP_X_GITHUB_EVENT'];
-    
-    // Verify signature
-    if ($config['webhook_secret'] !== 'b5bb81ecd85a49acc040ec1ef36d13379bf9238b9ee0dea7b32960edbb79041f') {
-        $signature = $_SERVER['HTTP_X_HUB_SIGNATURE_256'] ?? '';
-        $expected = 'sha256=' . hash_hmac('sha256', $payload, $config['webhook_secret']);
-        if (!hash_equals($expected, $signature)) {
-            http_response_code(401);
-            respond(['error' => 'Invalid signature']);
-            return;
-        }
-    }
-    
-    if ($event !== 'release') {
-        respond(['status' => 'ignored', 'event' => $event]);
-        return;
-    }
-    
-    $data = json_decode($payload, true);
-    
-    if ($data['action'] !== 'published') {
-        respond(['status' => 'ignored', 'action' => $data['action']]);
-        return;
-    }
-    
-    $release = $data['release'];
-    $version = ltrim($release['tag_name'], 'v');
-    $is_prerelease = $release['prerelease'] || strpos($version, 'beta') !== false;
-    
-    // Find zip asset
-    $zip_url = null;
-    foreach ($release['assets'] ?? [] as $asset) {
-        if (strpos($asset['name'], '.zip') !== false) {
-            $zip_url = $asset['browser_download_url'];
-            break;
-        }
-    }
-    
-    if (!$zip_url) {
-        respond(['error' => 'No zip asset found']);
-        return;
-    }
-    
-    // Download the zip
-    $zip_content = file_get_contents($zip_url);
-    if (!$zip_content) {
-        respond(['error' => 'Failed to download zip']);
-        return;
-    }
-    
-    $slug = 'oversee-helpdesk';
-    $filename = "{$slug}.zip";
-    file_put_contents(PACKAGES_DIR . "/{$filename}", $zip_content);
-    
-    // Update release manifest
-    $manifest = getManifest();
-    $clean_version = str_replace('-beta', '', $version);
-    
-    $release_info = [
-        'version' => $clean_version,
-        'tag' => $release['tag_name'],
-        'date' => date('Y-m-d', strtotime($release['published_at'])),
-        'changelog' => $release['body'] ?: 'Bug fixes and improvements',
-        'prerelease' => $is_prerelease
-    ];
-    
-    if ($is_prerelease) {
-        $manifest['beta'] = $release_info;
-    } else {
-        $manifest['stable'] = $release_info;
-        // Stable also becomes beta if it's newer
-        if (!isset($manifest['beta']) || version_compare($clean_version, $manifest['beta']['version'], '>')) {
-            $manifest['beta'] = $release_info;
-        }
-    }
-    
-    $manifest['all_releases'][] = $release_info;
-    $manifest['updated'] = date('c');
-    
-    saveManifest($manifest);
-    
-    // Clear cache
-    array_map('unlink', glob(CACHE_DIR . '/*.json'));
-    
-    writeLog("Release deployed: v{$version} (" . ($is_prerelease ? 'beta' : 'stable') . ")");
-    
-    respond([
-        'status' => 'success',
-        'version' => $version,
-        'channel' => $is_prerelease ? 'beta' : 'stable'
-    ]);
-}
-
-// ============================================================================
-// UPDATE CHECK
+// UPDATE CHECK - Core update logic
 // ============================================================================
 
 function handleUpdateCheck($config, $plugin) {
     $slug = $_REQUEST['slug'] ?? '';
-    $version = $_REQUEST['version'] ?? '0.0.0';
+    $installed_version = $_REQUEST['version'] ?? '0.0.0';
     $site_url = $_REQUEST['site_url'] ?? '';
-    $license_key = $_REQUEST['license_key'] ?? '';
-    
+
+    // Validate plugin slug
     if ($slug !== $plugin['slug']) {
-        respond(['error' => 'Unknown plugin']);
+        respond(['error' => 'Unknown plugin', 'requested_slug' => $slug]);
         return;
     }
-    
+
     // Check for forced rollback first
     if (isset($config['force_rollback'])) {
         $rollback = $config['force_rollback'];
-        if (in_array($version, $rollback['affected_versions'])) {
-            respond([
-                'update_available' => true,
-                'version' => $rollback['safe_version'],
-                'download_url' => getSignedDownloadUrl($plugin['slug'], $rollback['safe_version'], $license_key, $config),
-                'tested' => $plugin['tested'],
-                'requires_php' => $plugin['requires_php'],
-                'emergency' => true,
-                'upgrade_notice' => 'CRITICAL: ' . $rollback['reason']
-            ]);
-            return;
+        if (in_array($installed_version, $rollback['affected_versions'])) {
+            $release = fetchGitHubRelease($config, $rollback['safe_version']);
+            if ($release) {
+                respond([
+                    'update_available' => true,
+                    'version' => $rollback['safe_version'],
+                    'download_url' => $release['download_url'],
+                    'tested' => $plugin['tested'],
+                    'requires_php' => $plugin['requires_php'],
+                    'emergency' => true,
+                    'upgrade_notice' => 'CRITICAL: ' . $rollback['reason']
+                ]);
+                return;
+            }
         }
     }
-    
-    $release = getRelease($site_url, $config);
-    
-    if (version_compare($version, $release['version'], '<')) {
+
+    // Determine channel based on site
+    $is_beta_tester = isBetaTester($site_url, $config);
+
+    // Get appropriate release for this channel
+    $release = getLatestRelease($config, $is_beta_tester);
+
+    if (!$release) {
+        respond(['update_available' => false, 'reason' => 'No releases found']);
+        return;
+    }
+
+    // Compare versions properly (handles -beta suffix)
+    $update_available = version_compare(
+        normalizeVersion($installed_version),
+        normalizeVersion($release['version']),
+        '<'
+    );
+
+    if ($update_available) {
+        writeLog("Update available: {$installed_version} -> {$release['version']} for " . parse_url($site_url, PHP_URL_HOST));
         respond([
             'update_available' => true,
             'version' => $release['version'],
-            'download_url' => getSignedDownloadUrl($plugin['slug'], $release['version'], $license_key, $config),
+            'download_url' => $release['download_url'],
             'tested' => $plugin['tested'],
-            'requires_php' => $plugin['requires_php']
+            'requires_php' => $plugin['requires_php'],
+            'channel' => $is_beta_tester ? 'beta' : 'stable',
+            'is_beta' => $release['is_beta']
         ]);
     } else {
-        respond(['update_available' => false]);
+        respond([
+            'update_available' => false,
+            'installed' => $installed_version,
+            'latest' => $release['version'],
+            'channel' => $is_beta_tester ? 'beta' : 'stable'
+        ]);
     }
 }
 
 // ============================================================================
-// PLUGIN INFO
+// PLUGIN INFO - WordPress plugin details popup
 // ============================================================================
 
 function handlePluginInfo($config, $plugin) {
     $site_url = $_REQUEST['site_url'] ?? '';
-    $license_key = $_REQUEST['license_key'] ?? '';
-    
-    $release = getRelease($site_url, $config);
-    $manifest = getManifest();
-    
+    $is_beta_tester = isBetaTester($site_url, $config);
+
+    $release = getLatestRelease($config, $is_beta_tester);
+    $all_releases = getAllReleases($config);
+
     respond([
         'name' => $plugin['name'],
         'slug' => $plugin['slug'],
-        'version' => $release['version'],
+        'version' => $release['version'] ?? '0.0.0',
         'author' => $plugin['author'],
         'requires' => $plugin['requires'],
         'tested' => $plugin['tested'],
         'requires_php' => $plugin['requires_php'],
         'homepage' => $plugin['homepage'],
-        'download_link' => getSignedDownloadUrl($plugin['slug'], $release['version'], $license_key, $config),
+        'download_link' => $release['download_url'] ?? '',
         'banners' => $plugin['banners'],
         'icons' => $plugin['icons'],
         'sections' => [
             'description' => $plugin['description'],
-            'changelog' => buildChangelog($manifest)
+            'changelog' => buildChangelog($all_releases)
         ],
         'last_updated' => $release['date'] ?? date('Y-m-d')
     ]);
 }
 
 // ============================================================================
-// DOWNLOAD HANDLER
-// ============================================================================
-
-function handleDownload($config, $plugin) {
-    $slug = $_REQUEST['slug'] ?? '';
-    $version = $_REQUEST['v'] ?? '';
-    $expires = $_REQUEST['expires'] ?? 0;
-    $license = $_REQUEST['license'] ?? '';
-    $sig = $_REQUEST['sig'] ?? '';
-    
-    // Verify signature
-    $expected = hash_hmac('sha256', "{$slug}|{$version}|{$expires}|{$license}", $config['webhook_secret']);
-    if (!hash_equals($expected, $sig)) {
-        http_response_code(403);
-        respond(['error' => 'Invalid download signature']);
-        return;
-    }
-    
-    // Check expiry
-    if (time() > (int)$expires) {
-        http_response_code(403);
-        respond(['error' => 'Download link expired']);
-        return;
-    }
-    
-    // Validate license (optional - comment out to skip)
-    if (!empty($license) && !validateLicense($license, $config)) {
-        http_response_code(403);
-        respond(['error' => 'Invalid or expired license']);
-        return;
-    }
-    
-    // Find the package
-    $file = PACKAGES_DIR . "/{$slug}.zip";
-    
-    if (!file_exists($file)) {
-        http_response_code(404);
-        respond(['error' => 'Package not found']);
-        return;
-    }
-    
-    writeLog("Download: {$slug} v{$version} | License: " . substr($license, 0, 8) . '...');
-    
-    // Serve file
-    header('Content-Type: application/zip');
-    header('Content-Disposition: attachment; filename="' . $slug . '.zip"');
-    header('Content-Length: ' . filesize($file));
-    header('Cache-Control: no-cache');
-    readfile($file);
-    exit;
-}
-
-// ============================================================================
-// STATUS ENDPOINT
+// STATUS - Health check and debugging
 // ============================================================================
 
 function handleStatus($config) {
-    $manifest = getManifest();
-    
+    $releases = getAllReleases($config);
+
+    // Find latest stable and beta
+    $stable = null;
+    $beta = null;
+
+    foreach ($releases as $release) {
+        if ($release['is_beta']) {
+            if (!$beta || version_compare(normalizeVersion($release['version']), normalizeVersion($beta['version']), '>')) {
+                $beta = $release;
+            }
+        } else {
+            if (!$stable || version_compare(normalizeVersion($release['version']), normalizeVersion($stable['version']), '>')) {
+                $stable = $release;
+            }
+        }
+    }
+
+    // Beta channel should show the higher of beta or stable
+    $beta_channel_version = $beta;
+    if ($stable && (!$beta || version_compare(normalizeVersion($stable['version']), normalizeVersion($beta['version']), '>'))) {
+        $beta_channel_version = $stable;
+    }
+
     respond([
         'status' => 'ok',
+        'server_version' => '2.0.0',
         'server_time' => date('c'),
-        'stable_version' => $manifest['stable']['version'] ?? 'none',
-        'beta_version' => $manifest['beta']['version'] ?? 'none',
-        'last_updated' => $manifest['updated'] ?? 'never',
-        'package_exists' => file_exists(PACKAGES_DIR . '/oversee-helpdesk.zip')
+        'stable_version' => $stable['version'] ?? 'none',
+        'beta_version' => $beta_channel_version['version'] ?? 'none',
+        'total_releases' => count($releases),
+        'last_fetched' => getCacheTime(),
+        'cache_ttl' => $config['cache_ttl'] . ' seconds',
+        'beta_testers' => $config['beta_testers']
     ]);
+}
+
+// ============================================================================
+// CACHE MANAGEMENT
+// ============================================================================
+
+function handleClearCache() {
+    $files = glob(CACHE_DIR . '/*.json');
+    foreach ($files as $file) {
+        unlink($file);
+    }
+    writeLog("Cache cleared manually");
+    respond(['status' => 'ok', 'message' => 'Cache cleared', 'files_removed' => count($files)]);
+}
+
+// ============================================================================
+// GITHUB INTEGRATION - Dynamic release fetching
+// ============================================================================
+
+function getAllReleases($config) {
+    $cache_file = CACHE_DIR . '/releases.json';
+    $cache_ttl = $config['cache_ttl'];
+
+    // Check cache
+    if (file_exists($cache_file)) {
+        $cache_age = time() - filemtime($cache_file);
+        if ($cache_age < $cache_ttl) {
+            $cached = json_decode(file_get_contents($cache_file), true);
+            if ($cached) return $cached;
+        }
+    }
+
+    // Fetch from GitHub
+    $url = "https://api.github.com/repos/{$config['github_user']}/{$config['github_repo']}/releases";
+
+    $context = stream_context_create([
+        'http' => [
+            'method' => 'GET',
+            'header' => [
+                'User-Agent: Oversee-Update-Server/2.0',
+                'Accept: application/vnd.github.v3+json'
+            ],
+            'timeout' => 10
+        ]
+    ]);
+
+    $response = @file_get_contents($url, false, $context);
+
+    if (!$response) {
+        writeLog("Failed to fetch releases from GitHub");
+        // Return cached data even if stale
+        if (file_exists($cache_file)) {
+            return json_decode(file_get_contents($cache_file), true) ?: [];
+        }
+        return [];
+    }
+
+    $github_releases = json_decode($response, true);
+
+    if (!is_array($github_releases)) {
+        writeLog("Invalid response from GitHub");
+        return [];
+    }
+
+    $releases = [];
+
+    foreach ($github_releases as $gh_release) {
+        // Skip drafts
+        if ($gh_release['draft']) continue;
+
+        $tag = $gh_release['tag_name'];
+        $version = ltrim($tag, 'v');
+        $is_beta = $gh_release['prerelease'] || strpos($version, 'beta') !== false || strpos($version, 'alpha') !== false || strpos($version, 'rc') !== false;
+
+        // Find the plugin zip asset
+        $download_url = null;
+        foreach ($gh_release['assets'] ?? [] as $asset) {
+            if ($asset['name'] === 'oversee-helpdesk.zip') {
+                $download_url = $asset['browser_download_url'];
+                break;
+            }
+        }
+
+        if (!$download_url) continue; // Skip releases without plugin zip
+
+        $releases[] = [
+            'version' => $version,
+            'tag' => $tag,
+            'is_beta' => $is_beta,
+            'download_url' => $download_url,
+            'date' => date('Y-m-d', strtotime($gh_release['published_at'])),
+            'changelog' => $gh_release['body'] ?: 'Bug fixes and improvements'
+        ];
+    }
+
+    // Sort by version (newest first)
+    usort($releases, function($a, $b) {
+        return version_compare(normalizeVersion($b['version']), normalizeVersion($a['version']));
+    });
+
+    // Cache the results
+    file_put_contents($cache_file, json_encode($releases, JSON_PRETTY_PRINT));
+    writeLog("Fetched " . count($releases) . " releases from GitHub");
+
+    return $releases;
+}
+
+function getLatestRelease($config, $include_beta = false) {
+    $releases = getAllReleases($config);
+
+    if (empty($releases)) {
+        return null;
+    }
+
+    // If beta tester, find the highest version (stable or beta)
+    if ($include_beta) {
+        return $releases[0]; // Already sorted by version, newest first
+    }
+
+    // For stable channel, find highest non-beta version
+    foreach ($releases as $release) {
+        if (!$release['is_beta']) {
+            return $release;
+        }
+    }
+
+    // Fallback: if no stable releases, return null (don't give beta to stable users)
+    return null;
+}
+
+function fetchGitHubRelease($config, $version) {
+    $releases = getAllReleases($config);
+
+    foreach ($releases as $release) {
+        if ($release['version'] === $version) {
+            return $release;
+        }
+    }
+
+    return null;
 }
 
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
-function getRelease($site_url, $config) {
-    $manifest = getManifest();
-    
+/**
+ * Normalize version for comparison
+ * Converts "2.3.1-beta" to "2.3.1.0" and "2.3.1" to "2.3.1.1"
+ * This ensures stable versions are always higher than their beta counterparts
+ */
+function normalizeVersion($version) {
+    // Remove 'v' prefix if present
+    $version = ltrim($version, 'v');
+
+    // Check if it's a beta/pre-release
+    $is_prerelease = preg_match('/-(beta|alpha|rc|dev)/i', $version);
+
+    // Remove the suffix for base comparison
+    $base = preg_replace('/-(beta|alpha|rc|dev).*/i', '', $version);
+
+    // Ensure we have at least 3 parts
+    $parts = explode('.', $base);
+    while (count($parts) < 3) {
+        $parts[] = '0';
+    }
+
+    // Add a 4th part: 0 for pre-release, 1 for stable
+    // This ensures 2.3.1 > 2.3.1-beta
+    $parts[] = $is_prerelease ? '0' : '1';
+
+    return implode('.', $parts);
+}
+
+function isBetaTester($site_url, $config) {
+    if (empty($site_url)) return false;
+
     $domain = parse_url($site_url, PHP_URL_HOST);
-    $is_beta = in_array($domain, $config['beta_testers']);
-    
-    $channel = $is_beta ? 'beta' : 'stable';
-    
-    if (isset($manifest[$channel])) {
-        return $manifest[$channel];
+    if (!$domain) return false;
+
+    // Remove www. for comparison
+    $domain = preg_replace('/^www\./', '', $domain);
+
+    foreach ($config['beta_testers'] as $beta_domain) {
+        $beta_domain = preg_replace('/^www\./', '', $beta_domain);
+        if ($domain === $beta_domain) {
+            return true;
+        }
     }
-    
-    // Fallback
-    return $manifest['stable'] ?? $manifest['beta'] ?? ['version' => '0.0.0', 'date' => date('Y-m-d')];
+
+    return false;
 }
 
-function getManifest() {
-    $file = CACHE_DIR . '/manifest.json';
-    if (file_exists($file)) {
-        return json_decode(file_get_contents($file), true) ?: [];
-    }
-    return [];
-}
-
-function saveManifest($data) {
-    file_put_contents(CACHE_DIR . '/manifest.json', json_encode($data, JSON_PRETTY_PRINT));
-}
-
-function getSignedDownloadUrl($slug, $version, $license, $config) {
-    $expires = time() + 3600; // 1 hour
-    $sig = hash_hmac('sha256', "{$slug}|{$version}|{$expires}|{$license}", $config['webhook_secret']);
-    
-    $base_url = (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] . parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-    
-    return $base_url . '?' . http_build_query([
-        'action' => 'download',
-        'slug' => $slug,
-        'v' => $version,
-        'expires' => $expires,
-        'license' => $license,
-        'sig' => $sig
-    ]);
-}
-
-function validateLicense($license_key, $config) {
-    if (empty($license_key)) return true; // Allow updates without license for now
-    
-    // Call your existing license server
-    $response = @file_get_contents($config['license_api'] . '?' . http_build_query([
-        'action' => 'validate',
-        'license_key' => $license_key
-    ]));
-    
-    if (!$response) return true; // Fail open if license server is down
-    
-    $data = json_decode($response, true);
-    return isset($data['valid']) && $data['valid'];
-}
-
-function buildChangelog($manifest) {
+function buildChangelog($releases) {
     $html = '';
-    $releases = $manifest['all_releases'] ?? [];
-    
+
     // Show last 10 releases
-    $releases = array_slice($releases, -10);
-    $releases = array_reverse($releases);
-    
+    $releases = array_slice($releases, 0, 10);
+
     foreach ($releases as $release) {
-        $html .= '<h4>' . htmlspecialchars($release['version']);
+        $badge = $release['is_beta'] ? ' <span style="background:#f59e0b;color:#fff;padding:2px 6px;border-radius:3px;font-size:11px;">BETA</span>' : '';
+        $html .= '<h4>' . htmlspecialchars($release['version']) . $badge;
         if (!empty($release['date'])) {
-            $html .= ' <small>(' . htmlspecialchars($release['date']) . ')</small>';
+            $html .= ' <small style="color:#666;">(' . htmlspecialchars($release['date']) . ')</small>';
         }
         $html .= '</h4>';
-        $html .= '<p>' . nl2br(htmlspecialchars($release['changelog'])) . '</p>';
+        $html .= '<div style="margin-bottom:15px;">' . nl2br(htmlspecialchars($release['changelog'])) . '</div>';
     }
-    
+
     return $html ?: '<p>Initial release</p>';
 }
 
+function getCacheTime() {
+    $cache_file = CACHE_DIR . '/releases.json';
+    if (file_exists($cache_file)) {
+        return date('c', filemtime($cache_file));
+    }
+    return 'never';
+}
+
 function respond($data) {
-    echo json_encode($data, JSON_PRETTY_PRINT);
+    echo json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
 }
 
 function writeLog($message) {
     $file = LOGS_DIR . '/update-server-' . date('Y-m') . '.log';
     $line = '[' . date('Y-m-d H:i:s') . '] ' . $message . "\n";
-    file_put_contents($file, $line, FILE_APPEND);
+    @file_put_contents($file, $line, FILE_APPEND);
 }
