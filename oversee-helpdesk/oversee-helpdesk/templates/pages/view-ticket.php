@@ -71,11 +71,23 @@ function oversee_parse_attachments_tpl($message) {
 
 <section class="ticket-view-section">
     <?php if (!$ticket): ?>
-    <div class="empty-state">
-        <i class="fa-solid fa-ticket"></i>
+    <div class="empty-state-enhanced">
+        <div class="empty-icon">
+            <i class="fa-solid fa-ticket"></i>
+        </div>
         <h3>Ticket Not Found</h3>
-        <p>We couldn't find this ticket. Please verify the ticket number and email address.</p>
-        <a href="<?php echo esc_url(oversee_support_url('tickets')); ?>" class="btn btn-primary"><i class="fa-solid fa-arrow-left"></i> Back to My Tickets</a>
+        <p>We couldn't find this ticket. This could happen if the ticket number is incorrect or if you're using a different email address.</p>
+        <div class="empty-actions">
+            <a href="<?php echo esc_url(oversee_support_url('tickets')); ?>" class="btn btn-primary">
+                <i class="fa-solid fa-arrow-left"></i> Back to My Tickets
+            </a>
+            <a href="<?php echo esc_url(oversee_support_url('submit')); ?>" class="btn btn-secondary">
+                <i class="fa-solid fa-plus"></i> Submit New Ticket
+            </a>
+        </div>
+        <div class="empty-tip">
+            <p>Make sure you're using the same email address you used when creating the ticket.</p>
+        </div>
     </div>
     <?php else: ?>
     
@@ -180,14 +192,16 @@ function oversee_parse_attachments_tpl($message) {
 <?php if ($ticket): ?>
 <script>
 (function() {
+    const { Toast, Loading, escapeHtml: escapeHtmlUtil } = window.OverseeUX || {};
+
     const ticketId = <?php echo intval($ticket['id']); ?>;
     const customerEmail = '<?php echo esc_js($email); ?>';
     let pendingFiles = [];
     let justSentReply = false;
     let lastMessageCount = <?php echo count($messages) + 1; ?>;
-    
+
     localStorage.setItem('oversee_customer_email', customerEmail);
-    
+
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightboxImg');
     const messagesList = document.getElementById('messagesList');
@@ -198,14 +212,14 @@ function oversee_parse_attachments_tpl($message) {
     const imageInput = document.getElementById('imageInput');
     const fileInput = document.getElementById('fileInput');
     const notificationBanner = document.getElementById('notificationBanner');
-    
+
     // Lightbox
     document.querySelectorAll('[data-lightbox]').forEach(img => {
         img.addEventListener('click', () => openLightbox(img.src));
     });
     lightbox?.addEventListener('click', closeLightbox);
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
-    
+
     function openLightbox(src) {
         lightboxImg.src = src;
         lightbox.classList.add('active');
@@ -215,16 +229,19 @@ function oversee_parse_attachments_tpl($message) {
         lightbox.classList.remove('active');
         document.body.style.overflow = '';
     }
-    
+
     // File handling
     document.getElementById('addImageBtn')?.addEventListener('click', () => imageInput.click());
     document.getElementById('addFileBtn')?.addEventListener('click', () => fileInput.click());
     imageInput?.addEventListener('change', e => handleFiles(e.target));
     fileInput?.addEventListener('change', e => handleFiles(e.target));
-    
+
     function handleFiles(input) {
         Array.from(input.files).forEach(file => {
-            if (file.size > 10 * 1024 * 1024) { alert('File too large: ' + file.name); return; }
+            if (file.size > 10 * 1024 * 1024) {
+                showError(`File "${file.name}" is too large. Maximum size is 10MB.`);
+                return;
+            }
             const reader = new FileReader();
             reader.onload = e => {
                 pendingFiles.push({ file, name: file.name, type: file.type.startsWith('image/') ? 'image' : 'file', dataUrl: e.target.result });
@@ -234,12 +251,12 @@ function oversee_parse_attachments_tpl($message) {
         });
         input.value = '';
     }
-    
+
     function updatePreview() {
         if (!pendingFiles.length) { attachmentPreview.style.display = 'none'; attachmentPreview.innerHTML = ''; return; }
         attachmentPreview.style.display = 'flex';
-        attachmentPreview.innerHTML = pendingFiles.map((f, i) => 
-            f.type === 'image' 
+        attachmentPreview.innerHTML = pendingFiles.map((f, i) =>
+            f.type === 'image'
                 ? '<div class="attachment-item image-item"><img src="' + f.dataUrl + '" alt=""><button type="button" data-remove="' + i + '"><i class="fa-solid fa-times"></i></button></div>'
                 : '<div class="attachment-item file-item"><i class="fa-solid fa-file"></i><span>' + escapeHtml(f.name) + '</span><button type="button" data-remove="' + i + '"><i class="fa-solid fa-times"></i></button></div>'
         ).join('');
@@ -247,17 +264,22 @@ function oversee_parse_attachments_tpl($message) {
             btn.addEventListener('click', () => { pendingFiles.splice(parseInt(btn.dataset.remove), 1); updatePreview(); });
         });
     }
-    
+
     // Submit reply
     replyForm?.addEventListener('submit', async function(e) {
         e.preventDefault();
         const message = replyMessage.value.trim();
-        if (!message && !pendingFiles.length) { alert('Please enter a message or attach a file.'); return; }
-        
+
+        if (!message && !pendingFiles.length) {
+            showError('Please enter a message or attach a file.');
+            replyMessage.focus();
+            return;
+        }
+
         replyBtn.disabled = true;
         replyBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
         justSentReply = true;
-        
+
         try {
             let attachments = [];
             for (const f of pendingFiles) {
@@ -270,48 +292,61 @@ function oversee_parse_attachments_tpl($message) {
                         const data = await res.json();
                         if (data.url) attachments.push({ name: f.name, url: data.url, type: f.type });
                     }
-                } catch (err) {}
+                } catch (err) {
+                    console.error('File upload error:', err);
+                }
             }
-            
+
             let fullMessage = message;
             if (attachments.length) fullMessage += '\n[ATTACHMENTS:' + JSON.stringify(attachments) + ']';
-            
+
             const res = await fetch('<?php echo esc_url(rest_url('oversee/v1/tickets/public/reply')); ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ ticket_id: ticketId, email: customerEmail, message: fullMessage })
             });
-            if (!res.ok) throw new Error('Failed to send reply');
-            
-            // Add to UI
+
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(errorData.message || 'Failed to send reply');
+            }
+
+            // Add to UI optimistically
             const newMsg = document.createElement('div');
             newMsg.className = 'chat-message chat-message--outgoing';
-            let attHtml = attachments.length ? '<div class="chat-message__attachments">' + attachments.map(a => 
+            let attHtml = attachments.length ? '<div class="chat-message__attachments">' + attachments.map(a =>
                 a.type === 'image' ? '<img src="' + a.url + '" alt="" class="chat-attachment-img" data-lightbox>' : '<a href="' + a.url + '" target="_blank" class="chat-attachment-file"><i class="fa-solid fa-file"></i> ' + escapeHtml(a.name) + '</a>'
             ).join('') + '</div>' : '';
             newMsg.innerHTML = '<span class="chat-message__author"><i class="fa-solid fa-user"></i> You</span><span class="chat-message__time">Just now</span>' + (message ? '<p class="chat-message__text">' + escapeHtml(message).replace(/\n/g, '<br>') + '</p>' : '') + attHtml;
             messagesList.appendChild(newMsg);
             messagesList.scrollTop = messagesList.scrollHeight;
-            
+
             // Setup lightbox for new images
             newMsg.querySelectorAll('[data-lightbox]').forEach(img => { img.addEventListener('click', () => openLightbox(img.src)); });
-            
+
             lastMessageCount++;
             setTimeout(() => { justSentReply = false; }, 10000);
-            
+
             replyMessage.value = '';
             pendingFiles = [];
             updatePreview();
+
+            // Show success toast
+            if (Toast) {
+                Toast.success('Reply sent successfully!', { duration: 3000 });
+            }
+
         } catch (err) {
-            alert('Failed to send reply. Please try again.');
+            console.error('Reply error:', err);
+            showError(err.message || 'Failed to send reply. Please try again.');
             justSentReply = false;
         } finally {
             replyBtn.disabled = false;
             replyBtn.innerHTML = '<i class="fa-solid fa-arrow-up"></i>';
         }
     });
-    
-    // Polling
+
+    // Polling for new messages
     setInterval(async () => {
         try {
             const res = await fetch('<?php echo esc_url(rest_url('oversee/v1/tickets/public/' . $ticket['id'])); ?>?email=' + encodeURIComponent(customerEmail));
@@ -322,20 +357,48 @@ function oversee_parse_attachments_tpl($message) {
                 const replies = data.replies || [];
                 const latest = replies[replies.length - 1];
                 if (!justSentReply && latest && latest.author_type === 'agent') {
+                    // Show notification for new agent reply
+                    if (Toast) {
+                        Toast.info('New reply from support!', { title: 'New Message' });
+                    }
                     notificationBanner.classList.add('show');
                     setTimeout(() => notificationBanner.classList.remove('show'), 10000);
                 }
                 lastMessageCount = newCount;
             }
-        } catch (err) {}
+        } catch (err) {
+            // Silent fail for polling
+        }
     }, 5000);
-    
+
     document.getElementById('dismissNotification')?.addEventListener('click', () => notificationBanner.classList.remove('show'));
-    
+
     // Scroll to bottom on load
     if (messagesList) messagesList.scrollTop = messagesList.scrollHeight;
-    
-    function escapeHtml(t) { if (!t) return ''; const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+    // Auto-resize textarea
+    if (replyMessage) {
+        replyMessage.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+    }
+
+    function escapeHtml(t) {
+        if (escapeHtmlUtil) return escapeHtmlUtil(t);
+        if (!t) return '';
+        const d = document.createElement('div');
+        d.textContent = t;
+        return d.innerHTML;
+    }
+
+    function showError(message) {
+        if (Toast) {
+            Toast.error(message);
+        } else {
+            alert(message);
+        }
+    }
 })();
 </script>
 <?php endif; ?>

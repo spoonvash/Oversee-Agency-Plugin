@@ -553,15 +553,24 @@ final class Oversee_Support {
             '6.4.0'
         );
         
-        // Public JS
+        // UX Utilities (must load first - provides Toast, Skeleton, FormValidator, etc.)
         wp_enqueue_script(
-            'oversee-public',
-            OVERSEE_PLUGIN_URL . 'assets/js/public.js',
+            'oversee-ux-utils',
+            OVERSEE_PLUGIN_URL . 'assets/js/ux-utils.js',
             [],
             OVERSEE_VERSION,
             true
         );
-        
+
+        // Public JS
+        wp_enqueue_script(
+            'oversee-public',
+            OVERSEE_PLUGIN_URL . 'assets/js/public.js',
+            ['oversee-ux-utils'],
+            OVERSEE_VERSION,
+            true
+        );
+
         wp_localize_script('oversee-public', 'overseeData', [
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'restUrl' => rest_url('oversee/v1/'),

@@ -95,14 +95,59 @@ $success = isset($_GET['success']);
 
 <script>
 (function() {
+    const { Toast, FormValidator, Loading, ApiError, escapeHtml } = window.OverseeUX || {};
+
     let selectedFiles = [];
     const form = document.getElementById('ticketForm');
     const fileUploadArea = document.getElementById('fileUploadArea');
     const fileInput = document.getElementById('attachments');
     const filePreview = document.getElementById('filePreview');
-    
+    const submitBtn = document.getElementById('submitBtn');
+
     if (!form) return;
-    
+
+    // Field references
+    const fields = {
+        name: document.getElementById('name'),
+        email: document.getElementById('email'),
+        subject: document.getElementById('subject'),
+        message: document.getElementById('message')
+    };
+
+    // Validation rules
+    const validationRules = {
+        name: ['required', { type: 'minLength', min: 2 }],
+        email: ['required', 'email'],
+        subject: ['required', { type: 'minLength', min: 5 }, { type: 'maxLength', max: 200 }],
+        message: ['required', { type: 'minLength', min: 20 }]
+    };
+
+    // Setup real-time validation
+    if (FormValidator) {
+        Object.entries(fields).forEach(([name, field]) => {
+            if (field && validationRules[name]) {
+                FormValidator.setupRealTimeValidation(field, validationRules[name]);
+            }
+        });
+
+        // Add character counter for message
+        if (fields.message) {
+            const counter = document.createElement('span');
+            counter.className = 'char-counter';
+            fields.message.parentNode.appendChild(counter);
+
+            const updateCounter = () => {
+                const len = fields.message.value.length;
+                const min = 20;
+                counter.textContent = len < min ? `${min - len} more characters needed` : `${len} characters`;
+                counter.className = 'char-counter' + (len < min ? ' warning' : '');
+            };
+
+            fields.message.addEventListener('input', updateCounter);
+            updateCounter();
+        }
+    }
+
     // Get form token
     fetch('<?php echo esc_url(rest_url('oversee/v1/form-token')); ?>').then(r => r.json()).then(d => {
         if (d.token) document.getElementById('form_token').value = d.token;
@@ -111,7 +156,7 @@ $success = isset($_GET['success']);
     // File upload handling
     fileUploadArea?.addEventListener('click', () => fileInput.click());
     fileInput?.addEventListener('change', handleFileSelect);
-    
+
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
         fileUploadArea?.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false);
     });
@@ -126,7 +171,14 @@ $success = isset($_GET['success']);
     function handleFileSelect(e) {
         const files = Array.from(e.target.files);
         files.forEach(file => {
-            if (file.size > 10 * 1024 * 1024) { alert('File too large: ' + file.name); return; }
+            if (file.size > 10 * 1024 * 1024) {
+                if (Toast) {
+                    Toast.warning(`File "${file.name}" is too large. Maximum size is 10MB.`);
+                } else {
+                    alert('File too large: ' + file.name);
+                }
+                return;
+            }
             const reader = new FileReader();
             reader.onload = ev => {
                 selectedFiles.push({ file, name: file.name, type: file.type, preview: ev.target.result });
@@ -140,27 +192,61 @@ $success = isset($_GET['success']);
     function updatePreview() {
         if (!selectedFiles.length) { filePreview.innerHTML = ''; return; }
         filePreview.innerHTML = selectedFiles.map((f, i) => {
+            const safeName = escapeHtmlLocal(f.name);
             if (f.type.startsWith('image/')) {
-                return '<div class="preview-item image"><img src="' + f.preview + '" alt=""><button type="button" onclick="removeFile(' + i + ')"><i class="fa-solid fa-times"></i></button><span class="preview-name">' + escapeHtml(f.name) + '</span></div>';
+                return `<div class="preview-item image"><img src="${f.preview}" alt=""><button type="button" onclick="removeFile(${i})"><i class="fa-solid fa-times"></i></button><span class="preview-name">${safeName}</span></div>`;
             }
-            return '<div class="preview-item file"><i class="fa-solid fa-file"></i><span>' + escapeHtml(f.name) + '</span><button type="button" onclick="removeFile(' + i + ')"><i class="fa-solid fa-times"></i></button></div>';
+            return `<div class="preview-item file"><i class="fa-solid fa-file"></i><span>${safeName}</span><button type="button" onclick="removeFile(${i})"><i class="fa-solid fa-times"></i></button></div>`;
         }).join('');
     }
 
     window.removeFile = function(i) { selectedFiles.splice(i, 1); updatePreview(); };
 
+    // Validate all fields
+    function validateForm() {
+        if (!FormValidator) return true;
+
+        let isValid = true;
+        FormValidator.clearAllErrors(form);
+
+        Object.entries(fields).forEach(([name, field]) => {
+            if (field && validationRules[name]) {
+                const fieldValid = FormValidator.validateField(field, validationRules[name]);
+                if (!fieldValid) isValid = false;
+            }
+        });
+
+        return isValid;
+    }
+
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const btn = document.getElementById('submitBtn');
+
+        // Validate before submit
+        if (!validateForm()) {
+            if (Toast) {
+                Toast.error('Please fix the errors in the form before submitting.');
+            }
+            // Focus first error field
+            const firstError = form.querySelector('.form-group.has-error .form-control');
+            if (firstError) firstError.focus();
+            return;
+        }
+
         const errorAlert = document.getElementById('errorAlert');
-        
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+
+        // Show loading state
+        if (Loading) {
+            Loading.button(submitBtn, true, 'Submitting...');
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+        }
         errorAlert.classList.add('hidden');
-        
-        let description = document.getElementById('message').value;
+
+        let description = fields.message.value;
         let attachments = [];
-        
+
         // Upload files
         for (const f of selectedFiles) {
             try {
@@ -171,37 +257,70 @@ $success = isset($_GET['success']);
                     const data = await res.json();
                     if (data.url) attachments.push({ name: f.name, url: data.url, type: f.type.startsWith('image/') ? 'image' : 'file' });
                 }
-            } catch (err) {}
+            } catch (err) {
+                console.error('File upload error:', err);
+            }
         }
-        
+
         if (attachments.length) description += '\n[ATTACHMENTS:' + JSON.stringify(attachments) + ']';
-        
+
         try {
             const res = await fetch('<?php echo esc_url(rest_url('oversee/v1/tickets/public')); ?>', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    customer_name: document.getElementById('name').value,
-                    customer_email: document.getElementById('email').value,
-                    subject: document.getElementById('subject').value,
+                    customer_name: fields.name.value,
+                    customer_email: fields.email.value,
+                    subject: fields.subject.value,
                     description: description,
                     priority: document.getElementById('priority').value,
                     form_token: document.getElementById('form_token').value,
                     website_url: document.getElementById('website_url').value
                 })
             });
+
             const result = await res.json();
-            if (!res.ok) throw new Error(result.message || 'Failed to submit ticket');
-            localStorage.setItem('oversee_customer_email', document.getElementById('email').value);
+
+            if (!res.ok) {
+                throw new Error(result.message || 'Failed to submit ticket. Please try again.');
+            }
+
+            localStorage.setItem('oversee_customer_email', fields.email.value);
+
+            if (Toast) {
+                Toast.success('Ticket submitted successfully!');
+            }
+
             window.location.href = '<?php echo esc_url(oversee_support_url('submit')); ?>?success=1';
+
         } catch (err) {
-            errorAlert.textContent = err.message;
+            const message = err.message || 'An unexpected error occurred. Please try again.';
+
+            if (Toast) {
+                Toast.error(message);
+            }
+
+            errorAlert.innerHTML = `<i class="fa-solid fa-exclamation-circle"></i> ${escapeHtmlLocal(message)}`;
             errorAlert.classList.remove('hidden');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Ticket';
+
+            // Reset button
+            if (Loading) {
+                Loading.button(submitBtn, false);
+            } else {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit Ticket';
+            }
+
+            // Scroll to error
+            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     });
 
-    function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+    function escapeHtmlLocal(t) {
+        if (escapeHtml) return escapeHtml(t);
+        const d = document.createElement('div');
+        d.textContent = t;
+        return d.innerHTML;
+    }
 })();
 </script>
