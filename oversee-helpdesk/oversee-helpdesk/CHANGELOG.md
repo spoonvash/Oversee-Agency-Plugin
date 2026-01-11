@@ -5,6 +5,24 @@ All notable changes to Oversee Helpdesk will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.7.1-beta] - 2026-01-11
+
+### Fixed
+- **CSS Variable Compatibility**
+  - Template loader now outputs all CSS variable names that stylesheets expect
+  - Added color-primary, color-primary-hover, color-primary-light variants
+  - Added border, text-light, bg-body aliases for full compatibility
+  - Hero section now uses dynamic hero text color instead of hardcoded white
+  - Added body-bg and card-bg aliases for admin portal styling
+
+### Improved
+- **White-Label Preview UI**
+  - Larger preview panel (560px wide) for better visibility
+  - Increased preview element sizes and font sizes
+  - Enhanced sticky positioning with proper scroll behavior
+  - Improved shadow and border-radius for modern appearance
+  - Updated responsive breakpoint to 1200px
+
 ## [2.7.0-beta] - 2026-01-11
 
 ### Added
