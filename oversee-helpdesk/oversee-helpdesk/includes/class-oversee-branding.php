@@ -53,6 +53,7 @@ class Oversee_Branding {
         'public_text_muted' => '#6b7280', // Secondary/muted text
         'public_border' => '#e5e7eb',     // Borders
         'public_input_bg' => '#ffffff',   // Input field backgrounds
+        'public_icon_color' => '#f97316', // Icon color on public pages
 
         // ===== PUBLIC HERO SECTION =====
         'hero_bg' => '#1e293b',           // Hero background
@@ -66,12 +67,14 @@ class Oversee_Branding {
         'admin_text_muted' => '#64748b',  // Secondary/muted text
         'admin_border' => '#e2e8f0',      // Borders
         'admin_input_bg' => '#ffffff',    // Input field backgrounds
+        'admin_icon_color' => '#f97316',  // Icon color on admin pages
 
         // ===== SIDEBAR COLORS =====
         'sidebar_bg' => '#1e293b',        // Sidebar background
         'sidebar_text' => '#94a3b8',      // Nav item text
         'sidebar_text_active' => '#ffffff', // Active/hover text
         'sidebar_heading' => '#64748b',   // Section headings
+        'sidebar_icon_color' => '#94a3b8', // Sidebar icon color
 
         // ===== GLOBAL =====
         'text_on_dark' => '#ffffff',      // Text on dark backgrounds
@@ -415,6 +418,7 @@ class Oversee_Branding {
     --public-text-muted: ' . esc_attr($b['public_text_muted']) . ';
     --public-border: ' . esc_attr($b['public_border']) . ';
     --public-input-bg: ' . esc_attr($b['public_input_bg']) . ';
+    --public-icon-color: ' . esc_attr($b['public_icon_color']) . ';
 
     /* ===== PUBLIC HERO ===== */
     --hero-bg: ' . esc_attr($b['hero_bg']) . ';
@@ -429,12 +433,14 @@ class Oversee_Branding {
     --admin-border: ' . esc_attr($b['admin_border']) . ';
     --admin-border-light: ' . esc_attr($admin_border_light) . ';
     --admin-input-bg: ' . esc_attr($b['admin_input_bg']) . ';
+    --admin-icon-color: ' . esc_attr($b['admin_icon_color']) . ';
 
     /* ===== SIDEBAR COLORS ===== */
     --sidebar-bg: ' . esc_attr($b['sidebar_bg']) . ';
     --sidebar-text: ' . esc_attr($b['sidebar_text']) . ';
     --sidebar-text-active: ' . esc_attr($b['sidebar_text_active']) . ';
     --sidebar-heading: ' . esc_attr($b['sidebar_heading']) . ';
+    --sidebar-icon-color: ' . esc_attr($b['sidebar_icon_color']) . ';
     --sidebar-hover: rgba(255, 255, 255, 0.05);
 
     /* ===== GLOBAL ===== */
@@ -733,6 +739,13 @@ class Oversee_Branding {
                                     <span class="color-hint">Form fields</span>
                                 </div>
                             </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Icon Color</label>
+                                    <input type="text" name="public_icon_color" value="<?php echo esc_attr($b['public_icon_color']); ?>" class="oversee-color-picker" data-default-color="#f97316">
+                                    <span class="color-hint">Icons on public pages</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="settings-group">
@@ -788,6 +801,13 @@ class Oversee_Branding {
                                     <span class="color-hint">Form fields</span>
                                 </div>
                             </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Icon Color</label>
+                                    <input type="text" name="admin_icon_color" value="<?php echo esc_attr($b['admin_icon_color']); ?>" class="oversee-color-picker" data-default-color="#f97316">
+                                    <span class="color-hint">Icons on admin pages</span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="settings-group">
@@ -837,6 +857,13 @@ class Oversee_Branding {
                                     <label>Section Headings</label>
                                     <input type="text" name="sidebar_heading" value="<?php echo esc_attr($b['sidebar_heading']); ?>" class="oversee-color-picker" data-default-color="#64748b">
                                     <span class="color-hint">Nav section titles</span>
+                                </div>
+                            </div>
+                            <div class="color-row">
+                                <div class="color-field">
+                                    <label>Icon Color</label>
+                                    <input type="text" name="sidebar_icon_color" value="<?php echo esc_attr($b['sidebar_icon_color']); ?>" class="oversee-color-picker" data-default-color="#94a3b8">
+                                    <span class="color-hint">Sidebar navigation icons</span>
                                 </div>
                             </div>
                         </div>

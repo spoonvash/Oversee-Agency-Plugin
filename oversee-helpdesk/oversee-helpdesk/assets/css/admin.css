@@ -42,6 +42,7 @@
     --admin-border: #e2e8f0;
     --admin-border-light: #f1f5f9;
     --admin-input-bg: #ffffff;
+    --admin-icon-color: #f97316;
 
     /* ===== SIDEBAR COLORS (overridden by white-label) ===== */
     --sidebar-bg: #1e293b;
@@ -50,6 +51,7 @@
     --sidebar-text-hover: var(--text-on-dark);
     --sidebar-text-active: var(--text-on-dark);
     --sidebar-heading: #64748b;
+    --sidebar-icon-color: #94a3b8;
 
     /* ===== GLOBAL (overridden by white-label) ===== */
     --text-on-dark: #ffffff;
@@ -183,7 +185,7 @@ a:hover { color: var(--primary-hover); }
 .sidebar {
     width: var(--sidebar-width);
     background: var(--sidebar-bg);
-    color: white;
+    color: var(--text-on-dark);
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -268,7 +270,7 @@ a:hover { color: var(--primary-hover); }
 .nav-item .badge {
     margin-left: auto;
     background: var(--error);
-    color: white;
+    color: var(--text-on-dark);
     font-size: 10px;
     font-weight: 600;
     padding: 2px 6px;
@@ -379,7 +381,7 @@ a:hover { color: var(--primary-hover); }
     justify-content: center;
     font-size: 13px;
     font-weight: 600;
-    color: white;
+    color: var(--text-on-dark);
     position: relative;
     flex-shrink: 0;
 }
@@ -497,7 +499,7 @@ a:hover { color: var(--primary-hover); }
 
 .btn-primary {
     background: var(--primary);
-    color: white;
+    color: var(--text-on-dark);
 }
 
 .btn-primary:hover {
@@ -574,7 +576,7 @@ a:hover { color: var(--primary-hover); }
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
     border-radius: var(--radius-lg);
     padding: 24px 28px;
-    color: white;
+    color: var(--text-on-dark);
     margin-bottom: 20px;
     display: flex;
     justify-content: space-between;
@@ -826,7 +828,7 @@ a:hover { color: var(--primary-hover); }
     height: 36px;
     border-radius: 50%;
     background: var(--primary);
-    color: white;
+    color: var(--text-on-dark);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1491,7 +1493,7 @@ a:hover { color: var(--primary-hover); }
 
 .settings-tab.active {
     background: var(--primary);
-    color: white;
+    color: var(--text-on-dark);
     box-shadow: var(--shadow-primary);
 }
 
@@ -1588,7 +1590,7 @@ a:hover { color: var(--primary-hover); }
     width: 18px;
     left: 3px;
     bottom: 3px;
-    background-color: white;
+    background-color: var(--text-on-dark);
     transition: 0.3s;
     border-radius: 50%;
 }
@@ -1767,7 +1769,7 @@ tr:hover td {
     height: 72px;
     border-radius: 50%;
     background: var(--primary);
-    color: white;
+    color: var(--text-on-dark);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1976,7 +1978,7 @@ tr:hover td {
     gap: 10px;
     padding: 14px 20px;
     background: var(--sidebar-bg);
-    color: white;
+    color: var(--text-on-dark);
     border-radius: var(--radius-md);
     box-shadow: var(--shadow-md);
     font-size: 13px;
@@ -2009,7 +2011,7 @@ tr:hover td {
     left: var(--sidebar-width);
     right: 0;
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-hover) 100%);
-    color: white;
+    color: var(--text-on-dark);
     padding: 0;
     z-index: 10000;
     transform: translateY(-100%);
@@ -2077,7 +2079,7 @@ tr:hover td {
     background: rgba(255,255,255,0.2);
     border: none;
     border-radius: 50%;
-    color: white;
+    color: var(--text-on-dark);
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -2119,7 +2121,7 @@ tr:hover td {
     min-width: 18px;
     height: 18px;
     background: var(--error);
-    color: white;
+    color: var(--text-on-dark);
     font-size: 10px;
     font-weight: 700;
     border-radius: 9px;
@@ -2186,7 +2188,7 @@ body.login-page {
 }
 
 .login-logo i {
-    color: white;
+    color: var(--text-on-dark);
     font-size: 24px;
 }
 
@@ -2577,14 +2579,14 @@ body.login-page {
 }
 .articles-tab{padding:8px 16px;font-size:12px;font-weight:500;color:var(--text-muted);background:none;border:none;border-radius:var(--radius);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s}
 .articles-tab:hover{background:var(--border-light);color:var(--text-secondary)}
-.articles-tab.active{background:var(--primary);color:#fff;box-shadow:var(--shadow-primary)}
+.articles-tab.active{background:var(--primary);color: var(--text-on-dark);box-shadow:var(--shadow-primary)}
 .articles-tab .count{background:rgba(0,0,0,.1);padding:2px 6px;border-radius:10px;font-size:10px}
 .articles-tab.active .count{background:rgba(255,255,255,.25)}
 .categories-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:20px}
 .category-card{background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:var(--radius-lg);padding:20px;display:flex;align-items:flex-start;gap:14px;transition:all .2s;cursor:pointer}
 .category-card:hover{background:var(--color-primary-lighter);border-color:var(--color-primary-light);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
 .category-icon{width:44px;height:44px;border-radius:var(--radius-lg);background:var(--card-bg);border:1px solid var(--border-color);display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--primary);flex-shrink:0}
-.category-card:hover .category-icon{background:var(--primary);color:#fff;border-color:var(--primary)}
+.category-card:hover .category-icon{background:var(--primary);color: var(--text-on-dark);border-color:var(--primary)}
 .category-info{flex:1;min-width:0}
 .category-name{font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:4px}
 .category-desc{font-size:12px;color:var(--text-muted);margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
@@ -3137,7 +3139,7 @@ body.login-page {
     width: 18px;
     left: 3px;
     bottom: 3px;
-    background-color: white;
+    background-color: var(--text-on-dark);
     transition: all 0.25s ease;
     border-radius: 50%;
     box-shadow: 0 1px 3px rgba(0,0,0,0.15);

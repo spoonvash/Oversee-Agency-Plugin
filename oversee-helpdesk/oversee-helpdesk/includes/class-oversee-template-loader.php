@@ -361,6 +361,7 @@ class Oversee_Template_Loader {
             --public-text-muted: <?php echo esc_attr($branding['public_text_muted']); ?>;
             --public-border: <?php echo esc_attr($branding['public_border']); ?>;
             --public-input-bg: <?php echo esc_attr($branding['public_input_bg']); ?>;
+            --public-icon-color: <?php echo esc_attr($branding['public_icon_color']); ?>;
 
             /* Hero colors */
             --hero-bg: <?php echo esc_attr($branding['hero_bg']); ?>;
@@ -554,6 +555,7 @@ class Oversee_Template_Loader {
             'public_text_muted' => Oversee_Branding::get('public_text_muted', '#6b7280'),
             'public_border' => Oversee_Branding::get('public_border', '#e5e7eb'),
             'public_input_bg' => Oversee_Branding::get('public_input_bg', '#ffffff'),
+            'public_icon_color' => Oversee_Branding::get('public_icon_color', '#f97316'),
             // Hero colors
             'hero_bg' => Oversee_Branding::get('hero_bg', '#1e293b'),
             'hero_text' => Oversee_Branding::get('hero_text', '#ffffff'),
