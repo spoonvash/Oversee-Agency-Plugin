@@ -108,6 +108,12 @@
     --shadow-lg: 0 10px 15px rgba(0,0,0,0.1);
     --shadow-xl: 0 20px 25px rgba(0,0,0,0.1);
 
+    /* Primary Color Shadows (overridden by white-label) */
+    --shadow-primary-sm: 0 2px 4px rgba(0,0,0,0.15);
+    --shadow-primary: 0 4px 12px rgba(0,0,0,0.2);
+    --shadow-primary-lg: 0 8px 24px rgba(0,0,0,0.15);
+    --focus-ring-primary: 0 0 0 3px rgba(0,0,0,0.1);
+
     /* Border Radius */
     --radius-sm: 0.25rem;
     --radius-md: 0.375rem;
@@ -318,11 +324,11 @@ img { max-width: 100%; height: auto; }
 .btn-primary { 
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%); 
     color: #fff; 
-    box-shadow: 0 2px 4px rgba(249,115,22,0.3); 
+    box-shadow: var(--shadow-primary-sm); 
 }
 
 .btn-primary:hover:not(:disabled) { 
-    box-shadow: 0 4px 12px rgba(249,115,22,0.4); 
+    box-shadow: var(--shadow-primary); 
 }
 
 .btn-secondary { 
@@ -710,7 +716,7 @@ img { max-width: 100%; height: auto; }
     width: 48px; 
     height: 48px;
     min-width: 48px;
-    background: linear-gradient(135deg, #fff7ed, #fed7aa); 
+    background: linear-gradient(135deg, var(--color-primary-lighter), var(--color-primary-light)); 
     border-radius: var(--radius-md); 
     display: flex; 
     align-items: center; 
@@ -1306,7 +1312,7 @@ img { max-width: 100%; height: auto; }
 }
 
 .sidebar-btn-primary:hover { 
-    box-shadow: 0 4px 12px rgba(249,115,22,0.3); 
+    box-shadow: var(--shadow-primary); 
     color: #fff; 
 }
 
@@ -1495,7 +1501,7 @@ img { max-width: 100%; height: auto; }
 .form-control:focus { 
     outline: none; 
     border-color: var(--primary); 
-    box-shadow: 0 0 0 3px rgba(249,115,22,0.1); 
+    box-shadow: var(--focus-ring-primary); 
 }
 
 .form-control::placeholder { 
@@ -2327,7 +2333,7 @@ textarea.form-control {
 .chat-composer__input textarea:focus { 
     outline: none; 
     border-color: var(--primary); 
-    box-shadow: 0 0 0 2px rgba(249,115,22,0.1); 
+    box-shadow: var(--focus-ring-primary); 
 }
 
 .chat-composer__input textarea::placeholder { 
@@ -2351,7 +2357,7 @@ textarea.form-control {
 
 .chat-composer__send:hover { 
     transform: scale(1.05); 
-    box-shadow: 0 2px 8px rgba(249,115,22,0.4); 
+    box-shadow: var(--shadow-primary); 
 }
 
 .chat-composer__send:disabled { 
@@ -2522,7 +2528,7 @@ textarea.form-control {
 
 .agent-card:hover { 
     border-color: var(--primary); 
-    box-shadow: 0 8px 24px rgba(249, 115, 22, 0.12); 
+    box-shadow: var(--shadow-primary-lg); 
     transform: translateY(-4px); 
 }
 
@@ -2530,7 +2536,7 @@ textarea.form-control {
     width: 72px; 
     height: 72px; 
     border-radius: 50%; 
-    background: linear-gradient(135deg, var(--primary), #ea580c); 
+    background: linear-gradient(135deg, var(--color-primary), var(--color-primary-hover)); 
     color: #fff; 
     display: flex; 
     align-items: center; 
@@ -2538,7 +2544,7 @@ textarea.form-control {
     font-size: 24px; 
     font-weight: 600; 
     margin: 0 auto 14px; 
-    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.25); 
+    box-shadow: var(--shadow-primary); 
 }
 
 .agent-name { 
@@ -2715,7 +2721,7 @@ textarea.form-control {
     left: calc(50% + 30px); 
     width: calc(100% - 28px); 
     height: 2px; 
-    background: linear-gradient(90deg, var(--primary), #fdba74); 
+    background: linear-gradient(90deg, var(--color-primary), var(--color-primary-light)); 
     z-index: 0; 
 }
 
@@ -3341,7 +3347,7 @@ textarea.form-control {
 .empty-state-enhanced .empty-icon {
     width: 80px;
     height: 80px;
-    background: linear-gradient(135deg, var(--primary-light) 0%, #fed7aa 100%);
+    background: linear-gradient(135deg, var(--color-primary-lighter) 0%, var(--color-primary-light) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -3487,7 +3493,7 @@ textarea.form-control {
 
 .zoom-section .agent-card:hover {
     border-color: var(--primary);
-    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.15);
+    box-shadow: var(--shadow-primary);
 }
 
 .zoom-section .agent-avatar {

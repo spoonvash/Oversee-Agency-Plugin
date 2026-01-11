@@ -235,29 +235,55 @@ class Oversee_Branding {
      */
     public static function get_css_variables() {
         $b = self::get_all();
-        
+        $primary = $b['primary_color'];
+        $primary_hover = $b['primary_hover'] ?: self::darken_color($primary, 10);
+        $primary_light = self::lighten_color($primary, 35);
+        $primary_lighter = self::lighten_color($primary, 42);
+
+        // Convert hex to RGB for shadow/transparency support
+        $primary_rgb = self::hex_to_rgb($primary);
+
         $css = '<style id="oversee-branding-vars">
 :root {
-    --oversee-primary: ' . esc_attr($b['primary_color']) . ';
-    --oversee-primary-hover: ' . esc_attr($b['primary_hover'] ?: self::darken_color($b['primary_color'], 10)) . ';
+    /* Primary color system */
+    --color-primary: ' . esc_attr($primary) . ';
+    --color-primary-hover: ' . esc_attr($primary_hover) . ';
+    --color-primary-active: ' . esc_attr(self::darken_color($primary, 20)) . ';
+    --color-primary-light: ' . esc_attr($primary_light) . ';
+    --color-primary-lighter: ' . esc_attr($primary_lighter) . ';
+
+    /* Primary shadows and focus rings */
+    --shadow-primary-sm: 0 2px 4px rgba(' . $primary_rgb . ', 0.25);
+    --shadow-primary: 0 4px 12px rgba(' . $primary_rgb . ', 0.3);
+    --shadow-primary-lg: 0 8px 24px rgba(' . $primary_rgb . ', 0.2);
+    --focus-ring-primary: 0 0 0 3px rgba(' . $primary_rgb . ', 0.15);
+
+    /* Legacy aliases */
+    --oversee-primary: var(--color-primary);
+    --oversee-primary-hover: var(--color-primary-hover);
+    --primary: var(--color-primary);
+    --primary-hover: var(--color-primary-hover);
+    --primary-light: var(--color-primary-lighter);
+
+    /* Secondary/Sidebar colors */
     --oversee-secondary: ' . esc_attr($b['secondary_color']) . ';
     --oversee-accent: ' . esc_attr($b['accent_color']) . ';
-    --oversee-success: ' . esc_attr($b['success_color']) . ';
-    --oversee-warning: ' . esc_attr($b['warning_color']) . ';
-    --oversee-error: ' . esc_attr($b['error_color']) . ';
-    
+    --secondary: var(--oversee-secondary);
+    --accent: var(--oversee-accent);
+    --sidebar-bg: var(--oversee-secondary);
+
     /* Sidebar text colors */
     --sidebar-text: ' . esc_attr($b['sidebar_text_color'] ?: '#94a3b8') . ';
     --sidebar-text-hover: ' . esc_attr($b['sidebar_text_hover'] ?: '#ffffff') . ';
     --sidebar-text-active: ' . esc_attr($b['sidebar_text_active'] ?: '#ffffff') . ';
     --sidebar-heading: ' . esc_attr($b['sidebar_heading_color'] ?: '#64748b') . ';
-    
-    /* Aliases for templates */
-    --primary: var(--oversee-primary);
-    --primary-hover: var(--oversee-primary-hover);
-    --secondary: var(--oversee-secondary);
-    --accent: var(--oversee-accent);
-    --sidebar-bg: var(--oversee-secondary);
+
+    /* Other brand colors */
+    --oversee-success: ' . esc_attr($b['success_color']) . ';
+    --oversee-warning: ' . esc_attr($b['warning_color']) . ';
+    --oversee-error: ' . esc_attr($b['error_color']) . ';
+
+    /* Hero gradient */
     --hero-gradient: linear-gradient(135deg, ' . esc_attr($b['secondary_color']) . ' 0%, ' . esc_attr(self::darken_color($b['secondary_color'], 20)) . ' 100%);
 }
 </style>';
@@ -319,7 +345,21 @@ class Oversee_Branding {
         $b = min(255, hexdec(substr($hex, 4, 2)) + (255 * $percent / 100));
         return sprintf('#%02x%02x%02x', (int)$r, (int)$g, (int)$b);
     }
-    
+
+    /**
+     * Convert hex color to RGB string for use in rgba()
+     */
+    public static function hex_to_rgb($hex) {
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) !== 6) {
+            return '0, 0, 0';
+        }
+        $r = hexdec(substr($hex, 0, 2));
+        $g = hexdec(substr($hex, 2, 2));
+        $b = hexdec(substr($hex, 4, 2));
+        return $r . ', ' . $g . ', ' . $b;
+    }
+
     /**
      * Get logo HTML
      */
