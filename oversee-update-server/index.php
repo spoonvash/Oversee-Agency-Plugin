@@ -20,7 +20,11 @@ $CONFIG = [
     'beta_testers' => [
         'overseeagency.com',
         'www.overseeagency.com',
-        'developer.overseeagency.com'
+        'developer.overseeagency.com',
+        'test.overseeagency.com',
+        'staging.overseeagency.com',
+        'dev.overseeagency.com',
+        'localhost',
     ],
 
     // Cache TTL in seconds (5 minutes)
