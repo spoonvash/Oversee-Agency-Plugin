@@ -307,15 +307,33 @@ class Oversee_Template_Loader {
     <link rel="stylesheet" href="<?php echo esc_url(OVERSEE_PLUGIN_URL . 'assets/css/public.css?v=' . OVERSEE_VERSION); ?>">
     <style id="oversee-branding-vars">
         :root {
+            /* Brand colors */
             --primary: <?php echo esc_attr($branding['primary_color']); ?>;
             --primary-hover: <?php echo esc_attr(Oversee_Branding::darken_color($branding['primary_color'], 10)); ?>;
             --primary-light: <?php echo esc_attr($branding['primary_color']); ?>15;
             --secondary: <?php echo esc_attr($branding['secondary_color']); ?>;
             --accent: <?php echo esc_attr($branding['accent_color']); ?>;
+            /* Status colors */
             --success: <?php echo esc_attr($branding['success_color']); ?>;
             --warning: <?php echo esc_attr($branding['warning_color']); ?>;
             --error: <?php echo esc_attr($branding['error_color']); ?>;
-            --hero-gradient: linear-gradient(135deg, <?php echo esc_attr($branding['secondary_color']); ?> 0%, <?php echo esc_attr(Oversee_Branding::darken_color($branding['secondary_color'], 20)); ?> 100%);
+            /* Page colors */
+            --bg-light: <?php echo esc_attr($branding['public_bg_color']); ?>;
+            --bg-white: <?php echo esc_attr($branding['public_surface_color']); ?>;
+            --text-primary: <?php echo esc_attr($branding['public_text_color']); ?>;
+            --text-secondary: <?php echo esc_attr($branding['public_text_muted']); ?>;
+            --text-muted: <?php echo esc_attr($branding['public_text_muted']); ?>;
+            --border-color: <?php echo esc_attr($branding['public_border_color']); ?>;
+            /* Hero colors */
+            --hero-bg: <?php echo esc_attr($branding['hero_bg_color']); ?>;
+            --hero-text: <?php echo esc_attr($branding['hero_text_color']); ?>;
+            --hero-gradient: linear-gradient(135deg, <?php echo esc_attr($branding['hero_bg_color']); ?> 0%, <?php echo esc_attr(Oversee_Branding::darken_color($branding['hero_bg_color'], 20)); ?> 100%);
+            /* Primary shadows */
+            <?php $primary_rgb = Oversee_Branding::hex_to_rgb($branding['primary_color']); ?>
+            --shadow-primary-sm: 0 2px 4px rgba(<?php echo $primary_rgb; ?>, 0.25);
+            --shadow-primary: 0 4px 12px rgba(<?php echo $primary_rgb; ?>, 0.3);
+            --shadow-primary-lg: 0 8px 24px rgba(<?php echo $primary_rgb; ?>, 0.2);
+            --focus-ring-primary: 0 0 0 3px rgba(<?php echo $primary_rgb; ?>, 0.15);
         }
     </style>
     <?php if (!empty($branding['custom_css'])): ?>
@@ -464,6 +482,15 @@ class Oversee_Template_Loader {
             'success_color' => Oversee_Branding::get('success_color', '#10b981'),
             'warning_color' => Oversee_Branding::get('warning_color', '#f59e0b'),
             'error_color' => Oversee_Branding::get('error_color', '#ef4444'),
+            // Public/KB page colors
+            'public_bg_color' => Oversee_Branding::get('public_bg_color', '#f9fafb'),
+            'public_surface_color' => Oversee_Branding::get('public_surface_color', '#ffffff'),
+            'public_text_color' => Oversee_Branding::get('public_text_color', '#1f2937'),
+            'public_text_muted' => Oversee_Branding::get('public_text_muted', '#6b7280'),
+            'public_border_color' => Oversee_Branding::get('public_border_color', '#e5e7eb'),
+            'hero_bg_color' => Oversee_Branding::get('hero_bg_color', '#1e293b'),
+            'hero_text_color' => Oversee_Branding::get('hero_text_color', '#ffffff'),
+            // Other
             'support_email' => Oversee_Branding::get('support_email', ''),
             'support_phone' => Oversee_Branding::get('support_phone', ''),
             'footer_text' => Oversee_Branding::get('footer_text', ''),
