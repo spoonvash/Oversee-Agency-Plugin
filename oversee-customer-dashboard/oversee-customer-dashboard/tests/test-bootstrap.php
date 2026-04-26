@@ -1,0 +1,101 @@
+<?php
+/**
+ * Lightweight verification harness — no full WordPress install required.
+ * Stubs the WordPress core functions used by the integration classes and
+ * confirms that the plugin classes load and behave correctly when API
+ * credentials are absent (the "disconnected" path).
+ *
+ * Run with:  php oversee-customer-dashboard/tests/test-bootstrap.php
+ */
+
+if (!defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/');
+}
+
+// --- Minimal WordPress shims ---
+$GLOBALS['__ocd_options'] = [];
+function get_option($k, $default = false)   { return $GLOBALS['__ocd_options'][$k] ?? $default; }
+function update_option($k, $v)              { $GLOBALS['__ocd_options'][$k] = $v; return true; }
+function add_action(...$a)                  {}
+function add_filter(...$a)                  {}
+function add_shortcode(...$a)               {}
+function register_setting(...$a)            {}
+function register_activation_hook(...$a)    {}
+function register_rest_route(...$a)         {}
+function plugin_dir_path($f)                { return dirname($f) . '/'; }
+function plugin_dir_url($f)                 { return 'https://example.com/'; }
+function plugin_basename($f)                { return basename($f); }
+function load_plugin_textdomain(...$a)      {}
+function flush_rewrite_rules(...$a)         {}
+function sanitize_text_field($v)            { return is_string($v) ? trim(strip_tags($v)) : $v; }
+function add_query_arg($args, $url) {
+    $sep = strpos($url, '?') === false ? '?' : '&';
+    return $url . $sep . http_build_query($args);
+}
+function wp_json_encode($v)                 { return json_encode($v); }
+function wp_remote_request($url, $args)     { return ['response' => ['code' => 0], 'body' => '']; }
+function __($t, $d = '')                    { return $t; }
+function _e($t, $d = '')                    { echo $t; }
+function esc_html__($t, $d = '')            { return htmlspecialchars($t, ENT_QUOTES); }
+function is_wp_error($v)                    { return $v instanceof WP_Error; }
+class WP_Error {
+    private $code; private $message; private $data;
+    public function __construct($c = '', $m = '', $d = []) { $this->code = $c; $this->message = $m; $this->data = $d; }
+    public function get_error_message() { return $this->message; }
+    public function get_error_code()    { return $this->code; }
+}
+
+require_once __DIR__ . '/../includes/class-ocd-settings.php';
+require_once __DIR__ . '/../includes/class-ocd-highlevel.php';
+require_once __DIR__ . '/../includes/class-ocd-woocommerce.php';
+
+// --- Assertions ---
+$results = [];
+function check($label, $cond, &$results) {
+    $results[] = [$label, (bool) $cond];
+    echo ($cond ? '  ok ' : 'FAIL ') . $label . PHP_EOL;
+}
+
+OCD_Settings::install_defaults();
+$d = OCD_Settings::defaults();
+check('defaults include highlevel base url', $d['highlevel_base_url'] === 'https://services.leadconnectorhq.com', $results);
+check('defaults include api version', $d['highlevel_api_version'] === '2021-07-28', $results);
+
+check('highlevel disconnected by default', !OCD_HighLevel::is_configured(), $results);
+check('woocommerce disconnected by default', !OCD_WooCommerce::is_configured(), $results);
+
+$status = OCD_Settings::connection_status();
+check('connection_status returns expected keys',
+    isset($status['highlevel'], $status['woocommerce']) && $status['highlevel'] === false && $status['woocommerce'] === false,
+    $results
+);
+
+$err = OCD_HighLevel::ping();
+check('highlevel ping returns WP_Error when not configured',
+    is_wp_error($err) && in_array($err->get_error_code(), ['ocd_not_configured', 'ocd_no_location'], true),
+    $results
+);
+
+$err2 = OCD_WooCommerce::ping();
+check('woocommerce ping returns WP_Error when not configured', is_wp_error($err2) && $err2->get_error_code() === 'ocd_not_configured', $results);
+
+$bad = OCD_WooCommerce::update_subscription_status(123, 'definitely-not-valid');
+check('invalid subscription status rejected', is_wp_error($bad) && $bad->get_error_code() === 'ocd_invalid_status', $results);
+
+check('all six valid subscription statuses present',
+    OCD_WooCommerce::VALID_SUB_STATUSES === ['active', 'pending', 'on-hold', 'pending-cancel', 'cancelled', 'expired'],
+    $results
+);
+
+OCD_Settings::update(['highlevel_token' => 'tok', 'highlevel_location_id' => 'loc']);
+check('highlevel becomes configured when token+location set', OCD_HighLevel::is_configured(), $results);
+
+OCD_Settings::update(['wp_base_url' => 'https://x', 'woo_consumer_key' => 'k', 'woo_consumer_secret' => 's']);
+check('woocommerce becomes configured when keys set', OCD_WooCommerce::is_configured(), $results);
+
+$failed = array_filter($results, function ($r) { return !$r[1]; });
+if (count($failed) > 0) {
+    echo PHP_EOL . count($failed) . ' assertion(s) failed.' . PHP_EOL;
+    exit(1);
+}
+echo PHP_EOL . count($results) . ' assertions passed.' . PHP_EOL;
