@@ -94,6 +94,20 @@ class OCD_Admin {
                             <p class="description">Env var: <code>HIGHLEVEL_LOCATION_ID</code></p>
                         </td>
                     </tr>
+                    <tr>
+                        <th><label>Conversation Provider ID</label></th>
+                        <td>
+                            <input type="text" name="<?php echo esc_attr(OCD_Settings::OPTION_KEY); ?>[agency_conversation_provider_id]" value="<?php echo esc_attr($opts['agency_conversation_provider_id'] ?? ''); ?>" class="regular-text" />
+                            <p class="description">Optional. Required when posting messages through a Custom Conversation Provider configured in HighLevel. See HighLevel → Settings → Custom Conversation Providers.</p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><label>Inbound message type</label></th>
+                        <td>
+                            <input type="text" name="<?php echo esc_attr(OCD_Settings::OPTION_KEY); ?>[agency_inbound_type]" value="<?php echo esc_attr($opts['agency_inbound_type'] ?? 'Custom'); ?>" class="regular-text" />
+                            <p class="description">Used for <code>POST /conversations/messages/inbound</code>. Default <code>Custom</code>. Other values: <code>Live_Chat</code>, <code>WebChat</code>, <code>SMS</code>.</p>
+                        </td>
+                    </tr>
                 </table>
 
                 <h2><?php esc_html_e('WooCommerce', 'oversee-customer-dashboard'); ?></h2>

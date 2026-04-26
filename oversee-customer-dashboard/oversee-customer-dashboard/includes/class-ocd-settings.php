@@ -30,6 +30,8 @@ class OCD_Settings {
             'highlevel_api_version'    => '2021-07-28',
             'highlevel_token'          => '',
             'highlevel_location_id'    => '',
+            'agency_conversation_provider_id' => '',
+            'agency_inbound_type'      => 'Custom',
             'wp_base_url'              => '',
             'woo_consumer_key'         => '',
             'woo_consumer_secret'      => '',
@@ -105,7 +107,8 @@ class OCD_Settings {
 
         $string_keys = [
             'highlevel_base_url', 'highlevel_api_version', 'highlevel_token',
-            'highlevel_location_id', 'wp_base_url', 'woo_consumer_key', 'woo_consumer_secret',
+            'highlevel_location_id', 'agency_conversation_provider_id', 'agency_inbound_type',
+            'wp_base_url', 'woo_consumer_key', 'woo_consumer_secret',
         ];
         foreach ($string_keys as $k) {
             if (isset($input[$k])) {

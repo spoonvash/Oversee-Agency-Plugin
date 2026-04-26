@@ -87,6 +87,179 @@ class OCD_REST_API {
             'callback'            => [__CLASS__, 'webhook_highlevel'],
             'permission_callback' => [__CLASS__, 'verify_webhook'],
         ]);
+
+        // ---------- Customer messaging ----------
+        register_rest_route(self::NAMESPACE, '/customer/messages', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'customer_list_messages'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'customer_send_message'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+                'args'                => ['message' => ['required' => true, 'type' => 'string']],
+            ],
+        ]);
+
+        // ---------- Customer projects (read-only) ----------
+        register_rest_route(self::NAMESPACE, '/customer/projects', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_list_projects'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+
+        // ---------- Customer tasks ----------
+        register_rest_route(self::NAMESPACE, '/customer/tasks', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_list_tasks'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/customer/tasks/(?P<id>\d+)', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'customer_update_task'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+
+        // ---------- Customer entitlements + store ----------
+        register_rest_route(self::NAMESPACE, '/customer/entitlements', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_list_entitlements'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/customer/store', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_store'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+
+        // ---------- Customer-owned CRM ----------
+        register_rest_route(self::NAMESPACE, '/customer/crm', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'customer_crm_status'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'customer_crm_connect'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+            [
+                'methods'             => 'DELETE',
+                'callback'            => [__CLASS__, 'customer_crm_disconnect'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+        ]);
+
+        // ---------- Admin: messaging ----------
+        register_rest_route(self::NAMESPACE, '/admin/messages/inbox', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'admin_inbox'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/messages/thread/(?P<user_id>\d+)', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_get_thread'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_reply_thread'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+                'args'                => ['message' => ['required' => true, 'type' => 'string']],
+            ],
+        ]);
+
+        // ---------- Admin: projects ----------
+        register_rest_route(self::NAMESPACE, '/admin/projects', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_list_projects'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_create_project'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/projects/(?P<id>\d+)', [
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_update_project'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'DELETE',
+                'callback'            => [__CLASS__, 'admin_delete_project'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/projects/(?P<id>\d+)/milestones', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'admin_add_milestone'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/milestones/(?P<id>\d+)', [
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_update_milestone'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'DELETE',
+                'callback'            => [__CLASS__, 'admin_delete_milestone'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+
+        // ---------- Admin: tasks ----------
+        register_rest_route(self::NAMESPACE, '/admin/tasks', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_list_tasks'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_create_task'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/tasks/(?P<id>\d+)', [
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_update_task'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'DELETE',
+                'callback'            => [__CLASS__, 'admin_delete_task'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+
+        // ---------- Admin: entitlements + product map ----------
+        register_rest_route(self::NAMESPACE, '/admin/entitlements', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'admin_list_entitlements_for_user'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/product-map', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_get_product_map'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_set_product_map'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
     }
 
     public static function logged_in_permission() {
@@ -143,11 +316,17 @@ class OCD_REST_API {
                 'email' => $email,
                 'name'  => $user->display_name,
             ],
-            'connections'   => OCD_Settings::connection_status(),
-            'crm'           => null,
-            'subscriptions' => [],
-            'orders'        => [],
-            'errors'        => [],
+            'connections'      => OCD_Settings::connection_status(),
+            'crm'              => null,
+            'subscriptions'    => [],
+            'orders'           => [],
+            'errors'           => [],
+            'projects'         => OCD_Projects::for_user($user->ID),
+            'tasks'            => OCD_Tasks::for_user($user->ID),
+            'entitlements'     => OCD_Entitlements::for_user($user->ID),
+            'store'            => OCD_Store::listings_for_user($user->ID),
+            'customer_crm'     => OCD_Customer_CRM::status_for_user($user->ID),
+            'messages_unread'  => self::count_user_unread($user->ID, 'user'),
         ];
 
         if (OCD_HighLevel::is_configured()) {
@@ -286,7 +465,271 @@ class OCD_REST_API {
 
     public static function webhook_highlevel($request) {
         $payload = $request->get_json_params();
-        do_action('ocd_highlevel_webhook', $payload);
+        // If the webhook is an outbound message from CRM, mirror into local thread.
+        if (is_array($payload) && !empty($payload['contactId']) && (!empty($payload['message']) || !empty($payload['html']) || !empty($payload['body']))) {
+            $result = OCD_Messaging::ingest_from_webhook($payload);
+            do_action('ocd_highlevel_webhook', $payload, $result);
+            return rest_ensure_response(['received' => true, 'ingested' => !is_wp_error($result)]);
+        }
+        do_action('ocd_highlevel_webhook', $payload, null);
         return rest_ensure_response(['received' => true]);
+    }
+
+    /* ---------------- Customer messaging ---------------- */
+
+    public static function customer_list_messages() {
+        $user = wp_get_current_user();
+        OCD_Messaging::mark_thread_read($user->ID, 'user');
+        return rest_ensure_response([
+            'messages' => OCD_Messaging::thread_for_user($user->ID),
+            'connected_to_agency_crm' => OCD_HighLevel::is_configured(),
+        ]);
+    }
+
+    public static function customer_send_message($request) {
+        $user = wp_get_current_user();
+        $body = (string) $request->get_param('message');
+        $msg  = OCD_Messaging::customer_send($user->ID, $body);
+        if (is_wp_error($msg)) return $msg;
+        return rest_ensure_response(['message' => $msg, 'connected_to_agency_crm' => OCD_HighLevel::is_configured()]);
+    }
+
+    /* ---------------- Customer projects/tasks/entitlements ---------------- */
+
+    public static function customer_list_projects() {
+        $user = wp_get_current_user();
+        return rest_ensure_response(OCD_Projects::for_user($user->ID));
+    }
+
+    public static function customer_list_tasks() {
+        $user = wp_get_current_user();
+        return rest_ensure_response(OCD_Tasks::for_user($user->ID));
+    }
+
+    public static function customer_update_task($request) {
+        $user    = wp_get_current_user();
+        $task_id = (int) $request['id'];
+        $task    = OCD_Tasks::get($task_id);
+        if (!$task) return new WP_Error('ocd_no_task', 'Task not found.', ['status' => 404]);
+        if ((int) $task['user_id'] !== (int) $user->ID) {
+            return new WP_Error('ocd_forbidden', 'Not your task.', ['status' => 403]);
+        }
+        $update = [];
+        if ($request->get_param('status') !== null) $update['status'] = sanitize_text_field($request->get_param('status'));
+        $result = OCD_Tasks::update($task_id, $update, 'customer');
+        return is_wp_error($result) ? $result : rest_ensure_response($result);
+    }
+
+    public static function customer_list_entitlements() {
+        $user = wp_get_current_user();
+        return rest_ensure_response(OCD_Entitlements::for_user($user->ID));
+    }
+
+    public static function customer_store() {
+        $user = wp_get_current_user();
+        return rest_ensure_response([
+            'listings' => OCD_Store::listings_for_user($user->ID),
+            'cart_url' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
+        ]);
+    }
+
+    /* ---------------- Customer-owned CRM ---------------- */
+
+    public static function customer_crm_status() {
+        $user = wp_get_current_user();
+        return rest_ensure_response(OCD_Customer_CRM::status_for_user($user->ID));
+    }
+
+    public static function customer_crm_connect($request) {
+        $user = wp_get_current_user();
+        $data = [
+            'provider'         => sanitize_key($request->get_param('provider') ?: 'highlevel'),
+            'label'            => sanitize_text_field($request->get_param('label') ?: ''),
+            'location_id'      => sanitize_text_field($request->get_param('location_id') ?: ''),
+            'access_token'     => (string) $request->get_param('access_token'),
+            'refresh_token'    => (string) $request->get_param('refresh_token'),
+            'token_expires_at' => sanitize_text_field($request->get_param('token_expires_at') ?: ''),
+        ];
+        if (empty($data['access_token'])) {
+            return new WP_Error('ocd_invalid_token', 'access_token required.', ['status' => 400]);
+        }
+        $result = OCD_Customer_CRM::connect($user->ID, $data);
+        return is_wp_error($result) ? $result : rest_ensure_response($result);
+    }
+
+    public static function customer_crm_disconnect($request) {
+        $user = wp_get_current_user();
+        $provider = sanitize_key($request->get_param('provider') ?: 'highlevel');
+        OCD_Customer_CRM::disconnect($user->ID, $provider);
+        return rest_ensure_response(['disconnected' => true]);
+    }
+
+    /* ---------------- Admin messaging ---------------- */
+
+    public static function admin_inbox($request) {
+        return rest_ensure_response(OCD_Messaging::admin_inbox(['per_page' => (int) $request->get_param('per_page') ?: 25]));
+    }
+
+    public static function admin_get_thread($request) {
+        $user_id = (int) $request['user_id'];
+        OCD_Messaging::mark_thread_read($user_id, 'admin');
+        $u = get_userdata($user_id);
+        return rest_ensure_response([
+            'user_id'  => $user_id,
+            'name'     => $u ? $u->display_name : null,
+            'email'    => $u ? $u->user_email : null,
+            'messages' => OCD_Messaging::thread_for_user($user_id),
+        ]);
+    }
+
+    public static function admin_reply_thread($request) {
+        $user_id = (int) $request['user_id'];
+        $admin   = wp_get_current_user();
+        $body    = (string) $request->get_param('message');
+        $msg     = OCD_Messaging::admin_reply($user_id, $body, $admin->ID);
+        return is_wp_error($msg) ? $msg : rest_ensure_response($msg);
+    }
+
+    /* ---------------- Admin projects ---------------- */
+
+    public static function admin_list_projects($request) {
+        return rest_ensure_response(OCD_Projects::all([
+            'user_id'  => (int) $request->get_param('user_id'),
+            'status'   => sanitize_text_field((string) $request->get_param('status')),
+            'per_page' => (int) $request->get_param('per_page') ?: 50,
+        ]));
+    }
+
+    public static function admin_create_project($request) {
+        $data = [
+            'user_id'            => (int) $request->get_param('user_id'),
+            'title'              => sanitize_text_field((string) $request->get_param('title')),
+            'description'        => (string) $request->get_param('description'),
+            'status'             => sanitize_text_field((string) $request->get_param('status')) ?: 'planning',
+            'progress'           => (int) $request->get_param('progress'),
+            'start_date'         => $request->get_param('start_date'),
+            'target_date'        => $request->get_param('target_date'),
+            'wc_order_id'        => (int) $request->get_param('wc_order_id'),
+            'wc_subscription_id' => (int) $request->get_param('wc_subscription_id'),
+            'wc_product_id'      => (int) $request->get_param('wc_product_id'),
+        ];
+        $res = OCD_Projects::create($data);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_update_project($request) {
+        $id = (int) $request['id'];
+        $data = [];
+        foreach (['title', 'description', 'status', 'start_date', 'target_date'] as $f) {
+            if ($request->get_param($f) !== null) $data[$f] = $request->get_param($f);
+        }
+        if ($request->get_param('progress') !== null) $data['progress'] = (int) $request->get_param('progress');
+        $res = OCD_Projects::update($id, $data);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_delete_project($request) {
+        OCD_Projects::delete((int) $request['id']);
+        return rest_ensure_response(['deleted' => true]);
+    }
+
+    public static function admin_add_milestone($request) {
+        $project_id = (int) $request['id'];
+        $data = [
+            'title'      => sanitize_text_field((string) $request->get_param('title')),
+            'note'       => (string) $request->get_param('note'),
+            'status'     => sanitize_text_field((string) $request->get_param('status')) ?: 'pending',
+            'sort_order' => (int) $request->get_param('sort_order'),
+            'due_date'   => $request->get_param('due_date'),
+        ];
+        $res = OCD_Projects::add_milestone($project_id, $data);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_update_milestone($request) {
+        $id = (int) $request['id'];
+        $data = [];
+        foreach (['title', 'note', 'status', 'due_date'] as $f) {
+            if ($request->get_param($f) !== null) $data[$f] = $request->get_param($f);
+        }
+        if ($request->get_param('sort_order') !== null) $data['sort_order'] = (int) $request->get_param('sort_order');
+        $res = OCD_Projects::update_milestone($id, $data);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_delete_milestone($request) {
+        OCD_Projects::delete_milestone((int) $request['id']);
+        return rest_ensure_response(['deleted' => true]);
+    }
+
+    /* ---------------- Admin tasks ---------------- */
+
+    public static function admin_list_tasks($request) {
+        return rest_ensure_response(OCD_Tasks::all([
+            'user_id'  => (int) $request->get_param('user_id'),
+            'status'   => sanitize_text_field((string) $request->get_param('status')),
+            'per_page' => (int) $request->get_param('per_page') ?: 100,
+        ]));
+    }
+
+    public static function admin_create_task($request) {
+        $admin = wp_get_current_user();
+        $data = [
+            'user_id'    => (int) $request->get_param('user_id'),
+            'project_id' => (int) $request->get_param('project_id'),
+            'title'      => sanitize_text_field((string) $request->get_param('title')),
+            'details'    => (string) $request->get_param('details'),
+            'status'     => sanitize_text_field((string) $request->get_param('status')) ?: 'open',
+            'due_date'   => $request->get_param('due_date'),
+            'assigned_by'=> $admin->ID,
+        ];
+        $res = OCD_Tasks::create($data);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_update_task($request) {
+        $id = (int) $request['id'];
+        $data = [];
+        foreach (['title', 'details', 'status', 'due_date'] as $f) {
+            if ($request->get_param($f) !== null) $data[$f] = $request->get_param($f);
+        }
+        if ($request->get_param('project_id') !== null) $data['project_id'] = (int) $request->get_param('project_id');
+        $res = OCD_Tasks::update($id, $data, 'admin');
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_delete_task($request) {
+        OCD_Tasks::delete((int) $request['id']);
+        return rest_ensure_response(['deleted' => true]);
+    }
+
+    /* ---------------- Admin entitlements + map ---------------- */
+
+    public static function admin_list_entitlements_for_user($request) {
+        $user_id = (int) $request->get_param('user_id');
+        if (!$user_id) return new WP_Error('ocd_invalid', 'user_id required.', ['status' => 400]);
+        return rest_ensure_response(OCD_Entitlements::for_user($user_id));
+    }
+
+    public static function admin_get_product_map() {
+        return rest_ensure_response(OCD_Entitlements::get_product_map());
+    }
+
+    public static function admin_set_product_map($request) {
+        $map = $request->get_param('map');
+        if (!is_array($map)) return new WP_Error('ocd_invalid_map', 'Expected map array.', ['status' => 400]);
+        return rest_ensure_response(OCD_Entitlements::set_product_map($map));
+    }
+
+    /* ---------------- helpers ---------------- */
+
+    private static function count_user_unread($user_id, $reader) {
+        global $wpdb;
+        $col = $reader === 'admin' ? 'read_by_admin' : 'read_by_user';
+        return (int) $wpdb->get_var($wpdb->prepare(
+            'SELECT COUNT(*) FROM ' . OCD_Schema::table('messages')
+            . ' WHERE user_id = %d AND ' . $col . ' = 0',
+            (int) $user_id
+        ));
     }
 }

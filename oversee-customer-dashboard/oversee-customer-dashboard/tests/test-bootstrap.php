@@ -14,6 +14,8 @@ if (!defined('ABSPATH')) {
 
 // --- Minimal WordPress shims ---
 $GLOBALS['__ocd_options'] = [];
+$GLOBALS['__ocd_user_meta'] = [];
+
 function get_option($k, $default = false)   { return $GLOBALS['__ocd_options'][$k] ?? $default; }
 function update_option($k, $v)              { $GLOBALS['__ocd_options'][$k] = $v; return true; }
 function add_action(...$a)                  {}
@@ -28,12 +30,19 @@ function plugin_basename($f)                { return basename($f); }
 function load_plugin_textdomain(...$a)      {}
 function flush_rewrite_rules(...$a)         {}
 function sanitize_text_field($v)            { return is_string($v) ? trim(strip_tags($v)) : $v; }
+function sanitize_key($v)                   { return is_string($v) ? strtolower(preg_replace('/[^a-z0-9_-]/i', '', $v)) : ''; }
+function wp_kses_post($v)                   { return is_string($v) ? strip_tags($v, '<a><strong><em><br><p>') : $v; }
+function wp_strip_all_tags($v)              { return is_string($v) ? strip_tags($v) : $v; }
 function add_query_arg($args, $url) {
     $sep = strpos($url, '?') === false ? '?' : '&';
     return $url . $sep . http_build_query($args);
 }
 function wp_json_encode($v)                 { return json_encode($v); }
 function wp_remote_request($url, $args)     { return ['response' => ['code' => 0], 'body' => '']; }
+function get_userdata($id)                  { return null; }
+function update_user_meta($id, $k, $v)      { $GLOBALS['__ocd_user_meta'][$id][$k] = $v; return true; }
+function get_user_meta($id, $k, $single)    { return $GLOBALS['__ocd_user_meta'][$id][$k] ?? ''; }
+function current_time($type, $gmt = 0)      { return $type === 'mysql' ? gmdate('Y-m-d H:i:s') : time(); }
 function __($t, $d = '')                    { return $t; }
 function _e($t, $d = '')                    { echo $t; }
 function esc_html__($t, $d = '')            { return htmlspecialchars($t, ENT_QUOTES); }
@@ -48,6 +57,9 @@ class WP_Error {
 require_once __DIR__ . '/../includes/class-ocd-settings.php';
 require_once __DIR__ . '/../includes/class-ocd-highlevel.php';
 require_once __DIR__ . '/../includes/class-ocd-woocommerce.php';
+require_once __DIR__ . '/../includes/class-ocd-projects.php';
+require_once __DIR__ . '/../includes/class-ocd-tasks.php';
+require_once __DIR__ . '/../includes/class-ocd-entitlements.php';
 
 // --- Assertions ---
 $results = [];
@@ -60,6 +72,7 @@ OCD_Settings::install_defaults();
 $d = OCD_Settings::defaults();
 check('defaults include highlevel base url', $d['highlevel_base_url'] === 'https://services.leadconnectorhq.com', $results);
 check('defaults include api version', $d['highlevel_api_version'] === '2021-07-28', $results);
+check('defaults include agency conversation provider id key', array_key_exists('agency_conversation_provider_id', $d), $results);
 
 check('highlevel disconnected by default', !OCD_HighLevel::is_configured(), $results);
 check('woocommerce disconnected by default', !OCD_WooCommerce::is_configured(), $results);
@@ -92,6 +105,30 @@ check('highlevel becomes configured when token+location set', OCD_HighLevel::is_
 
 OCD_Settings::update(['wp_base_url' => 'https://x', 'woo_consumer_key' => 'k', 'woo_consumer_secret' => 's']);
 check('woocommerce becomes configured when keys set', OCD_WooCommerce::is_configured(), $results);
+
+// HighLevel inbound message validation (without network).
+$res = OCD_HighLevel::post_inbound_message(['message' => '']);
+check('inbound message rejects empty body', is_wp_error($res), $results);
+
+$res2 = OCD_HighLevel::post_inbound_message(['message' => 'hi']);
+check('inbound message rejects missing target', is_wp_error($res2) && $res2->get_error_code() === 'ocd_invalid_target', $results);
+
+// Project status validation (no DB writes — purely validation surface).
+check('project statuses include planning + completed', in_array('planning', OCD_Projects::VALID_STATUSES, true) && in_array('completed', OCD_Projects::VALID_STATUSES, true), $results);
+check('milestone statuses include pending + completed', in_array('pending', OCD_Projects::VALID_MILESTONE_STATUSES, true) && in_array('completed', OCD_Projects::VALID_MILESTONE_STATUSES, true), $results);
+check('task statuses include open + completed', in_array('open', OCD_Tasks::VALID_STATUSES, true) && in_array('completed', OCD_Tasks::VALID_STATUSES, true), $results);
+
+// Entitlement product map round-trip.
+$map_in  = ['42' => ['slug' => 'analytics-pro', 'label' => 'Analytics Pro'], 'bad' => ['slug' => '']];
+$map_out = OCD_Entitlements::set_product_map($map_in);
+check('product map drops invalid rows and keeps valid ones',
+    isset($map_out[42]) && $map_out[42]['slug'] === 'analytics-pro' && !isset($map_out['bad']) && !isset($map_out[0]),
+    $results
+);
+$f = OCD_Entitlements::feature_for_product(42);
+check('feature_for_product returns the mapped slug', is_array($f) && $f['slug'] === 'analytics-pro', $results);
+$nope = OCD_Entitlements::feature_for_product(999999);
+check('feature_for_product returns null for unmapped products', $nope === null, $results);
 
 $failed = array_filter($results, function ($r) { return !$r[1]; });
 if (count($failed) > 0) {
