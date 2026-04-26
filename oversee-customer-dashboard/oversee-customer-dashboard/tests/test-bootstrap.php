@@ -47,6 +47,8 @@ function __($t, $d = '')                    { return $t; }
 function _e($t, $d = '')                    { echo $t; }
 function esc_html__($t, $d = '')            { return htmlspecialchars($t, ENT_QUOTES); }
 function is_wp_error($v)                    { return $v instanceof WP_Error; }
+function home_url($p = '')                  { return 'https://example.com' . $p; }
+function sanitize_title($v)                 { return is_string($v) ? strtolower(preg_replace('/[^a-z0-9-]+/i', '-', $v)) : ''; }
 class WP_Error {
     private $code; private $message; private $data;
     public function __construct($c = '', $m = '', $d = []) { $this->code = $c; $this->message = $m; $this->data = $d; }
@@ -60,6 +62,19 @@ require_once __DIR__ . '/../includes/class-ocd-woocommerce.php';
 require_once __DIR__ . '/../includes/class-ocd-projects.php';
 require_once __DIR__ . '/../includes/class-ocd-tasks.php';
 require_once __DIR__ . '/../includes/class-ocd-entitlements.php';
+
+// Provide a minimal OCD_Schema + OCD_Entitlements::for_user shim so the
+// store class can be loaded and its WC-unavailable + empty-map paths
+// exercised without a full WordPress install.
+if (!class_exists('OCD_Schema_Stub')) {
+    class OCD_Schema_Stub {
+        public static function table($_) { return 'wp_ocd_x'; }
+    }
+}
+if (!class_exists('OCD_Schema')) {
+    class_alias('OCD_Schema_Stub', 'OCD_Schema');
+}
+require_once __DIR__ . '/../includes/class-ocd-store.php';
 
 // --- Assertions ---
 $results = [];
@@ -129,6 +144,34 @@ $f = OCD_Entitlements::feature_for_product(42);
 check('feature_for_product returns the mapped slug', is_array($f) && $f['slug'] === 'analytics-pro', $results);
 $nope = OCD_Entitlements::feature_for_product(999999);
 check('feature_for_product returns null for unmapped products', $nope === null, $results);
+
+// --- Store: WooCommerce-unavailable path returns a setup empty state, never fake products. ---
+$payload = OCD_Store::dashboard_payload(123);
+check('store payload returns available=false when WooCommerce is not loaded',
+    is_array($payload) && $payload['available'] === false,
+    $results
+);
+check('store payload returns no listings when WooCommerce is not loaded',
+    is_array($payload['listings']) && count($payload['listings']) === 0,
+    $results
+);
+check('store payload includes a human-readable reason for empty state',
+    is_string($payload['reason']) && stripos($payload['reason'], 'WooCommerce') !== false,
+    $results
+);
+check('search_existing_products returns empty when WC is not loaded (never fabricates products)',
+    OCD_Store::search_existing_products(['search' => 'anything']) === [],
+    $results
+);
+check('OCD_Store::listings_for_user backwards-compatible wrapper still returns an array',
+    is_array(OCD_Store::listings_for_user(123)),
+    $results
+);
+
+// --- Store category persistence ---
+$cat_in = OCD_Store::set_store_category('Add-Ons & Bonuses!');
+check('store category sanitizes to a slug', $cat_in === 'add-ons-bonuses-' || preg_match('/^[a-z0-9-]+$/', $cat_in), $results);
+check('store category round-trips via wp options', OCD_Store::get_store_category() === $cat_in, $results);
 
 $failed = array_filter($results, function ($r) { return !$r[1]; });
 if (count($failed) > 0) {

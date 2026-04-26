@@ -15,12 +15,23 @@ The visual design uses the Oversee brand color discovered in the Hub Child theme
 
 ## What's in this release (1.1.x)
 
+- **Two strictly separate dashboards.** `[oversee_customer_dashboard]` renders only the customer-facing surface (subscriptions, projects, tasks, messages, store, integrations). `[oversee_admin_dashboard]` is staff-only (`manage_woocommerce`/`manage_options`) and renders only the operational surface (inbox, projects, tasks, entitlements, customers, subscriptions, CRM, sync). The two never share navigation — even an admin user visiting the customer page sees the customer view only.
+- **Dashboard store backed by existing WooCommerce products only.** The plugin **never** creates, seeds, or mocks products. It surfaces real `wc_get_products()` results — name, price, image, short description, permalink — pulled either from the admin-curated product → feature map or, optionally, every published product in an admin-selected WooCommerce category.
+- **Checkout routes through real WooCommerce.** Every CTA is the product's live add-to-cart URL (`$product->add_to_cart_url()`); a "Checkout" link goes to `wc_get_checkout_url()`. There are no fake purchase buttons.
 - **Two-way customer messaging** stored in custom tables and forwarded to the agency HighLevel sub-account via `POST /conversations/messages/inbound`. Outbound replies from HighLevel can be mirrored back via the webhook ingest endpoint.
 - **Project timelines + milestones** with progress tracking and admin CRUD.
 - **Client tasks/steps** that admins assign and customers can complete from the dashboard.
-- **Feature entitlements + dashboard store** mapped from WooCommerce products. Buying a product (or activating a subscription) automatically grants the entitlement and creates an associated project.
+- **Feature entitlements + dashboard store** mapped from existing WooCommerce products. Buying a mapped product (or activating a subscription on a mapped product) automatically grants the entitlement and creates an associated project.
 - **Customer-owned CRM connections** are stored in a separate table from the agency CRM credentials — they never mix.
 - **Auto dashboard access**: a `access_oversee_dashboard` capability is granted on order processing/completion and on subscription activation.
+
+### Setup / empty state
+
+When WooCommerce isn't active, or no products are mapped (and no store category is configured), the customer dashboard's store renders a clearly worded setup empty state:
+
+> *No eligible WooCommerce products mapped yet. An admin can map existing products to the dashboard under Oversee Admin → Entitlements.*
+
+The plugin never falls back to placeholder products or fake checkout flows.
 
 ## Architecture
 
@@ -134,13 +145,27 @@ Each customer can connect their own CRM account separately under **Dashboard →
 
 ## WooCommerce → entitlement mapping
 
-Map WooCommerce product IDs to dashboard feature slugs under **Oversee Admin → Entitlements**. When a customer's order moves to `processing` or `completed` (or a subscription becomes `active`), the plugin:
+Map **existing** WooCommerce products to dashboard feature slugs under **Oversee Admin → Entitlements**. The mapping UI is a live product search (by name or SKU) that talks to `wc_get_products()` server-side — picking from products that already exist in WooCommerce. The plugin will refuse to save a mapping for a product ID that does not exist in WooCommerce.
+
+Optionally, an admin can pick a single existing **product category**; every published product in that category will be surfaced in the customer dashboard store (in addition to any explicit mappings). This lets the agency curate a "Dashboard add-ons" category in WooCommerce and have the dashboard mirror it without ever needing a duplicate catalog.
+
+When a customer's order moves to `processing` or `completed` (or a subscription becomes `active`), the plugin:
 
 - Adds the `access_oversee_dashboard` capability to the customer
-- Grants matching entitlements (active)
+- Grants matching entitlements (active) for any line items whose product IDs are in the map
 - Creates a project record per purchased product if one doesn't exist
 
 Subscription transitions to `on-hold`, `pending-cancel`, `cancelled`, or `expired` propagate to entitlement statuses.
+
+### Customer checkout flow
+
+The dashboard store does not implement its own cart or payment processing. Each product card has:
+
+- **Add to cart** → `$product->add_to_cart_url()` (the live WooCommerce URL)
+- **Checkout** → `wc_get_checkout_url()`
+- **Details** → `get_permalink($product)` (the standard product page)
+
+This means the agency configures payment gateways, taxes, shipping, etc. once in WooCommerce. The dashboard is a discovery surface, not a parallel store.
 
 ## REST API surface
 
@@ -163,7 +188,7 @@ All routes are under `/wp-json/ocd/v1/`. Authentication: WordPress cookie + `X-W
 | GET | `/customer/tasks` | Owner-only task list | Logged-in |
 | POST | `/customer/tasks/{id}` | Owner toggles task `open` ↔ `completed` | Logged-in |
 | GET | `/customer/entitlements` | Active feature entitlements | Logged-in |
-| GET | `/customer/store` | Listings derived from product map; CTA → real Woo cart | Logged-in |
+| GET | `/customer/store` | Existing WC products only; CTA → real Woo `add_to_cart_url()` and `wc_get_checkout_url()`. Renders setup empty state when WC inactive / no mapping. | Logged-in |
 | GET, POST, DELETE | `/customer/crm` | Customer-owned CRM connection (separate from agency) | Logged-in |
 | GET | `/admin/messages/inbox` | Conversation list with unread counts | manage_woocommerce |
 | GET, POST | `/admin/messages/thread/{user_id}` | View thread / post staff reply | manage_woocommerce |
@@ -174,7 +199,9 @@ All routes are under `/wp-json/ocd/v1/`. Authentication: WordPress cookie + `X-W
 | GET, POST | `/admin/tasks` | List / create tasks | manage_woocommerce |
 | POST, DELETE | `/admin/tasks/{id}` | Update / delete task | manage_woocommerce |
 | GET | `/admin/entitlements?user_id=…` | Per-user entitlements | manage_woocommerce |
-| GET, POST | `/admin/product-map` | Read / write WC product → feature mapping | manage_woocommerce |
+| GET, POST | `/admin/product-map` | Read / write WC product → feature mapping. POST validates that every product ID exists in WooCommerce. | manage_woocommerce |
+| GET | `/admin/wc-products?search=…` | Server-side search of *existing* WooCommerce products (id, name, sku, image, price). Used to power the mapping picker. | manage_woocommerce |
+| GET, POST | `/admin/store-category` | Optional: pick an existing WC category whose products are surfaced in the store. | manage_woocommerce |
 | POST | `/webhooks/highlevel` | HighLevel webhook ingestion + outbound mirroring | HMAC `X-OCD-Signature` |
 
 ### Subscription statuses

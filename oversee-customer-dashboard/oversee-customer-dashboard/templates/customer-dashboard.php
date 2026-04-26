@@ -138,7 +138,13 @@ $status = OCD_Settings::connection_status();
 
     <section class="ocd-cust-panel" data-ocd-cust-panel="store">
         <div class="ocd-card">
-            <div class="ocd-card__header"><h2><?php esc_html_e('Add-ons & services', 'oversee-customer-dashboard'); ?></h2></div>
+            <div class="ocd-card__header">
+                <h2><?php esc_html_e('Add-ons & services', 'oversee-customer-dashboard'); ?></h2>
+                <a class="ocd-btn ocd-btn--ghost" data-ocd-store-cart hidden href="#"><?php esc_html_e('View cart', 'oversee-customer-dashboard'); ?></a>
+            </div>
+            <p class="ocd-muted">
+                <?php esc_html_e('Each item below is an existing WooCommerce product. Checkout routes to the real WooCommerce cart — no separate billing.', 'oversee-customer-dashboard'); ?>
+            </p>
             <div class="ocd-store" data-ocd-list="store">
                 <p class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></p>
             </div>

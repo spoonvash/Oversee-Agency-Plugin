@@ -105,15 +105,43 @@ $status = OCD_Settings::connection_status();
     <section class="ocd-tab-panel" data-ocd-panel="entitlements">
         <div class="ocd-card">
             <div class="ocd-card__header">
-                <h2><?php esc_html_e('Product → feature mapping', 'oversee-customer-dashboard'); ?></h2>
-                <button class="ocd-btn ocd-btn--primary" data-ocd-action="add-product-map"><?php esc_html_e('Add mapping', 'oversee-customer-dashboard'); ?></button>
+                <h2><?php esc_html_e('Existing WooCommerce products → feature mapping', 'oversee-customer-dashboard'); ?></h2>
             </div>
-            <p class="ocd-muted"><?php esc_html_e('Map a WooCommerce product ID to a dashboard feature slug. Customers who buy the product (or whose subscription becomes active) automatically receive that feature.', 'oversee-customer-dashboard'); ?></p>
+            <p class="ocd-muted">
+                <?php esc_html_e('Map an existing WooCommerce product to a dashboard feature slug. The dashboard never creates new products — only existing WC products are surfaced. When a customer buys a mapped product (or their subscription activates), the matching feature is granted automatically.', 'oversee-customer-dashboard'); ?>
+            </p>
+
+            <div class="ocd-product-picker">
+                <label class="ocd-product-picker__label">
+                    <?php esc_html_e('Search existing products', 'oversee-customer-dashboard'); ?>
+                    <input type="search" class="ocd-input" data-ocd-search="wc-products" placeholder="<?php esc_attr_e('Type a product name or SKU…', 'oversee-customer-dashboard'); ?>" autocomplete="off" />
+                </label>
+                <ul class="ocd-product-picker__results" data-ocd-list="wc-products" hidden></ul>
+            </div>
+
             <div class="ocd-table-wrap">
                 <table class="ocd-table">
-                    <thead><tr><th><?php esc_html_e('Product ID', 'oversee-customer-dashboard'); ?></th><th><?php esc_html_e('Feature slug', 'oversee-customer-dashboard'); ?></th><th><?php esc_html_e('Label', 'oversee-customer-dashboard'); ?></th><th></th></tr></thead>
-                    <tbody data-ocd-list="admin-product-map"><tr><td colspan="4" class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></td></tr></tbody>
+                    <thead><tr>
+                        <th></th>
+                        <th><?php esc_html_e('Product', 'oversee-customer-dashboard'); ?></th>
+                        <th><?php esc_html_e('Feature slug', 'oversee-customer-dashboard'); ?></th>
+                        <th><?php esc_html_e('Label', 'oversee-customer-dashboard'); ?></th>
+                        <th></th>
+                    </tr></thead>
+                    <tbody data-ocd-list="admin-product-map"><tr><td colspan="5" class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></td></tr></tbody>
                 </table>
+            </div>
+        </div>
+
+        <div class="ocd-card">
+            <div class="ocd-card__header">
+                <h2><?php esc_html_e('Optional: store product category', 'oversee-customer-dashboard'); ?></h2>
+            </div>
+            <p class="ocd-muted">
+                <?php esc_html_e('Pick an existing WooCommerce product category to surface every published product in that category in the dashboard store — in addition to any explicit mappings above. Leave empty to only show explicitly-mapped products.', 'oversee-customer-dashboard'); ?>
+            </p>
+            <div data-ocd-block="store-category">
+                <p class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></p>
             </div>
         </div>
     </section>

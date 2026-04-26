@@ -260,6 +260,27 @@ class OCD_REST_API {
                 'permission_callback' => [__CLASS__, 'admin_permission'],
             ],
         ]);
+
+        // Search existing WooCommerce products (admin mapping UI). Existing products only — never creates products.
+        register_rest_route(self::NAMESPACE, '/admin/wc-products', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'admin_search_wc_products'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+
+        // Read/write the optional "store category" (existing WC category slug used to surface products in the customer dashboard).
+        register_rest_route(self::NAMESPACE, '/admin/store-category', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_get_store_category'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_set_store_category'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
     }
 
     public static function logged_in_permission() {
@@ -526,11 +547,11 @@ class OCD_REST_API {
     }
 
     public static function customer_store() {
-        $user = wp_get_current_user();
-        return rest_ensure_response([
-            'listings' => OCD_Store::listings_for_user($user->ID),
-            'cart_url' => function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/'),
-        ]);
+        $user    = wp_get_current_user();
+        $payload = OCD_Store::dashboard_payload($user->ID);
+        // Tell the client whether WooCommerce is reachable so it can render a setup empty-state instead of a broken UI.
+        $payload['wc_active'] = function_exists('wc_get_products');
+        return rest_ensure_response($payload);
     }
 
     /* ---------------- Customer-owned CRM ---------------- */
@@ -718,7 +739,58 @@ class OCD_REST_API {
     public static function admin_set_product_map($request) {
         $map = $request->get_param('map');
         if (!is_array($map)) return new WP_Error('ocd_invalid_map', 'Expected map array.', ['status' => 400]);
+        // Validate every product id exists in WooCommerce. We never create products from the dashboard;
+        // mapping must reference an existing WC product.
+        if (function_exists('wc_get_product')) {
+            foreach ($map as $product_id => $entry) {
+                $pid = (int) $product_id;
+                if ($pid <= 0) continue;
+                $product = wc_get_product($pid);
+                if (!$product) {
+                    return new WP_Error(
+                        'ocd_unknown_product',
+                        sprintf('WooCommerce product #%d does not exist. Mapping must reference an existing product.', $pid),
+                        ['status' => 400]
+                    );
+                }
+            }
+        }
         return rest_ensure_response(OCD_Entitlements::set_product_map($map));
+    }
+
+    public static function admin_search_wc_products($request) {
+        $args = [
+            'search'   => sanitize_text_field((string) $request->get_param('search')),
+            'per_page' => (int) ($request->get_param('per_page') ?: 25),
+        ];
+        return rest_ensure_response(OCD_Store::search_existing_products($args));
+    }
+
+    public static function admin_get_store_category() {
+        $cat = OCD_Store::get_store_category();
+        $available = [];
+        if (function_exists('get_terms')) {
+            $terms = get_terms(['taxonomy' => 'product_cat', 'hide_empty' => false]);
+            if (!is_wp_error($terms)) {
+                foreach ((array) $terms as $term) {
+                    if (!is_object($term)) continue;
+                    $available[] = [
+                        'slug'  => $term->slug,
+                        'name'  => $term->name,
+                        'count' => (int) ($term->count ?? 0),
+                    ];
+                }
+            }
+        }
+        return rest_ensure_response([
+            'category'   => $cat,
+            'available'  => $available,
+        ]);
+    }
+
+    public static function admin_set_store_category($request) {
+        $slug = sanitize_title((string) $request->get_param('category'));
+        return rest_ensure_response(['category' => OCD_Store::set_store_category($slug)]);
     }
 
     /* ---------------- helpers ---------------- */

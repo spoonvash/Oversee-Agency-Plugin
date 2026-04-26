@@ -321,27 +321,49 @@
 
     function loadCustomerStore(root) {
         var target = root.querySelector('[data-ocd-list="store"]');
+        var cartBtn = root.querySelector('[data-ocd-store-cart]');
         if (!target) return;
         target.innerHTML = '<p class="ocd-empty">Loading…</p>';
         api('customer/store').then(function (r) {
-            if (!r.ok) { target.innerHTML = '<p class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</p>'; return; }
-            var listings = (r.body && r.body.listings) || [];
-            if (!listings.length) {
-                target.innerHTML = '<p class="ocd-muted">No add-ons configured yet. Oversee staff can add WooCommerce products to the dashboard store from Oversee Admin → Entitlements.</p>';
+            if (!r.ok) {
+                target.innerHTML = '<p class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</p>';
                 return;
             }
+            var data = r.body || {};
+            if (cartBtn && data.cart_url) {
+                cartBtn.href = data.cart_url;
+                cartBtn.hidden = false;
+            }
+            // Empty/setup state — never render fake products. The reason copy is server-supplied.
+            if (data.available === false || !data.listings || !data.listings.length) {
+                var reason = data.reason || (data.wc_active === false
+                    ? 'WooCommerce products unavailable.'
+                    : 'No eligible WooCommerce products mapped yet.');
+                target.innerHTML = '<div class="ocd-store__empty">' +
+                    '<p class="ocd-muted">' + escapeHtml(reason) + '</p>' +
+                '</div>';
+                return;
+            }
+            var listings = data.listings;
             target.innerHTML = '<div class="ocd-store__grid">' + listings.map(function (it) {
                 var owned = it.owned_status === 'active';
-                var cta = owned
+                var primaryCta = owned
                     ? '<span class="ocd-pill ocd-pill--success">Active</span>'
                     : (it.available
                         ? '<a class="ocd-btn ocd-btn--primary" href="' + escapeHtml(it.add_to_cart) + '">Add to cart</a>'
-                        : '<span class="ocd-muted">Unavailable</span>');
+                        : '<span class="ocd-muted">Out of stock</span>');
+                var checkoutCta = (!owned && it.available && data.checkout_url)
+                    ? ' <a class="ocd-btn ocd-btn--ghost" href="' + escapeHtml(data.checkout_url) + '">Checkout</a>'
+                    : '';
+                var img = it.image
+                    ? '<div class="ocd-store__image"><img loading="lazy" alt="" src="' + escapeHtml(it.image) + '" /></div>'
+                    : '';
                 return '<div class="ocd-store__card">' +
+                    img +
                     '<h3>' + escapeHtml(it.name || it.label) + '</h3>' +
-                    '<p class="ocd-muted">' + escapeHtml(it.description || '') + '</p>' +
+                    (it.description ? '<p class="ocd-muted">' + escapeHtml(it.description) + '</p>' : '') +
                     (it.price_html ? '<div class="ocd-store__price">' + it.price_html + '</div>' : '') +
-                    '<div class="ocd-actions">' + cta +
+                    '<div class="ocd-actions">' + primaryCta + checkoutCta +
                         (it.permalink ? ' <a class="ocd-btn ocd-btn--ghost" href="' + escapeHtml(it.permalink) + '">Details</a>' : '') +
                     '</div>' +
                 '</div>';
@@ -446,16 +468,25 @@
             });
         });
 
-        var addMap = root.querySelector('[data-ocd-action="add-product-map"]');
-        if (addMap) addMap.addEventListener('click', function () {
-            var pid = prompt('WooCommerce product ID?'); if (!pid) return;
-            var slug = prompt('Feature slug (e.g. analytics-pro)?'); if (!slug) return;
-            var label = prompt('Label?', slug);
-            getMapAndUpdate(root, function (map) {
-                map[pid] = { slug: slug, label: label || slug };
-                return map;
+        // Live product search → click-to-map. Existing WooCommerce products only — never creates products.
+        var prodSearch = root.querySelector('[data-ocd-search="wc-products"]');
+        var prodResults = root.querySelector('[data-ocd-list="wc-products"]');
+        if (prodSearch && prodResults) {
+            var ptimer;
+            prodSearch.addEventListener('input', function () {
+                clearTimeout(ptimer);
+                var q = prodSearch.value;
+                if (!q || q.length < 2) {
+                    prodResults.hidden = true;
+                    prodResults.innerHTML = '';
+                    return;
+                }
+                ptimer = setTimeout(function () { searchExistingProducts(root, q); }, 250);
             });
-        });
+            prodSearch.addEventListener('blur', function () {
+                setTimeout(function () { prodResults.hidden = true; }, 200);
+            });
+        }
 
         // Customers tab
         var custSearch = root.querySelector('[data-ocd-search="customers"]');
@@ -632,23 +663,62 @@
     function loadProductMap(root) {
         var body = root.querySelector('[data-ocd-list="admin-product-map"]');
         if (!body) return;
-        body.innerHTML = '<tr><td colspan="4" class="ocd-empty">Loading…</td></tr>';
+        body.innerHTML = '<tr><td colspan="5" class="ocd-empty">Loading…</td></tr>';
         api('admin/product-map').then(function (r) {
-            if (!r.ok) { body.innerHTML = '<tr><td colspan="4" class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</td></tr>'; return; }
+            if (!r.ok) { body.innerHTML = '<tr><td colspan="5" class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</td></tr>'; return; }
             var map = r.body || {};
             var keys = Object.keys(map);
-            if (!keys.length) { body.innerHTML = '<tr><td colspan="4" class="ocd-empty">No mappings yet. Click "Add mapping" to get started.</td></tr>'; return; }
-            body.innerHTML = keys.map(function (k) {
-                var entry = map[k] || {};
-                return '<tr><td>' + escapeHtml(k) + '</td><td><code>' + escapeHtml(entry.slug || '') + '</code></td><td>' + escapeHtml(entry.label || '') + '</td><td><button class="ocd-btn ocd-btn--danger" data-ocd-map-del="' + escapeHtml(k) + '">Remove</button></td></tr>';
-            }).join('');
-            body.querySelectorAll('[data-ocd-map-del]').forEach(function (b) {
-                b.addEventListener('click', function () {
-                    var pid = b.getAttribute('data-ocd-map-del');
-                    if (!confirm('Remove mapping for product #' + pid + '?')) return;
-                    getMapAndUpdate(root, function (m) { delete m[pid]; return m; });
+            if (!keys.length) {
+                body.innerHTML = '<tr><td colspan="5" class="ocd-empty">No mappings yet. Use the search above to map an existing WooCommerce product to a dashboard feature.</td></tr>';
+            } else {
+                body.innerHTML = keys.map(function (k) {
+                    var entry = map[k] || {};
+                    return '<tr data-ocd-map-row="' + escapeHtml(k) + '">' +
+                        '<td><img class="ocd-map-thumb" data-ocd-map-thumb="' + escapeHtml(k) + '" alt="" /></td>' +
+                        '<td><strong data-ocd-map-name="' + escapeHtml(k) + '">#' + escapeHtml(k) + '</strong></td>' +
+                        '<td><input class="ocd-input ocd-input--mono" data-ocd-map-slug="' + escapeHtml(k) + '" value="' + escapeHtml(entry.slug || '') + '" /></td>' +
+                        '<td><input class="ocd-input" data-ocd-map-label="' + escapeHtml(k) + '" value="' + escapeHtml(entry.label || '') + '" /></td>' +
+                        '<td>' +
+                            '<button class="ocd-btn ocd-btn--ghost" data-ocd-map-save="' + escapeHtml(k) + '">Save</button> ' +
+                            '<button class="ocd-btn ocd-btn--danger" data-ocd-map-del="' + escapeHtml(k) + '">Remove</button>' +
+                        '</td>' +
+                    '</tr>';
+                }).join('');
+                // Hydrate product names/thumbs from WC for already-mapped IDs.
+                keys.forEach(function (pid) { hydrateMappedProduct(root, pid); });
+                body.querySelectorAll('[data-ocd-map-save]').forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        var pid = b.getAttribute('data-ocd-map-save');
+                        var slug = root.querySelector('[data-ocd-map-slug="' + pid + '"]').value;
+                        var label = root.querySelector('[data-ocd-map-label="' + pid + '"]').value;
+                        getMapAndUpdate(root, function (m) {
+                            m[pid] = { slug: slug, label: label || slug };
+                            return m;
+                        });
+                    });
                 });
-            });
+                body.querySelectorAll('[data-ocd-map-del]').forEach(function (b) {
+                    b.addEventListener('click', function () {
+                        var pid = b.getAttribute('data-ocd-map-del');
+                        if (!confirm('Remove mapping for product #' + pid + '?')) return;
+                        getMapAndUpdate(root, function (m) { delete m[pid]; return m; });
+                    });
+                });
+            }
+        });
+        loadStoreCategory(root);
+    }
+
+    function hydrateMappedProduct(root, productId) {
+        api('admin/wc-products?per_page=1&search=' + encodeURIComponent('id:' + productId)).then(function (r) {
+            if (!r.ok || !Array.isArray(r.body)) return;
+            // Fallback: just look it up by listing & matching id.
+            var match = (r.body || []).filter(function (p) { return parseInt(p.id, 10) === parseInt(productId, 10); })[0];
+            if (!match) return;
+            var name = root.querySelector('[data-ocd-map-name="' + productId + '"]');
+            var thumb = root.querySelector('[data-ocd-map-thumb="' + productId + '"]');
+            if (name) name.textContent = match.name + ' (#' + match.id + ')';
+            if (thumb && match.image) thumb.src = match.image;
         });
     }
 
@@ -660,6 +730,77 @@
             api('admin/product-map', { method: 'POST', body: { map: next } }).then(function (rr) {
                 if (rr.ok) loadProductMap(root);
                 else alert((rr.body && rr.body.message) || 'Failed.');
+            });
+        });
+    }
+
+    function searchExistingProducts(root, query) {
+        var results = root.querySelector('[data-ocd-list="wc-products"]');
+        if (!results) return;
+        results.hidden = false;
+        results.innerHTML = '<li class="ocd-empty">Searching…</li>';
+        api('admin/wc-products?per_page=15&search=' + encodeURIComponent(query)).then(function (r) {
+            if (!r.ok) { results.innerHTML = '<li class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</li>'; return; }
+            var rows = Array.isArray(r.body) ? r.body : [];
+            if (!rows.length) { results.innerHTML = '<li class="ocd-empty">No matching WooCommerce products. Make sure the product exists in WooCommerce — the dashboard never creates new products.</li>'; return; }
+            results.innerHTML = rows.map(function (p) {
+                return '<li class="ocd-product-result" data-ocd-pick-product="' + escapeHtml(p.id) + '">' +
+                    (p.image ? '<img alt="" src="' + escapeHtml(p.image) + '" />' : '<span class="ocd-product-result__noimg"></span>') +
+                    '<div>' +
+                        '<strong>' + escapeHtml(p.name) + '</strong> ' +
+                        '<span class="ocd-muted">#' + escapeHtml(p.id) + (p.sku ? ' · ' + escapeHtml(p.sku) : '') + '</span>' +
+                        (p.price_html ? '<div class="ocd-muted">' + p.price_html + '</div>' : '') +
+                    '</div>' +
+                '</li>';
+            }).join('');
+            results.querySelectorAll('[data-ocd-pick-product]').forEach(function (li) {
+                li.addEventListener('mousedown', function (ev) {
+                    ev.preventDefault();
+                    var pid = li.getAttribute('data-ocd-pick-product');
+                    var name = li.querySelector('strong') ? li.querySelector('strong').textContent : '';
+                    var slug = prompt('Feature slug for "' + name + '" (e.g. analytics-pro):');
+                    if (!slug) return;
+                    var label = prompt('Display label?', name) || name;
+                    getMapAndUpdate(root, function (m) {
+                        m[pid] = { slug: slug, label: label };
+                        return m;
+                    });
+                    var input = root.querySelector('[data-ocd-search="wc-products"]');
+                    if (input) input.value = '';
+                    results.innerHTML = '';
+                    results.hidden = true;
+                });
+            });
+        });
+    }
+
+    function loadStoreCategory(root) {
+        var block = root.querySelector('[data-ocd-block="store-category"]');
+        if (!block) return;
+        block.innerHTML = '<p class="ocd-empty">Loading…</p>';
+        api('admin/store-category').then(function (r) {
+            if (!r.ok) { block.innerHTML = '<p class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</p>'; return; }
+            var data = r.body || {};
+            var available = (data.available || []).slice();
+            available.unshift({ slug: '', name: '— None —', count: 0 });
+            var current = data.category || '';
+            block.innerHTML = '<label>Category ' +
+                '<select class="ocd-input" data-ocd-store-category>' +
+                available.map(function (t) {
+                    return '<option value="' + escapeHtml(t.slug) + '"' + (t.slug === current ? ' selected' : '') + '>' +
+                        escapeHtml(t.name) + (t.count ? ' (' + t.count + ')' : '') +
+                    '</option>';
+                }).join('') +
+                '</select></label> ' +
+                '<button class="ocd-btn ocd-btn--primary" data-ocd-action="save-store-category">Save</button>';
+            var btn = block.querySelector('[data-ocd-action="save-store-category"]');
+            if (btn) btn.addEventListener('click', function () {
+                var sel = block.querySelector('[data-ocd-store-category]');
+                var value = sel ? sel.value : '';
+                api('admin/store-category', { method: 'POST', body: { category: value } }).then(function (rr) {
+                    if (rr.ok) loadStoreCategory(root);
+                    else alert((rr.body && rr.body.message) || 'Failed.');
+                });
             });
         });
     }

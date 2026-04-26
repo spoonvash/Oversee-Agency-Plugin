@@ -2,6 +2,15 @@
 /**
  * Shortcodes: render the customer dashboard inside any WordPress page.
  *
+ * Two strictly separate shortcodes:
+ *   - [oversee_customer_dashboard] — customer-only view. Even when an
+ *     Oversee staff user visits the page, they see the *customer* surface
+ *     (subscriptions, projects, store, integrations). Admin/CRM operational
+ *     navigation is never rendered here.
+ *   - [oversee_admin_dashboard]    — staff-only operational view.
+ *     Locked to manage_woocommerce / manage_options. Returns a forbidden
+ *     notice for non-staff. The two surfaces never share navigation.
+ *
  * @package Oversee_Customer_Dashboard
  */
 
@@ -19,6 +28,7 @@ class OCD_Shortcodes {
     public static function render_customer_dashboard($atts = []) {
         OCD_Assets::enqueue_frontend();
         ob_start();
+        // The template renders ONLY customer-facing panels. No admin/CRM operational nav.
         include OCD_TEMPLATES . '/customer-dashboard.php';
         return ob_get_clean();
     }
@@ -29,6 +39,8 @@ class OCD_Shortcodes {
         }
         OCD_Assets::enqueue_frontend();
         ob_start();
+        // The template renders ONLY the admin operational surface. Staff who want to QA the
+        // customer view should visit the customer page, not see customer panels mixed in here.
         include OCD_TEMPLATES . '/admin-dashboard.php';
         return ob_get_clean();
     }
