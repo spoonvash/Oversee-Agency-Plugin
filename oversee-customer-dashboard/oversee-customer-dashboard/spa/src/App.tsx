@@ -5,52 +5,62 @@ import { Home } from "./pages/Home";
 import { Projects } from "./pages/Projects";
 import { BoardDetail } from "./pages/BoardDetail";
 import {
-    Messages, ScheduleCall, PerformanceReports, Documents, Reviews,
-    Files, Knowledge, Services, Billing, Account,
-    AdminHome, AdminClients, AdminBoards, AdminSpecialists, AdminOrders,
-    AdminSubscriptions, AdminCatalog, AdminTemplates, AdminAutomations,
-    AdminKnowledge, AdminHighLevel, AdminSettings, AdminActivity,
+    // Client (12)
+    Tasks, Files, Forms, Contracts, Messages, Schedule, Reports, Reviews,
+    BrowseServices, Subscriptions, Billing,
+    // Admin (15)
+    AdminToday, AdminClients, AdminProjects, AdminTasks, AdminMessages,
+    AdminOrders, AdminSubscriptions, AdminServiceTemplates, AdminServiceCatalog, AdminPayments,
+    AdminForms, AdminContracts, AdminFiles, AdminAutomations,
+    AdminTeam, AdminSettings,
 } from "./pages/SimplePages";
 import { isAdmin } from "./lib/api";
 
 export function App() {
     const location = useLocation();
     const breadcrumb = humanizePath(location.pathname);
+    const isAdminRoute = location.pathname.startsWith("/admin");
 
     return (
         <div className="flex min-h-screen" style={{ background: "var(--oversee-bg)" }}>
-            <Sidebar admin={location.pathname.startsWith("/admin") && isAdmin} />
+            <Sidebar admin={isAdminRoute && isAdmin} />
             <div className="flex-1 flex flex-col" style={{ paddingRight: 16, paddingBottom: 16 }}>
                 <Topbar breadcrumb={breadcrumb} />
                 <main className="flex-1 mt-4">
                     <Routes>
+                        {/* Client (12 nav items + projects detail) */}
                         <Route path="/" element={<Home />} />
+                        <Route path="/tasks" element={<Tasks />} />
+                        <Route path="/files" element={<Files />} />
+                        <Route path="/forms" element={<Forms />} />
+                        <Route path="/contracts" element={<Contracts />} />
+                        <Route path="/messages" element={<Messages />} />
+                        <Route path="/schedule" element={<Schedule />} />
+                        <Route path="/reports" element={<Reports />} />
+                        <Route path="/reviews" element={<Reviews />} />
+                        <Route path="/services" element={<BrowseServices />} />
+                        <Route path="/subscriptions" element={<Subscriptions />} />
+                        <Route path="/billing" element={<Billing />} />
+                        {/* Project workspace (drill-down) */}
                         <Route path="/projects" element={<Projects />} />
                         <Route path="/projects/:id" element={<BoardDetail />} />
-                        <Route path="/files" element={<Files />} />
-                        <Route path="/messages" element={<Messages />} />
-                        <Route path="/schedule-call" element={<ScheduleCall />} />
-                        <Route path="/performance-reports" element={<PerformanceReports />} />
-                        <Route path="/documents" element={<Documents />} />
-                        <Route path="/reviews" element={<Reviews />} />
-                        <Route path="/knowledge" element={<Knowledge />} />
-                        <Route path="/services" element={<Services />} />
-                        <Route path="/billing" element={<Billing />} />
-                        <Route path="/account" element={<Account />} />
-                        {/* Admin */}
-                        <Route path="/admin" element={<AdminHome />} />
+                        {/* Admin (15) */}
+                        <Route path="/admin" element={<AdminToday />} />
                         <Route path="/admin/clients" element={<AdminClients />} />
-                        <Route path="/admin/boards" element={<AdminBoards />} />
-                        <Route path="/admin/specialists" element={<AdminSpecialists />} />
+                        <Route path="/admin/projects" element={<AdminProjects />} />
+                        <Route path="/admin/tasks" element={<AdminTasks />} />
+                        <Route path="/admin/messages" element={<AdminMessages />} />
                         <Route path="/admin/orders" element={<AdminOrders />} />
                         <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
-                        <Route path="/admin/catalog" element={<AdminCatalog />} />
-                        <Route path="/admin/templates" element={<AdminTemplates />} />
+                        <Route path="/admin/service-templates" element={<AdminServiceTemplates />} />
+                        <Route path="/admin/service-catalog" element={<AdminServiceCatalog />} />
+                        <Route path="/admin/payments" element={<AdminPayments />} />
+                        <Route path="/admin/forms" element={<AdminForms />} />
+                        <Route path="/admin/contracts" element={<AdminContracts />} />
+                        <Route path="/admin/files" element={<AdminFiles />} />
                         <Route path="/admin/automations" element={<AdminAutomations />} />
-                        <Route path="/admin/knowledge" element={<AdminKnowledge />} />
-                        <Route path="/admin/highlevel" element={<AdminHighLevel />} />
+                        <Route path="/admin/team" element={<AdminTeam />} />
                         <Route path="/admin/settings" element={<AdminSettings />} />
-                        <Route path="/admin/activity" element={<AdminActivity />} />
                         <Route path="*" element={<NotFound />} />
                     </Routes>
                 </main>

@@ -1,8 +1,26 @@
-# Oversee Customer Dashboard
+# Oversee Dashboard (legacy slug: oversee-customer-dashboard)
 
-A WordPress plugin that surfaces a customer-facing dashboard and an Oversee staff admin portal, integrating **HighLevel/LeadConnector CRM** and **WooCommerce Subscriptions** via real REST APIs.
+An Assembly-style WordPress-native client + admin dashboard for Oversee
+Agency, mounted at `/dashboard/` on the existing **overseeagency.com**
+WordPress install. Three jobs:
 
-This plugin lives in the `Oversee-Agency-Plugin` repository alongside `oversee-helpdesk`, `oversee-license-server` and `oversee-update-server`. It is designed to be installed on the Oversee Agency WordPress site (which already runs WooCommerce + WooCommerce Subscriptions and the helpdesk plugin).
+- **SELL** — WooCommerce storefront, cart, checkout, subscriptions, billing, all rendered inside the dashboard chrome.
+- **DELIVER** — project workspace with tasks, files, forms, contracts, approvals, automations.
+- **CONNECT** — HighLevel SSO embeds (Conversations, Calendar, Performance Reports, Reputation, Documents).
+
+The plugin ships **alongside** the `oversee-hub-child` child theme. Both must
+be active on the site for the dashboard to render. WooCommerce is the source
+of truth for billing; HighLevel is the source of truth for CRM/messaging;
+the plugin owns project/task/form/contract/files/automations data natively.
+
+| Layer | Spec namespace | Legacy namespace |
+|---|---|---|
+| REST | `/wp-json/oversee/v1/*` | `/wp-json/ocd/v1/*` |
+| Tables | `wp_oversee_*` | `wp_ocd_*` |
+| CPTs | `project_board`, `service_template`, `intake_form_template`, `contract_template`, `client_record` | `board_template` |
+
+See `docs/INSTALL.md` for setup, `docs/ADMIN_GUIDE.md` for staff workflow,
+and `docs/CLIENT_ONBOARDING.md` for the client experience.
 
 ## Brand
 

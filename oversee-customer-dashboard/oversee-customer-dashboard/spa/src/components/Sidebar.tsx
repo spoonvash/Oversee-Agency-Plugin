@@ -4,22 +4,41 @@ import {
     Home, Folder, MessageCircle, Calendar, BarChart3, FileText, Star,
     BookOpen, ShoppingBag, CreditCard, User, LayoutDashboard, Users,
     UserCog, Package, Repeat, Zap, Link as LinkIcon, Settings, History,
-    PanelLeftClose, PanelLeftOpen,
+    PanelLeftClose, PanelLeftOpen, CheckSquare, ListChecks, FileSignature,
+    Sun,
     type LucideIcon,
 } from "lucide-react";
 import { CLIENT_NAV, ADMIN_NAV, type NavGroup } from "@/lib/nav";
 
 const ICONS: Record<string, LucideIcon> = {
-    home: Home, kanban: LayoutDashboard, folder: Folder,
-    "message-circle": MessageCircle, calendar: Calendar, "bar-chart-3": BarChart3,
-    "file-text": FileText, star: Star, "book-open": BookOpen,
-    "shopping-bag": ShoppingBag, "credit-card": CreditCard, user: User,
-    "layout-dashboard": LayoutDashboard, users: Users, "user-cog": UserCog,
-    package: Package, repeat: Repeat, zap: Zap, link: LinkIcon,
-    settings: Settings, history: History,
+    home: Home,
+    kanban: LayoutDashboard,
+    folder: Folder,
+    "message-circle": MessageCircle,
+    calendar: Calendar,
+    "bar-chart-3": BarChart3,
+    "file-text": FileText,
+    star: Star,
+    "book-open": BookOpen,
+    "shopping-bag": ShoppingBag,
+    "credit-card": CreditCard,
+    user: User,
+    "layout-dashboard": LayoutDashboard,
+    users: Users,
+    "user-cog": UserCog,
+    package: Package,
+    repeat: Repeat,
+    zap: Zap,
+    link: LinkIcon,
+    settings: Settings,
+    history: History,
+    "check-square": CheckSquare,
+    "list-checks": ListChecks,
+    "file-signature": FileSignature,
+    sun: Sun,
 };
 
-export function Sidebar({ admin }: { admin: boolean }) {
+export function Sidebar({ admin, badges }: { admin: boolean; badges?: Record<string, number | undefined> }) {
     const [collapsed, setCollapsed] = useState(false);
     const groups: NavGroup[] = admin ? ADMIN_NAV : CLIENT_NAV;
 
@@ -27,13 +46,14 @@ export function Sidebar({ admin }: { admin: boolean }) {
         <aside
             className="oversee-card flex flex-col"
             style={{
-                width: collapsed ? 64 : 240,
+                width: collapsed ? 60 : 220,
                 minHeight: "calc(100vh - 32px)",
                 margin: 16,
                 padding: 12,
                 borderRadius: 12,
                 transition: "width 0.18s ease",
             }}
+            aria-label={admin ? "Admin navigation" : "Client navigation"}
         >
             <div className="flex items-center justify-between mb-4 px-2">
                 {!collapsed && (
@@ -60,6 +80,7 @@ export function Sidebar({ admin }: { admin: boolean }) {
                         <ul>
                             {group.items.map((item) => {
                                 const Icon = ICONS[item.icon] ?? Home;
+                                const badgeCount = item.badge && badges ? badges[item.badge] : undefined;
                                 return (
                                     <li key={item.route}>
                                         <NavLink
@@ -73,7 +94,12 @@ export function Sidebar({ admin }: { admin: boolean }) {
                                             }
                                         >
                                             <Icon size={16} />
-                                            {!collapsed && <span>{item.label}</span>}
+                                            {!collapsed && <span className="flex-1 truncate">{item.label}</span>}
+                                            {!collapsed && badgeCount && badgeCount > 0 ? (
+                                                <span className="ml-auto inline-flex items-center justify-center min-w-[18px] h-[18px] px-1.5 rounded-full text-[10px] font-medium" style={{ background: "var(--oversee-accent)", color: "#fff" }}>
+                                                    {badgeCount > 99 ? "99+" : badgeCount}
+                                                </span>
+                                            ) : null}
                                         </NavLink>
                                     </li>
                                 );

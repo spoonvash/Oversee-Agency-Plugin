@@ -2,6 +2,24 @@
 
 This is the customer-facing onboarding outline. The Loom walkthrough hosted at the URL below mirrors these steps; copy this file into your CMS or HighLevel knowledge base as needed.
 
+## What you'll see when you log in
+
+Your dashboard at `/dashboard/` opens to **Home**, which shows:
+
+- **Welcome back, {first name}** headline.
+- **Your actions** — four tiles: Invoices, Contracts, Tasks, Forms (with pending counts).
+- **Your team** — your account manager and any specialists assigned to your projects.
+- **Active Projects** — the projects we're delivering for you right now.
+- **Recent updates** — a feed of comments, files uploaded, and status changes.
+
+The left sidebar (12 items, grouped) gives you everything else:
+
+- HOME · Home
+- WORK · Tasks · Files · Forms · Contracts
+- COMMUNICATION · Messages · Schedule a Call
+- INSIGHTS · Performance Reports · Reviews
+- COMMERCE · Browse Services · Subscriptions · Billing
+
 > **Loom walkthrough placeholder:** `https://www.loom.com/share/REPLACE_ME`
 
 ## What you'll see when you sign in

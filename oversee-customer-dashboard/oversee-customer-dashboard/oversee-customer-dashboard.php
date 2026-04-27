@@ -1,9 +1,9 @@
 <?php
 /**
- * Plugin Name: Oversee Customer Dashboard
- * Plugin URI: https://overseeagency.com/plugins/oversee-customer-dashboard
- * Description: Customer-facing dashboard and Oversee Agency admin portal. Roles, custom post types, project boards, HighLevel/LeadConnector SSO, WooCommerce-driven board provisioning, and a React SPA mounted at /dashboard/.
- * Version: 1.4.0
+ * Plugin Name: Oversee Dashboard
+ * Plugin URI: https://overseeagency.com/plugins/oversee-dashboard
+ * Description: Assembly-style WordPress-native client + admin dashboard for Oversee Agency. Roles, CPTs (project_board, service_template, intake_form_template, contract_template, client_record), wp_oversee_* tables, HighLevel SSO, WooCommerce-driven service provisioning, and a React SPA mounted at /dashboard/. Compatibility wrapper preserves the legacy `oversee-customer-dashboard` slug.
+ * Version: 2.0.0
  * Author: Oversee Agency
  * Author URI: https://overseeagency.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('OCD_VERSION', '1.4.0');
+define('OCD_VERSION', '2.0.0');
 define('OCD_FILE', __FILE__);
 define('OCD_DIR', plugin_dir_path(__FILE__));
 define('OCD_URL', plugin_dir_url(__FILE__));
@@ -52,6 +52,11 @@ require_once OCD_INCLUDES . '/class-ocd-boards-rest.php';
 require_once OCD_INCLUDES . '/class-ocd-shortcodes.php';
 require_once OCD_INCLUDES . '/class-ocd-admin.php';
 require_once OCD_INCLUDES . '/class-ocd-assets.php';
+// Spec-aligned (2.x) layer — additive, lives alongside legacy ocd_* code.
+require_once OCD_INCLUDES . '/class-oversee-schema.php';
+require_once OCD_INCLUDES . '/class-oversee-cpt.php';
+require_once OCD_INCLUDES . '/class-oversee-rest-api.php';
+require_once OCD_INCLUDES . '/class-oversee-signup-hooks.php';
 
 final class Oversee_Customer_Dashboard {
 
@@ -76,8 +81,11 @@ final class Oversee_Customer_Dashboard {
         OCD_Roles::init();
         OCD_Schema::maybe_install();
         OCD_Board_Schema::maybe_install();
+        Oversee_Schema::maybe_install();
         OCD_CPT::init();
+        Oversee_CPT::init();
         OCD_REST_API::init();
+        Oversee_REST_API::init();
         OCD_Boards_REST::init();
         OCD_Shortcodes::init();
         OCD_Admin::init();
@@ -88,6 +96,9 @@ final class Oversee_Customer_Dashboard {
         if (class_exists('OCD_Signup_Hooks')) {
             OCD_Signup_Hooks::init();
         }
+        if (class_exists('Oversee_Signup_Hooks')) {
+            Oversee_Signup_Hooks::init();
+        }
     }
 
     public function activate() {
@@ -95,8 +106,10 @@ final class Oversee_Customer_Dashboard {
         OCD_Roles::install();
         OCD_Schema::install();
         OCD_Board_Schema::install();
+        Oversee_Schema::install();
         update_option(OCD_Schema::DB_VERSION_OPTION, OCD_Schema::DB_VERSION);
         update_option(OCD_Board_Schema::DB_VERSION_OPTION, OCD_Board_Schema::DB_VERSION);
+        update_option(Oversee_Schema::DB_VERSION_OPTION, Oversee_Schema::DB_VERSION);
         update_option(OCD_Roles::VERSION_OPTION, OCD_Roles::VERSION);
 
         // Make sure the customer/subscriber/admin roles can see the dashboard.

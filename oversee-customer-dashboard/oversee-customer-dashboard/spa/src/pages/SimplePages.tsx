@@ -1,79 +1,75 @@
 import { EmbedFrame } from "@/components/EmbedFrame";
 
-// Simple page wrappers around embeds and read-only WC links. Each page has a
-// skeleton/empty state and never blanks the screen.
+// Skeleton page wrappers for the Assembly-style spec. Most surfaces are
+// placeholders that drill into either the dashboard plugin REST or the
+// HighLevel SSO embed.
+
+const Card = ({ title, children }: { title: string; children: React.ReactNode }) => (
+    <div>
+        <h1 className="text-xl font-semibold mb-4">{title}</h1>
+        <div className="oversee-card p-6 text-sm text-zinc-500">{children}</div>
+    </div>
+);
+
+// ---------- Client surfaces (12 items) ----------
+
+export const Tasks = () => (
+    <Card title="Tasks">
+        Your tasks across all projects. Filter by status, priority, due date.
+    </Card>
+);
+export const Files = () => (
+    <Card title="Files">
+        Files attached to your projects appear here. Open any project to upload, drag-drop, and version files.
+    </Card>
+);
+export const Forms = () => (
+    <Card title="Forms">
+        Onboarding and on-demand forms requested by your account manager.
+    </Card>
+);
+export const Contracts = () => (
+    <Card title="Contracts">
+        Review and sign contracts. We never email you a contract — they live here, signable in-place.
+    </Card>
+);
 
 export const Messages = () => <EmbedFrame surface="conversations" title="Messages" />;
-export const ScheduleCall = () => <EmbedFrame surface="calendar" title="Schedule a call" />;
-export const PerformanceReports = () => <EmbedFrame surface="reports" title="Performance reports" />;
-export const Documents = () => <EmbedFrame surface="documents" title="Documents" />;
+export const Schedule = () => <EmbedFrame surface="calendar" title="Schedule a Call" />;
+export const Reports = () => <EmbedFrame surface="reports" title="Performance Reports" />;
 export const Reviews = () => <EmbedFrame surface="reputation" title="Reviews" />;
 
-export const Files = () => (
-    <div>
-        <h1 className="text-xl font-semibold mb-4">Files</h1>
-        <div className="oversee-card p-6 text-sm text-zinc-500">
-            Files attached to your projects appear here. Open any project to upload, drag-drop, and version files.
-        </div>
-    </div>
+export const BrowseServices = () => (
+    <Card title="Browse Services">
+        <p>Browse Oversee services in the WooCommerce shop. Checkout and recurring billing run through your existing payment method.</p>
+        <p className="mt-3">
+            <a href="/shop/" className="oversee-btn-primary inline-block">Open the shop</a>
+        </p>
+    </Card>
 );
-
-export const Knowledge = () => (
-    <div>
-        <h1 className="text-xl font-semibold mb-4">Knowledge base</h1>
-        <div className="oversee-card p-6 text-sm text-zinc-500">
-            How-tos, onboarding videos, and FAQ articles will appear here.
-        </div>
-    </div>
+export const Subscriptions = () => (
+    <Card title="Subscriptions">
+        <p>Manage your active subscriptions, change plans, or cancel.</p>
+        <p className="mt-3"><a href="/my-account/subscriptions/" className="oversee-btn-primary inline-block">My subscriptions</a></p>
+    </Card>
 );
-
-export const Services = () => (
-    <div>
-        <h1 className="text-xl font-semibold mb-4">Services</h1>
-        <div className="oversee-card p-6">
-            <p className="text-sm text-zinc-500">
-                Browse Oversee services in the WooCommerce shop. Checkout and recurring billing run through your existing payment method.
-            </p>
-            <p className="mt-3">
-                <a href="/shop/" className="oversee-btn-primary inline-block">Open the shop</a>
-            </p>
-        </div>
-    </div>
-);
-
 export const Billing = () => (
-    <div>
-        <h1 className="text-xl font-semibold mb-4">Billing</h1>
-        <div className="oversee-card p-6">
-            <p className="text-sm text-zinc-500">
-                Manage payment methods, subscriptions, and invoices in your account area.
-            </p>
-            <p className="mt-3 flex gap-2">
-                <a href="/my-account/subscriptions/" className="oversee-btn-primary inline-block">Subscriptions</a>
-                <a href="/my-account/payment-methods/" className="oversee-btn-secondary inline-block">Payment methods</a>
-                <a href="/my-account/orders/" className="oversee-btn-secondary inline-block">Invoices</a>
-            </p>
-        </div>
-    </div>
+    <Card title="Billing">
+        <p>Manage payment methods and download invoices.</p>
+        <p className="mt-3 flex gap-2">
+            <a href="/my-account/payment-methods/" className="oversee-btn-secondary inline-block">Payment methods</a>
+            <a href="/my-account/orders/" className="oversee-btn-secondary inline-block">Invoices</a>
+        </p>
+    </Card>
 );
 
-export const Account = () => (
-    <div>
-        <h1 className="text-xl font-semibold mb-4">Account</h1>
-        <div className="oversee-card p-6">
-            <p className="text-sm text-zinc-500">Update your profile, password, and notification preferences.</p>
-            <p className="mt-3"><a href="/my-account/edit-account/" className="oversee-btn-primary inline-block">Edit account</a></p>
-        </div>
-    </div>
-);
+// ---------- Admin surfaces (15 items) ----------
 
-// Admin counterparts — minimal stubs the rest of the SPA can drill into.
-
-export const AdminHome = () => (
+export const AdminToday = () => (
     <div>
-        <h1 className="text-xl font-semibold mb-4">Admin dashboard</h1>
+        <h1 className="text-xl font-semibold mb-4">Today</h1>
         <div className="grid gap-4" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))" }}>
-            {["Active boards", "Open client requests", "Renewals this week"].map((label) => (
+            {["Open tasks", "Active clients", "Renewals this week", "Unread messages"].map((label) => (
                 <div key={label} className="oversee-card p-4">
                     <div className="text-xs uppercase tracking-wider text-zinc-500">{label}</div>
                     <div className="text-2xl font-semibold mt-2">—</div>
@@ -82,45 +78,25 @@ export const AdminHome = () => (
         </div>
     </div>
 );
+export const AdminClients = () => <Card title="Clients">List of clients. Master/detail view with profile, projects, billing, notes.</Card>;
+export const AdminProjects = () => <Card title="Projects">All active projects across clients.</Card>;
+export const AdminTasks = () => <Card title="Tasks">Tasks across all projects with filtering by client, project, assignee.</Card>;
+export const AdminMessages = () => <Card title="Messages">Inbox of all client conversations (mirrored from HighLevel).</Card>;
 
-export const AdminClients = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Clients</h1><div className="oversee-card p-6 text-sm text-zinc-500">Client list coming online — connects to /admin/customers REST endpoint.</div></div>
-);
-export const AdminBoards = () => (
-    <div><h1 className="text-xl font-semibold mb-4">All boards</h1><div className="oversee-card p-6 text-sm text-zinc-500">All Oversee boards across all clients.</div></div>
-);
-export const AdminSpecialists = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Specialists</h1><div className="oversee-card p-6 text-sm text-zinc-500">Specialist roster + workload.</div></div>
-);
-export const AdminOrders = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Orders</h1><div className="oversee-card p-6 text-sm text-zinc-500">Recent WooCommerce orders.</div></div>
-);
-export const AdminSubscriptions = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Subscriptions</h1><div className="oversee-card p-6 text-sm text-zinc-500">Active and lapsed subscriptions.</div></div>
-);
-export const AdminCatalog = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Catalog</h1><div className="oversee-card p-6 text-sm text-zinc-500">SKU → board template mapping.</div></div>
-);
-export const AdminTemplates = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Templates</h1><div className="oversee-card p-6 text-sm text-zinc-500">Edit board templates that get spawned on order completion.</div></div>
-);
-export const AdminAutomations = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Automations</h1><div className="oversee-card p-6 text-sm text-zinc-500">Workflow rules per board template.</div></div>
-);
-export const AdminKnowledge = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Knowledge base (admin)</h1><div className="oversee-card p-6 text-sm text-zinc-500">Curate the client-facing knowledge base.</div></div>
-);
-export const AdminHighLevel = () => (
-    <div>
-        <h1 className="text-xl font-semibold mb-4">HighLevel SSO</h1>
-        <div className="oversee-card p-6 text-sm text-zinc-500">
-            Configure the magic-link endpoint (settings or constant <code>HIGHLEVEL_MAGIC_LINK_ENDPOINT</code>) so the embed surfaces work end-to-end.
-        </div>
-    </div>
-);
+export const AdminOrders = () => <Card title="Orders">Recent WooCommerce orders.</Card>;
+export const AdminSubscriptions = () => <Card title="Subscriptions">Active and lapsed WooCommerce subscriptions.</Card>;
+export const AdminServiceTemplates = () => <Card title="Service Templates">Reusable service definitions with default tasks, mapped to existing WC product SKUs.</Card>;
+export const AdminServiceCatalog = () => <Card title="Service Catalog">SKU → service template mapping (uses existing WooCommerce products only — never creates new products).</Card>;
+export const AdminPayments = () => <Card title="Payments">Custom payment links, refunds, and out-of-band charges.</Card>;
+
+export const AdminForms = () => <Card title="Forms">Edit intake form templates and review responses.</Card>;
+export const AdminContracts = () => <Card title="Contracts">Edit contract templates and track signed contracts.</Card>;
+export const AdminFiles = () => <Card title="Files">All files across all clients with approval queue.</Card>;
+export const AdminAutomations = () => <Card title="Automations">Workflow rules: when X happens, do Y.</Card>;
+
+export const AdminTeam = () => <Card title="Team">Account managers, specialists, contractors. Assign clients/projects.</Card>;
 export const AdminSettings = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Settings</h1><div className="oversee-card p-6 text-sm text-zinc-500">Tokens, brand assets, and dashboard policies.</div></div>
-);
-export const AdminActivity = () => (
-    <div><h1 className="text-xl font-semibold mb-4">Activity log</h1><div className="oversee-card p-6 text-sm text-zinc-500">Append-only audit log across boards.</div></div>
+    <Card title="Settings">
+        Tokens, brand assets, HighLevel SSO endpoint, AI provider key, Pusher/Bunny/Resend credentials.
+    </Card>
 );

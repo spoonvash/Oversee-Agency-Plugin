@@ -2,14 +2,24 @@
 
 This guide is for Oversee staff configuring the plugin on a fresh WordPress install. It assumes the parent **Hub** theme, **WooCommerce**, **WooCommerce Subscriptions**, and **WooCommerce Stripe** are already installed and active.
 
+## Versioning
+
+| Component | Version |
+|---|---|
+| Plugin (`oversee-dashboard`) | 2.0.0 |
+| REST namespaces | `oversee/v1` (spec), `ocd/v1` (legacy, retained) |
+| Schema | `wp_oversee_*` tables (spec) + `wp_ocd_*` (legacy) |
+| Roles | `oversee_client`, `oversee_account_manager`, `oversee_specialist`, `oversee_contractor`, `oversee_admin`, plus standard `administrator` |
+
 ## Install order
 
 1. Activate parent **Hub** theme.
 2. Activate **Oversee Hub Child** (`/wp-content/themes/oversee-hub-child/`).
 3. Activate **Oversee Customer Dashboard** plugin (`/wp-content/plugins/oversee-customer-dashboard/`). Activation runs:
-   - schema migrations (legacy + board tables)
+   - schema migrations (legacy `ocd_*`, board `ocd_board_*`, **and** spec `oversee_*` tables)
    - role registration (`oversee_client`, `oversee_account_manager`, `oversee_specialist`, `oversee_contractor`, `oversee_admin`)
    - capability backfill on `customer`, `subscriber`, `administrator`, `shop_manager`
+   - CPT registration: `project_board`, `service_template`, `intake_form_template`, `contract_template`, `client_record`, plus legacy `board_template`
 4. Create a Page with slug `dashboard`. Set Page Template to **Oversee Dashboard (Full-Width)**.
 5. Create Pages with slugs `login` and `register`. Set Template to **Oversee Login (Full-Width)**.
 6. Build the SPA: `cd oversee-customer-dashboard/spa && npm install && npm run build`.

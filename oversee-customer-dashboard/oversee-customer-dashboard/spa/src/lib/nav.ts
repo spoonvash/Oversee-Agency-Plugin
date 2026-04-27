@@ -1,42 +1,52 @@
-// Sidebar navigation definitions per the user's spec.
+// Sidebar navigation per the latest authoritative Assembly-style spec.
 //
-// Client view: 12 items grouped into MAIN / COMMUNICATION / RESOURCES / COMMERCE.
-// Admin view: 13 items grouped into OPERATIONS / COMMERCE / LIBRARY / SYSTEM.
+// Client view: 12 items grouped HOME / WORK / COMMUNICATION / INSIGHTS / COMMERCE.
+// Admin view: 15 items grouped OPERATIONS / COMMERCE / TOOLS / SYSTEM.
 
-export type NavItem = { label: string; route: string; icon: string };
+export type NavItem = {
+    label: string;
+    route: string;
+    icon: string;
+    badge?: "unread" | "pending" | "due";
+};
 export type NavGroup = { label: string; items: NavItem[] };
 
 export const CLIENT_NAV: NavGroup[] = [
     {
-        label: "MAIN",
+        label: "HOME",
         items: [
             { label: "Home", route: "/", icon: "home" },
-            { label: "My Projects", route: "/projects", icon: "kanban" },
+        ],
+    },
+    {
+        label: "WORK",
+        items: [
+            { label: "Tasks", route: "/tasks", icon: "check-square", badge: "due" },
             { label: "Files", route: "/files", icon: "folder" },
+            { label: "Forms", route: "/forms", icon: "list-checks", badge: "pending" },
+            { label: "Contracts", route: "/contracts", icon: "file-signature", badge: "pending" },
         ],
     },
     {
         label: "COMMUNICATION",
         items: [
-            { label: "Messages", route: "/messages", icon: "message-circle" },
-            { label: "Schedule a call", route: "/schedule-call", icon: "calendar" },
-            { label: "Performance reports", route: "/performance-reports", icon: "bar-chart-3" },
+            { label: "Messages", route: "/messages", icon: "message-circle", badge: "unread" },
+            { label: "Schedule a Call", route: "/schedule", icon: "calendar" },
         ],
     },
     {
-        label: "RESOURCES",
+        label: "INSIGHTS",
         items: [
-            { label: "Documents", route: "/documents", icon: "file-text" },
+            { label: "Performance Reports", route: "/reports", icon: "bar-chart-3" },
             { label: "Reviews", route: "/reviews", icon: "star" },
-            { label: "Knowledge base", route: "/knowledge", icon: "book-open" },
         ],
     },
     {
         label: "COMMERCE",
         items: [
-            { label: "Services", route: "/services", icon: "shopping-bag" },
+            { label: "Browse Services", route: "/services", icon: "shopping-bag" },
+            { label: "Subscriptions", route: "/subscriptions", icon: "repeat" },
             { label: "Billing", route: "/billing", icon: "credit-card" },
-            { label: "Account", route: "/account", icon: "user" },
         ],
     },
 ];
@@ -45,10 +55,11 @@ export const ADMIN_NAV: NavGroup[] = [
     {
         label: "OPERATIONS",
         items: [
-            { label: "Dashboard", route: "/admin", icon: "layout-dashboard" },
+            { label: "Today", route: "/admin", icon: "sun" },
             { label: "Clients", route: "/admin/clients", icon: "users" },
-            { label: "Boards", route: "/admin/boards", icon: "kanban" },
-            { label: "Specialists", route: "/admin/specialists", icon: "user-cog" },
+            { label: "Projects", route: "/admin/projects", icon: "kanban" },
+            { label: "Tasks", route: "/admin/tasks", icon: "check-square" },
+            { label: "Messages", route: "/admin/messages", icon: "message-circle", badge: "unread" },
         ],
     },
     {
@@ -56,23 +67,37 @@ export const ADMIN_NAV: NavGroup[] = [
         items: [
             { label: "Orders", route: "/admin/orders", icon: "package" },
             { label: "Subscriptions", route: "/admin/subscriptions", icon: "repeat" },
-            { label: "Catalog", route: "/admin/catalog", icon: "shopping-bag" },
+            { label: "Service Templates", route: "/admin/service-templates", icon: "file-text" },
+            { label: "Service Catalog", route: "/admin/service-catalog", icon: "shopping-bag" },
+            { label: "Payments", route: "/admin/payments", icon: "credit-card" },
         ],
     },
     {
-        label: "LIBRARY",
+        label: "TOOLS",
         items: [
-            { label: "Templates", route: "/admin/templates", icon: "file-text" },
+            { label: "Forms", route: "/admin/forms", icon: "list-checks" },
+            { label: "Contracts", route: "/admin/contracts", icon: "file-signature" },
+            { label: "Files", route: "/admin/files", icon: "folder" },
             { label: "Automations", route: "/admin/automations", icon: "zap" },
-            { label: "Knowledge base", route: "/admin/knowledge", icon: "book-open" },
         ],
     },
     {
         label: "SYSTEM",
         items: [
-            { label: "HighLevel SSO", route: "/admin/highlevel", icon: "link" },
+            { label: "Team", route: "/admin/team", icon: "user-cog" },
             { label: "Settings", route: "/admin/settings", icon: "settings" },
-            { label: "Activity log", route: "/admin/activity", icon: "history" },
         ],
     },
 ];
+
+// Compile-time guards: surface mistakes if someone edits the lists.
+const _CLIENT_TOTAL = CLIENT_NAV.reduce((n, g) => n + g.items.length, 0);
+const _ADMIN_TOTAL = ADMIN_NAV.reduce((n, g) => n + g.items.length, 0);
+if (_CLIENT_TOTAL !== 12) {
+    // eslint-disable-next-line no-console
+    console.warn(`Oversee CLIENT_NAV expected 12 items, got ${_CLIENT_TOTAL}`);
+}
+if (_ADMIN_TOTAL !== 15) {
+    // eslint-disable-next-line no-console
+    console.warn(`Oversee ADMIN_NAV expected 15 items, got ${_ADMIN_TOTAL}`);
+}
