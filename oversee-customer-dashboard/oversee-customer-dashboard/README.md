@@ -13,6 +13,24 @@ The visual design uses the Oversee brand color discovered in the Hub Child theme
 
 (These supersede any prior teal palette from earlier visual previews.)
 
+## What's in release 1.4 (this PR)
+
+This release adds the foundation for the Monday-style project-board system, the Oversee role hierarchy, the HighLevel SSO/embed bridge, and the React SPA mounted at `/dashboard/`. Everything from 1.3.x continues to work — the new pieces live alongside the existing classes.
+
+- **Roles** — five custom roles (`oversee_client`, `oversee_account_manager`, `oversee_specialist`, `oversee_contractor`, `oversee_admin`) with capability mapping. Standard `administrator` role gets the same operational caps mirrored on. WooCommerce `customer` role gets dashboard-view access. See `includes/class-ocd-roles.php`.
+- **Custom post types** — `project_board` (one row per active client board) and `board_template` (reusable skeletons mapped to WooCommerce SKUs). See `includes/class-ocd-cpt.php`.
+- **Board schema** — 12 new tables (`wp_ocd_board_*`) modelling boards, groups, items, subitems, columns, views, updates, attachments, item files, automations, intake responses, and an append-only activity log. See `includes/class-ocd-board-schema.php`.
+- **Auto provisioning** — `woocommerce_created_customer` promotes the new user to `oversee_client` and sends a branded welcome email (`includes/class-ocd-signup-hooks.php`). `woocommerce_order_status_completed` walks line items, looks up the board template by SKU, and spawns one board per matching item, preserving variation IDs and line-item meta as the board's intake answers (`includes/class-ocd-boards.php`).
+- **Subscription lifecycle** — `subscription_status_*` hooks pause/archive/restore boards. `subscription_renewal_payment_complete` rolls the board's monthly group over so each new month starts fresh.
+- **HighLevel SSO bridge** — `ohl_contact_id` user meta, server-side magic-link fetch, configurable endpoint via filter / constant / option, friendly empty states when unconfigured. Five embed surfaces: `conversations`, `calendar`, `reports`, `documents`, `reputation`. See `includes/class-ocd-highlevel-sso.php`.
+- **REST API extensions** — `/me/preferences` (dark mode), `/boards`, `/boards/<id>`, `/boards/<id>/items`, `/items/<id>`, `/items/<id>/move`, `/items/<id>/updates`, `/boards/<id>/views`, `/highlevel/embed-pages`, `/highlevel/embed/<surface>`, `/notifications`. All require login; write endpoints additionally require `work_oversee_boards`. See `includes/class-ocd-boards-rest.php`.
+- **Child theme `oversee-hub-child`** — branded full-width dashboard / login / register page templates that suppress Hub chrome, WooCommerce template overrides for cart/checkout/my-account (native WooCommerce flow preserved), branded HTML email wrapper, brand CSS tokens (`#ff8201` primary, white in light mode, black/zinc in dark mode), and the `template_include` filter that enforces the templates by slug. See `oversee-hub-child/`.
+- **React SPA scaffold** — Vite + React 19 + TypeScript + Tailwind v4 + shadcn-style local primitives + lucide-react + Recharts + @dnd-kit + TipTap + Pusher. Sidebar (12 client / 13 admin items per the spec), top bar with Cmd+K command palette stub, breadcrumb, notification bell, dark mode toggle. Routes for home, projects list, board detail (table + kanban view), files, messages, schedule-call, performance-reports, documents, reviews, knowledge, services, billing, account, plus admin counterparts. See `spa/`.
+- **Tests** — new harness at `tests/test-boards.php` covers role registration & capabilities, `promote_to_client`, CPT SKU lookup, HighLevel SSO error paths, embed-config short-circuit via filter, board skeleton resolution, default columns, spawn validation, and the welcome email. 33 new assertions on top of the existing 99 (132 total).
+- **Docs** — `docs/ADMIN_GUIDE.md` (install order, env/options, HighLevel setup, SKU mapping, staging checklist, limitations) and `docs/CLIENT_ONBOARDING.md` (client-facing walkthrough placeholder for Loom).
+
+This is **source-code / PR work only** — none of it has been verified against a running WP install. See the staging checklist in `docs/ADMIN_GUIDE.md`.
+
 ## What's in release 1.3.x
 
 This release answers the latest UX feedback round: **send images in messages**, **see images in tasks**, **drag-and-drop tasks across columns**, and **stop showing several menus that go to the same place**.

@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+/*
+ * Oversee dashboard SPA styles.
+ *
+ * Light mode: white / near-white surfaces, orange accent.
+ * Dark mode: black / zinc surfaces, orange accent.
+ *
+ * Orange is reserved for: primary buttons, the active sidebar item,
+ * focus rings, links, and small accent strokes. Everything else is
+ * neutral so the orange reads as a deliberate accent — not the dominant
+ * surface color.
+ */
+@theme {
+    --color-oversee-orange: #ff8201;
+    --color-oversee-orange-hover: #e67300;
+    --color-oversee-orange-soft: #fff2e5;
+}
+
+:root {
+    --oversee-bg: #ffffff;
+    --oversee-surface: #ffffff;
+    --oversee-surface-2: #fafafa;
+    --oversee-border: #e5e5e5;
+    --oversee-text: #0a0a0a;
+    --oversee-muted: #52525b;
+}
+html.oversee-dark {
+    --oversee-bg: #09090b;
+    --oversee-surface: #18181b;
+    --oversee-surface-2: #27272a;
+    --oversee-border: #27272a;
+    --oversee-text: #fafafa;
+    --oversee-muted: #a1a1aa;
+}
+
+body {
+    background: var(--oversee-bg);
+    color: var(--oversee-text);
+    font-family: "Inter", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
+
+.oversee-card {
+    background: var(--oversee-surface);
+    border: 1px solid var(--oversee-border);
+    border-radius: 12px;
+}
+.oversee-input {
+    background: var(--oversee-surface);
+    color: var(--oversee-text);
+    border: 1px solid var(--oversee-border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+.oversee-input:focus {
+    outline: none;
+    border-color: var(--color-oversee-orange);
+    box-shadow: 0 0 0 3px rgba(255, 130, 1, 0.35);
+}
+.oversee-btn-primary {
+    background: var(--color-oversee-orange);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: background-color 0.15s;
+}
+.oversee-btn-primary:hover {
+    background: var(--color-oversee-orange-hover);
+}
+.oversee-btn-secondary {
+    background: var(--oversee-surface);
+    color: var(--oversee-text);
+    border: 1px solid var(--oversee-border);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+.oversee-btn-secondary:hover {
+    background: var(--oversee-surface-2);
+}
+
+/* Active nav item */
+.oversee-nav-active {
+    background: var(--color-oversee-orange-soft);
+    color: var(--color-oversee-orange-hover);
+    border-left: 3px solid var(--color-oversee-orange);
+}
+html.oversee-dark .oversee-nav-active {
+    background: rgba(255, 130, 1, 0.12);
+    color: var(--color-oversee-orange);
+}

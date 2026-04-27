@@ -30,6 +30,7 @@ class OCD_Settings {
             'highlevel_api_version'    => '2021-07-28',
             'highlevel_token'          => '',
             'highlevel_location_id'    => '',
+            'highlevel_magic_link_endpoint' => '',
             'agency_conversation_provider_id' => '',
             'agency_inbound_type'      => 'Custom',
             'wp_base_url'              => '',

@@ -1,0 +1,18 @@
+/*
+Theme Name: Oversee Hub Child
+Theme URI: https://overseeagency.com/
+Description: Oversee Agency child theme for the Hub parent. Provides the branded
+ dashboard chrome, WooCommerce template overrides, and login/registration styling
+ for the customer portal at /dashboard/, /login/, /register/, and /my-account/.
+ Marketing site styling continues to come from the Hub parent theme; this child
+ theme only customizes the customer-portal surfaces.
+Author: Oversee Agency
+Author URI: https://overseeagency.com/
+Template: hub
+Version: 1.0.0
+Text Domain: oversee-hub-child
+*/
+
+/* The dashboard CSS is enqueued separately (assets/css/oversee-dashboard.css)
+   on /dashboard/*, /login/, /register/ and select WooCommerce account pages.
+   This stylesheet is required by WordPress for the child theme to register. */
