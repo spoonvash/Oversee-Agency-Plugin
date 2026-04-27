@@ -13,7 +13,25 @@ The visual design uses the Oversee brand color discovered in the Hub Child theme
 
 (These supersede any prior teal palette from earlier visual previews.)
 
-## What's in this release (1.1.x)
+## What's in release 1.2.x
+
+This release implements the marketing-agency-dashboard backlog from the Oversee research brief and the requirements review:
+
+- **Project files**: project- and task-scoped uploads with stage folders (`intake`, `working`, `deliverables`, `archive`), versioning, visibility flags (`client` vs `internal`), approval workflow (`pending`/`approved`/`rejected`/`not_required`), view + download counters, and PHP-served downloads from a plugin-private uploads directory (`wp-content/uploads/oversee-private/`) protected by `Require all denied`/`Deny from all`/`web.config` files. Media Library is **never** used for client files. See "Project files & private serving" below.
+- **Loom / YouTube / Vimeo instruction media**: tasks and milestones each accept a single instruction-video URL, validated against an allow-list pattern. The plugin never accepts arbitrary iframe HTML — the frontend reconstructs an embed from the validated provider+id.
+- **Monday-style task board**: status set is `not_started`, `in_progress`, `needs_your_input`, `waiting_on_oversee`, `completed`, `blocked`, `cancelled`. Tasks have `task_type` (`client_required`/`internal`), `visibility` (`client`/`internal`), `priority`, `assignee_user_id`, `internal_notes` (admin-only), and `instruction_video_url`. Customers see only `client`-visibility rows; admins see everything.
+- **Task comments**: customers and staff post comments per task. Comments have a visibility flag — staff comments default to `shared` but can be marked `internal` (staff-only). Customers can never post internal comments and never see internal comments.
+- **Subscription variants & sub-selections**: the product → feature map supports per-variation overrides (slug, label, required_steps). Order/subscription line items are extracted with `product_id`, `variation_id`, `pa_*` attributes, and display meta preserved. WC variation handling never explodes into fake products. Complex sub-selections live as `client_required` task forms attached to the project, not as new variations.
+- **Required-step templates**: admins define onboarding step templates keyed by slug. When an order is paid (or a subscription activates) on a feature whose `required_steps` reference those templates, the plugin auto-creates `client_required` tasks tied to the new project.
+- **Billing self-service via WooCommerce-native flows**: card details never enter this plugin. The customer billing payload exposes:
+  - **Payment Methods** link (`/my-account/payment-methods/`)
+  - **Add Payment Method** link
+  - Per-subscription **Change Payment Method** link (`view-subscription/<id>/?change_payment_method=<id>`) gated by eligibility (active status, automatic gateway, future renewal scheduled, not staging)
+  - Per-order **Pay** + **Invoice** + **View order** links
+- **Pending Actions** aggregator: `/customer/pending-actions` returns the home-dashboard "what needs your attention" panel — tasks needing input, files awaiting client approval, failed/pending orders that need payment, and on-hold subscriptions whose card can be updated.
+- **Subscription switching**: `/customer/subscriptions/<id>/switch-options` surfaces the native WC Subscriptions switch URL (or the unavailable reason: status, staging mode, etc.) — the plugin **never** custom-processes a payment or plan change.
+
+## What's in earlier release 1.1.x
 
 - **Two strictly separate dashboards.** `[oversee_customer_dashboard]` renders only the customer-facing surface (subscriptions, projects, tasks, messages, store, integrations). `[oversee_admin_dashboard]` is staff-only (`manage_woocommerce`/`manage_options`) and renders only the operational surface (inbox, projects, tasks, entitlements, customers, subscriptions, CRM, sync). The two never share navigation — even an admin user visiting the customer page sees the customer view only.
 - **Dashboard store backed by existing WooCommerce products only.** The plugin **never** creates, seeds, or mocks products. It surfaces real `wc_get_products()` results — name, price, image, short description, permalink — pulled either from the admin-curated product → feature map or, optionally, every published product in an admin-selected WooCommerce category.
@@ -45,10 +63,14 @@ oversee-customer-dashboard/
 │   ├── class-ocd-woocommerce.php        # WooCommerce REST client (incl. Subscriptions)
 │   ├── class-ocd-messaging.php          # Two-way customer ↔ agency CRM messaging
 │   ├── class-ocd-projects.php           # Projects + milestones
-│   ├── class-ocd-tasks.php              # Client tasks
-│   ├── class-ocd-entitlements.php       # Feature entitlements + product map
+│   ├── class-ocd-tasks.php              # Client tasks (Monday-style + comments)
+│   ├── class-ocd-entitlements.php       # Feature entitlements + product/variation map
 │   ├── class-ocd-customer-crm.php       # Customer-owned CRM connections (separate)
 │   ├── class-ocd-store.php              # In-dashboard feature store (WC product passthrough)
+│   ├── class-ocd-project-files.php      # Project-scoped private file storage + approvals
+│   ├── class-ocd-instruction-media.php  # Loom/YouTube/Vimeo URL validator
+│   ├── class-ocd-billing.php            # WooCommerce-native payment-method links + eligibility
+│   ├── class-ocd-pending-actions.php    # Aggregated "what needs your attention"
 │   ├── class-ocd-woocommerce-hooks.php  # WC order/subscription → entitlements + access
 │   ├── class-ocd-rest-api.php           # /wp-json/ocd/v1/* endpoints
 │   ├── class-ocd-shortcodes.php         # Shortcodes
@@ -203,11 +225,142 @@ All routes are under `/wp-json/ocd/v1/`. Authentication: WordPress cookie + `X-W
 | GET | `/admin/wc-products?search=…` | Server-side search of *existing* WooCommerce products (id, name, sku, image, price). Used to power the mapping picker. | manage_woocommerce |
 | GET, POST | `/admin/store-category` | Optional: pick an existing WC category whose products are surfaced in the store. | manage_woocommerce |
 | POST | `/webhooks/highlevel` | HighLevel webhook ingestion + outbound mirroring | HMAC `X-OCD-Signature` |
+| GET, POST | `/customer/files` | List/upload customer-owned project/task files (multipart `file`, optional `project_id`, `task_id`, `folder`) | Logged-in |
+| POST | `/customer/files/{id}/approval` | Customer approve/reject deliverable + comment | Logged-in |
+| GET | `/files/{id}/download` | Permission-checked PHP-served download (never a raw filesystem URL) | Logged-in |
+| GET, POST | `/admin/files` | Admin list / upload (visibility flag, approval status, folder) | manage_woocommerce |
+| DELETE | `/admin/files/{id}` | Admin remove (also deletes from disk) | manage_woocommerce |
+| POST | `/admin/files/{id}/archive` | Move file to archive folder | manage_woocommerce |
+| POST | `/admin/files/{id}/approval` | Admin set approval state + comment | manage_woocommerce |
+| GET, POST | `/customer/tasks/{id}/comments` | Owner-only: list shared comments / post a comment | Logged-in |
+| GET, POST | `/admin/tasks/{id}/comments` | Admin list (incl. internal) / post (visibility=shared|internal) | manage_woocommerce |
+| DELETE | `/admin/task-comments/{id}` | Remove comment | manage_woocommerce |
+| GET | `/customer/pending-actions` | Aggregated "what needs your attention" list | Logged-in |
+| GET | `/customer/billing` | WC-native payment-method links, change-payment eligibility, invoices, pay-now | Logged-in |
+| GET | `/customer/task-status-sets` | Status keys, labels, groups, priorities for the UI | Public |
+| GET | `/customer/subscriptions/{id}/switch-options` | WC-native switch URL or unavailable reasons | Logged-in |
+| GET, POST | `/admin/required-step-templates` | Admin onboarding-step library | manage_woocommerce |
 
 ### Subscription statuses
 
 The plugin treats these as the canonical valid statuses (matching WooCommerce Subscriptions):
 `active`, `pending`, `on-hold`, `pending-cancel`, `cancelled`, `expired`.
+
+## Project files & private serving
+
+Client files are stored in a plugin-private directory **outside** of `wp-content/uploads/<year>/<month>/` so that no Media Library URL ever exposes them.
+
+```
+wp-content/uploads/oversee-private/
+├── .htaccess              # Require all denied / Deny from all
+├── web.config             # IIS deny-all rule
+├── index.html             # empty, for directory listing protection
+└── <user_id>/<timestamp>-<random>.<ext>
+```
+
+- The on-disk filename is randomized (`YYYYMMDD-HHMMSS-<token>.<ext>`); the original filename is stored in the DB row only.
+- MIME type is verified server-side via `finfo_open(FILEINFO_MIME_TYPE)`. The allow-list (`OCD_Project_Files::ALLOWED_MIME`) covers images, PDFs, Office documents, plain text, CSV, audio, and MP4/MOV. Disallowed types (e.g. `application/x-php`, `text/html`) are rejected.
+- File size is capped at `OCD_Project_Files::MAX_BYTES` (25 MB) server-side.
+- Downloads are served **only** through `GET /wp-json/ocd/v1/files/{id}/download`, which:
+  1. Verifies the requesting user is either the file owner or an admin (`manage_woocommerce`/`manage_options`).
+  2. Refuses any internal-visibility file for non-admins.
+  3. Bumps the view + download counters.
+  4. Streams the bytes via `readfile()` with `Content-Disposition: inline; filename="<name>"` and `X-Content-Type-Options: nosniff`.
+- The DB row carries the SHA-256 checksum, version (auto-incremented per project+filename), uploader role, view/download counts, and approval metadata.
+
+> **nginx note:** `.htaccess` is ignored by nginx. Mirror the deny rule in your nginx config:
+> ```
+> location ^~ /wp-content/uploads/oversee-private/ { deny all; return 403; }
+> ```
+> Apache and IIS users get the included `.htaccess` and `web.config` automatically.
+
+### Approval workflow
+
+Files have one of four approval states:
+
+| State | Meaning |
+|---|---|
+| `not_required` | Default — no approval gate |
+| `pending` | Admin uploaded a deliverable; client must approve |
+| `approved` | Client approved (with optional comment) |
+| `rejected` | Client rejected (with comment) |
+
+Pending files are surfaced via `/customer/pending-actions` so they appear on the home dashboard.
+
+## Loom / YouTube / Vimeo instruction media
+
+`OCD_Instruction_Media::validate_video_url($url)` accepts only `https://` URLs from these providers and returns `{provider, url, embed_url, id}`:
+
+- Loom: `https://www.loom.com/share/<id>` or `/embed/<id>` → embed: `https://www.loom.com/embed/<id>`
+- YouTube: `https://www.youtube.com/watch?v=<id>`, `https://youtu.be/<id>`, `/embed/<id>`, `/shorts/<id>`, `youtube-nocookie.com` → embed: `https://www.youtube-nocookie.com/embed/<id>`
+- Vimeo: `https://vimeo.com/<id>` or `/video/<id>` → embed: `https://player.vimeo.com/video/<id>`
+
+Anything else is rejected. Tasks, milestones, and required-step templates only ever store the validated URL + provider; the frontend reconstructs the embed iframe from those fields, so untrusted markup never round-trips through the database.
+
+`OCD_Instruction_Media::validate_image_url($url)` accepts only images served from the local site host. Off-host image URLs are rejected to prevent SSRF and tracking pixels.
+
+## Variation / sub-selection strategy
+
+The product → feature map (`ocd_product_feature_map`) is variation-aware:
+
+```php
+[
+  42 => [
+    'slug' => 'analytics-pro',
+    'label' => 'Analytics Pro',
+    'required_steps' => ['onboarding-call'],
+    'variations' => [
+      101 => ['slug' => 'analytics-pro-monthly', 'label' => 'Analytics Pro · Monthly'],
+      102 => ['slug' => 'analytics-pro-annual',  'label' => 'Analytics Pro · Annual',
+              'required_steps' => ['brand-assets']],
+    ],
+  ],
+]
+```
+
+`OCD_Entitlements::feature_for_product($product_id, $variation_id)` resolves a line item into the most-specific feature: variation entry wins over parent entry. Unknown product IDs are rejected by the admin mapping endpoint (every ID must exist in WooCommerce).
+
+For complex sub-selections (the kind that would explode WC variation counts), use **required-step templates** instead: store a per-feature list of step slugs (`required_steps`), and define each step in `ocd_required_step_templates`. When an order or subscription with that feature is paid, the plugin auto-creates a `client_required` task for each step on the customer's project. The form responses live as task records or comments — never as fake products.
+
+`OCD_Entitlements::extract_line_item($wc_line_item)` normalises a WooCommerce REST line-item payload into:
+- `product_id`, `variation_id`, `name`, `parent_name`, `quantity`
+- `attributes` — keyed by attribute slug (the `pa_` prefix is stripped)
+- `meta` — display meta (private `_`-prefixed keys are dropped)
+
+This is the canonical way to display sub-selections on the dashboard.
+
+## Billing — WooCommerce-native flows only
+
+This plugin **does not** collect, transmit, or store card details. Every billing action links to the WooCommerce-native flow:
+
+| Customer action | Endpoint we hand them |
+|---|---|
+| Manage saved cards | `/my-account/payment-methods/` |
+| Add a new card | `/my-account/add-payment-method/` |
+| Update card on a single subscription | `/my-account/view-subscription/<id>/?change_payment_method=<id>` |
+| Pay a pending/failed order | `/checkout/order-pay/<id>/?key=<order_key>` |
+| Download invoice / view order | `/my-account/view-order/<id>/` |
+| Switch / upgrade / downgrade subscription | `/my-account/view-subscription/<id>/` (native WC switch CTA) |
+
+`OCD_Billing::subscription_payment_eligibility($sub)` enforces the documented WooCommerce constraints before showing the "Update card" CTA:
+- subscription is `active`
+- it has an automatic-payment gateway (`payment_method` populated)
+- a future payment is scheduled (`next_payment_date_gmt`)
+- site is not in staging mode (`WP_STAGING`, `WCS_STAGING`, or `WP_ENVIRONMENT_TYPE` of `staging`/`development`)
+
+Subscription switching: `/customer/subscriptions/{id}/switch-options` returns `switch_available: true|false` and a list of `unavailable_reasons` so the UI can render the native CTA only when it'll work.
+
+## Marketing-agency dashboard workflow
+
+Putting it all together, the workflow informed by the research brief is:
+
+1. **Pending Actions panel** on the customer home: tasks needing input, deliverables awaiting approval, failed payments, on-hold subscriptions whose card can be rotated. (`/customer/pending-actions`)
+2. **Project detail**: phase timeline (milestones with `phase_label`, instruction video, image), Monday-style task board grouped by status, file manager with `intake/working/deliverables/archive` folders, two-way comments per task.
+3. **Client-required steps**: paying for a feature whose `required_steps` reference templates auto-creates a checklist of `client_required` tasks. The customer sees them in `Needs Your Input`. Each step can carry its own Loom video.
+4. **Files**: client uploads land in `intake`; staff uploads land in `working` or `deliverables`. Deliverables can be flagged `pending` for client approval, surfaced in Pending Actions.
+5. **Billing**: every CTA is a deep link to the appropriate WooCommerce My Account page. No card data flows through this plugin.
+6. **Subscription self-service**: "Switch" / "Upgrade" / "Downgrade" deep-link to the native WC view-subscription page. The plugin only computes URLs and eligibility — it never modifies subscription state outside `pending-cancel`.
+7. **Admin operational view**: file manager by client/project, full task board (incl. internal tasks + notes), instruction-media editor, product/variation mapping, required-step template library, sync health.
 
 ## Webhook security
 

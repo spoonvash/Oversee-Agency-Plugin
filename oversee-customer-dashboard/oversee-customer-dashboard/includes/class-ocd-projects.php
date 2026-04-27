@@ -33,10 +33,12 @@ class OCD_Projects {
             'wc_order_id'        => isset($data['wc_order_id']) ? (int) $data['wc_order_id'] : null,
             'wc_subscription_id' => isset($data['wc_subscription_id']) ? (int) $data['wc_subscription_id'] : null,
             'wc_product_id'      => isset($data['wc_product_id']) ? (int) $data['wc_product_id'] : null,
+            'wc_variation_id'    => isset($data['wc_variation_id']) ? (int) $data['wc_variation_id'] : null,
             'title'              => sanitize_text_field($data['title']),
             'description'        => isset($data['description']) ? wp_kses_post($data['description']) : null,
             'status'             => $status,
             'progress'           => isset($data['progress']) ? max(0, min(100, (int) $data['progress'])) : 0,
+            'current_phase'      => isset($data['current_phase']) ? sanitize_text_field($data['current_phase']) : null,
             'start_date'         => self::sanitize_date($data['start_date'] ?? null),
             'target_date'        => self::sanitize_date($data['target_date'] ?? null),
             'created_at'         => current_time('mysql', true),
@@ -65,6 +67,7 @@ class OCD_Projects {
             }
         }
         if (isset($data['progress'])) $update['progress'] = max(0, min(100, (int) $data['progress']));
+        if (isset($data['current_phase'])) $update['current_phase'] = sanitize_text_field($data['current_phase']);
         if (array_key_exists('start_date', $data))  $update['start_date']  = self::sanitize_date($data['start_date']);
         if (array_key_exists('target_date', $data)) $update['target_date'] = self::sanitize_date($data['target_date']);
 
@@ -141,12 +144,20 @@ class OCD_Projects {
         if (!in_array($status, self::VALID_MILESTONE_STATUSES, true)) {
             return new WP_Error('ocd_invalid_status', 'Invalid milestone status.');
         }
+        $video = self::sanitize_video($data['instruction_video_url'] ?? null);
+        if (is_wp_error($video)) return $video;
+        $image = self::sanitize_image($data['instruction_image_url'] ?? null);
+        if (is_wp_error($image)) return $image;
         $row = [
             'project_id' => (int) $project_id,
             'title'      => sanitize_text_field($data['title']),
             'note'       => isset($data['note']) ? wp_kses_post($data['note']) : null,
             'status'     => $status,
             'sort_order' => isset($data['sort_order']) ? (int) $data['sort_order'] : 0,
+            'phase_label'=> isset($data['phase_label']) ? sanitize_text_field($data['phase_label']) : null,
+            'instruction_video_url' => $video['url'] ?? null,
+            'instruction_video_provider' => $video['provider'] ?? null,
+            'instruction_image_url' => $image['url'] ?? null,
             'due_date'   => self::sanitize_date($data['due_date'] ?? null),
             'created_at' => current_time('mysql', true),
         ];
@@ -174,6 +185,18 @@ class OCD_Projects {
             }
         }
         if (isset($data['sort_order'])) $update['sort_order'] = (int) $data['sort_order'];
+        if (isset($data['phase_label'])) $update['phase_label'] = sanitize_text_field($data['phase_label']);
+        if (array_key_exists('instruction_video_url', $data)) {
+            $v = self::sanitize_video($data['instruction_video_url']);
+            if (is_wp_error($v)) return $v;
+            $update['instruction_video_url'] = $v['url'] ?? null;
+            $update['instruction_video_provider'] = $v['provider'] ?? null;
+        }
+        if (array_key_exists('instruction_image_url', $data)) {
+            $im = self::sanitize_image($data['instruction_image_url']);
+            if (is_wp_error($im)) return $im;
+            $update['instruction_image_url'] = $im['url'] ?? null;
+        }
         if (array_key_exists('due_date', $data)) $update['due_date'] = self::sanitize_date($data['due_date']);
 
         if (!empty($update)) {
@@ -233,5 +256,21 @@ class OCD_Projects {
         if (!$d) return null;
         $ts = strtotime((string) $d);
         return $ts ? date('Y-m-d', $ts) : null;
+    }
+
+    private static function sanitize_video($url) {
+        if ($url === null || $url === '') return ['url' => null, 'provider' => null];
+        if (!class_exists('OCD_Instruction_Media')) return ['url' => null, 'provider' => null];
+        $res = OCD_Instruction_Media::validate_video_url($url);
+        if (is_wp_error($res)) return $res;
+        return $res;
+    }
+
+    private static function sanitize_image($url) {
+        if ($url === null || $url === '') return ['url' => null];
+        if (!class_exists('OCD_Instruction_Media')) return ['url' => null];
+        $res = OCD_Instruction_Media::validate_image_url($url);
+        if (is_wp_error($res)) return $res;
+        return $res;
     }
 }

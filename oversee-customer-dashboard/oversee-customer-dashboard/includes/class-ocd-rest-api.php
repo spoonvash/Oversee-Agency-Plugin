@@ -281,6 +281,128 @@ class OCD_REST_API {
                 'permission_callback' => [__CLASS__, 'admin_permission'],
             ],
         ]);
+
+        // ---------- Project files ----------
+        register_rest_route(self::NAMESPACE, '/customer/files', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'customer_list_files'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'customer_upload_file'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+        ]);
+        register_rest_route(self::NAMESPACE, '/customer/files/(?P<id>\d+)/approval', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'customer_set_file_approval'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+
+        register_rest_route(self::NAMESPACE, '/files/(?P<id>\d+)/download', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'serve_file'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+
+        register_rest_route(self::NAMESPACE, '/admin/files', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_list_files'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_upload_file'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/files/(?P<id>\d+)', [
+            'methods'             => 'DELETE',
+            'callback'            => [__CLASS__, 'admin_delete_file'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/files/(?P<id>\d+)/archive', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'admin_archive_file'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/files/(?P<id>\d+)/approval', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'admin_set_file_approval'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+
+        // ---------- Task comments ----------
+        register_rest_route(self::NAMESPACE, '/customer/tasks/(?P<id>\d+)/comments', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'customer_list_task_comments'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'customer_add_task_comment'],
+                'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            ],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/tasks/(?P<id>\d+)/comments', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_list_task_comments'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_add_task_comment'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/task-comments/(?P<id>\d+)', [
+            'methods'             => 'DELETE',
+            'callback'            => [__CLASS__, 'admin_delete_task_comment'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+        ]);
+
+        // ---------- Pending actions + billing + status sets ----------
+        register_rest_route(self::NAMESPACE, '/customer/pending-actions', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_pending_actions'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/customer/billing', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_billing'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/customer/task-status-sets', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'task_status_sets'],
+            'permission_callback' => '__return_true',
+        ]);
+
+        // ---------- Required-step templates (admin) ----------
+        register_rest_route(self::NAMESPACE, '/admin/required-step-templates', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_get_required_step_templates'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_set_required_step_templates'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+
+        // ---------- Subscription switching (delegate-only; we do not custom-process) ----------
+        register_rest_route(self::NAMESPACE, '/customer/subscriptions/(?P<id>\d+)/switch-options', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_subscription_switch_options'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
     }
 
     public static function logged_in_permission() {
@@ -343,11 +465,17 @@ class OCD_REST_API {
             'orders'           => [],
             'errors'           => [],
             'projects'         => OCD_Projects::for_user($user->ID),
-            'tasks'            => OCD_Tasks::for_user($user->ID),
+            'tasks'            => array_map([OCD_Tasks::class, 'present_for_customer'], OCD_Tasks::for_user($user->ID)),
             'entitlements'     => OCD_Entitlements::for_user($user->ID),
             'store'            => OCD_Store::listings_for_user($user->ID),
             'customer_crm'     => OCD_Customer_CRM::status_for_user($user->ID),
             'messages_unread'  => self::count_user_unread($user->ID, 'user'),
+            'files'            => array_map(function ($r) { return OCD_Project_Files::present($r, false); }, OCD_Project_Files::for_user($user->ID, ['context' => 'customer'])),
+            'task_status_sets' => [
+                'statuses' => OCD_Tasks::VALID_STATUSES,
+                'labels'   => OCD_Tasks::STATUS_LABELS,
+                'groups'   => OCD_Tasks::status_groups(),
+            ],
         ];
 
         if (OCD_HighLevel::is_configured()) {
@@ -374,6 +502,9 @@ class OCD_REST_API {
                 $payload['orders']        = is_wp_error($orders) ? [] : $orders;
             }
         }
+
+        $payload['billing']         = OCD_Billing::payload_for_customer($user->ID, $payload['subscriptions'], $payload['orders']);
+        $payload['pending_actions'] = OCD_Pending_Actions::for_user($user->ID, $payload['subscriptions'], $payload['orders']);
 
         return rest_ensure_response($payload);
     }
@@ -657,11 +788,14 @@ class OCD_REST_API {
     public static function admin_add_milestone($request) {
         $project_id = (int) $request['id'];
         $data = [
-            'title'      => sanitize_text_field((string) $request->get_param('title')),
-            'note'       => (string) $request->get_param('note'),
-            'status'     => sanitize_text_field((string) $request->get_param('status')) ?: 'pending',
-            'sort_order' => (int) $request->get_param('sort_order'),
-            'due_date'   => $request->get_param('due_date'),
+            'title'                 => sanitize_text_field((string) $request->get_param('title')),
+            'note'                  => (string) $request->get_param('note'),
+            'status'                => sanitize_text_field((string) $request->get_param('status')) ?: 'pending',
+            'sort_order'            => (int) $request->get_param('sort_order'),
+            'phase_label'           => (string) $request->get_param('phase_label'),
+            'instruction_video_url' => (string) $request->get_param('instruction_video_url'),
+            'instruction_image_url' => (string) $request->get_param('instruction_image_url'),
+            'due_date'              => $request->get_param('due_date'),
         ];
         $res = OCD_Projects::add_milestone($project_id, $data);
         return is_wp_error($res) ? $res : rest_ensure_response($res);
@@ -670,7 +804,7 @@ class OCD_REST_API {
     public static function admin_update_milestone($request) {
         $id = (int) $request['id'];
         $data = [];
-        foreach (['title', 'note', 'status', 'due_date'] as $f) {
+        foreach (['title', 'note', 'status', 'due_date', 'phase_label', 'instruction_video_url', 'instruction_image_url'] as $f) {
             if ($request->get_param($f) !== null) $data[$f] = $request->get_param($f);
         }
         if ($request->get_param('sort_order') !== null) $data['sort_order'] = (int) $request->get_param('sort_order');
@@ -696,13 +830,21 @@ class OCD_REST_API {
     public static function admin_create_task($request) {
         $admin = wp_get_current_user();
         $data = [
-            'user_id'    => (int) $request->get_param('user_id'),
-            'project_id' => (int) $request->get_param('project_id'),
-            'title'      => sanitize_text_field((string) $request->get_param('title')),
-            'details'    => (string) $request->get_param('details'),
-            'status'     => sanitize_text_field((string) $request->get_param('status')) ?: 'open',
-            'due_date'   => $request->get_param('due_date'),
-            'assigned_by'=> $admin->ID,
+            'user_id'              => (int) $request->get_param('user_id'),
+            'project_id'           => (int) $request->get_param('project_id'),
+            'milestone_id'         => (int) $request->get_param('milestone_id'),
+            'title'                => sanitize_text_field((string) $request->get_param('title')),
+            'details'              => (string) $request->get_param('details'),
+            'internal_notes'       => (string) $request->get_param('internal_notes'),
+            'status'               => sanitize_text_field((string) $request->get_param('status')) ?: 'not_started',
+            'task_type'            => sanitize_text_field((string) $request->get_param('task_type')) ?: 'internal',
+            'visibility'           => sanitize_text_field((string) $request->get_param('visibility')) ?: '',
+            'priority'             => sanitize_text_field((string) $request->get_param('priority')) ?: 'normal',
+            'assignee_user_id'     => (int) $request->get_param('assignee_user_id'),
+            'instruction_video_url'=> (string) $request->get_param('instruction_video_url'),
+            'instruction_image_url'=> (string) $request->get_param('instruction_image_url'),
+            'due_date'             => $request->get_param('due_date'),
+            'assigned_by'          => $admin->ID,
         ];
         $res = OCD_Tasks::create($data);
         return is_wp_error($res) ? $res : rest_ensure_response($res);
@@ -711,10 +853,12 @@ class OCD_REST_API {
     public static function admin_update_task($request) {
         $id = (int) $request['id'];
         $data = [];
-        foreach (['title', 'details', 'status', 'due_date'] as $f) {
+        foreach (['title', 'details', 'internal_notes', 'status', 'task_type', 'visibility', 'priority', 'due_date', 'instruction_video_url', 'instruction_image_url'] as $f) {
             if ($request->get_param($f) !== null) $data[$f] = $request->get_param($f);
         }
-        if ($request->get_param('project_id') !== null) $data['project_id'] = (int) $request->get_param('project_id');
+        if ($request->get_param('project_id')      !== null) $data['project_id']       = (int) $request->get_param('project_id');
+        if ($request->get_param('milestone_id')    !== null) $data['milestone_id']     = (int) $request->get_param('milestone_id');
+        if ($request->get_param('assignee_user_id')!== null) $data['assignee_user_id'] = (int) $request->get_param('assignee_user_id');
         $res = OCD_Tasks::update($id, $data, 'admin');
         return is_wp_error($res) ? $res : rest_ensure_response($res);
     }
@@ -791,6 +935,366 @@ class OCD_REST_API {
     public static function admin_set_store_category($request) {
         $slug = sanitize_title((string) $request->get_param('category'));
         return rest_ensure_response(['category' => OCD_Store::set_store_category($slug)]);
+    }
+
+    /* ---------------- Project files ---------------- */
+
+    public static function customer_list_files($request) {
+        $user = wp_get_current_user();
+        $args = ['context' => 'customer'];
+        if ($p = (int) $request->get_param('project_id')) $args['project_id'] = $p;
+        if ($t = (int) $request->get_param('task_id'))    $args['task_id'] = $t;
+        if ($f = $request->get_param('folder'))           $args['folder'] = sanitize_key((string) $f);
+        $rows = OCD_Project_Files::for_user($user->ID, $args);
+        return rest_ensure_response(array_map(function ($r) { return OCD_Project_Files::present($r, false); }, $rows));
+    }
+
+    public static function customer_upload_file($request) {
+        $user = wp_get_current_user();
+        $owner_id = (int) $user->ID;
+        $project_id = (int) $request->get_param('project_id');
+        if ($project_id) {
+            // Customer can only upload to their own project.
+            $proj = OCD_Projects::get($project_id);
+            if (!$proj || (int) $proj['user_id'] !== $owner_id) {
+                return new WP_Error('ocd_forbidden', 'Not your project.', ['status' => 403]);
+            }
+        }
+        $task_id = (int) $request->get_param('task_id');
+        if ($task_id) {
+            $task = OCD_Tasks::get($task_id);
+            if (!$task || (int) $task['user_id'] !== $owner_id) {
+                return new WP_Error('ocd_forbidden', 'Not your task.', ['status' => 403]);
+            }
+        }
+        return self::process_file_upload($request, [
+            'owner_user_id'    => $owner_id,
+            'uploader_user_id' => $owner_id,
+            'uploader_role'    => 'customer',
+            'project_id'       => $project_id,
+            'task_id'          => $task_id,
+            'visibility'       => 'client',
+            'approval_status'  => 'not_required',
+            'folder'           => sanitize_key((string) $request->get_param('folder')) ?: 'intake',
+        ]);
+    }
+
+    public static function customer_set_file_approval($request) {
+        $user = wp_get_current_user();
+        $id = (int) $request['id'];
+        $file = OCD_Project_Files::get($id);
+        if (!$file) return new WP_Error('ocd_no_file', 'File not found.', ['status' => 404]);
+        if ((int) $file['owner_user_id'] !== (int) $user->ID) {
+            return new WP_Error('ocd_forbidden', 'Not your file.', ['status' => 403]);
+        }
+        if ($file['visibility'] !== 'client') {
+            return new WP_Error('ocd_forbidden', 'This file is internal-only.', ['status' => 403]);
+        }
+        $status  = sanitize_key((string) $request->get_param('status'));
+        $comment = (string) $request->get_param('comment');
+        if (!in_array($status, ['approved', 'rejected'], true)) {
+            return new WP_Error('ocd_invalid_status', 'Customers can only approve or reject.', ['status' => 400]);
+        }
+        $res = OCD_Project_Files::set_approval($id, $status, $comment, (int) $user->ID);
+        if (is_wp_error($res)) return $res;
+        return rest_ensure_response(OCD_Project_Files::present($res, false));
+    }
+
+    public static function admin_list_files($request) {
+        $rows = OCD_Project_Files::all([
+            'project_id'      => (int) $request->get_param('project_id'),
+            'user_id'         => (int) $request->get_param('user_id'),
+            'folder'          => sanitize_key((string) $request->get_param('folder')),
+            'approval_status' => sanitize_key((string) $request->get_param('approval_status')),
+            'archived'        => $request->get_param('include_archived') ? null : 0,
+            'per_page'        => (int) $request->get_param('per_page') ?: 100,
+        ]);
+        return rest_ensure_response(array_map(function ($r) { return OCD_Project_Files::present($r, true); }, $rows));
+    }
+
+    public static function admin_upload_file($request) {
+        $admin = wp_get_current_user();
+        $owner_id = (int) $request->get_param('owner_user_id');
+        if (!$owner_id) {
+            return new WP_Error('ocd_invalid', 'owner_user_id required.', ['status' => 400]);
+        }
+        return self::process_file_upload($request, [
+            'owner_user_id'    => $owner_id,
+            'uploader_user_id' => (int) $admin->ID,
+            'uploader_role'    => 'staff',
+            'project_id'       => (int) $request->get_param('project_id'),
+            'task_id'          => (int) $request->get_param('task_id'),
+            'milestone_id'     => (int) $request->get_param('milestone_id'),
+            'visibility'       => sanitize_key((string) $request->get_param('visibility')) ?: 'client',
+            'approval_status'  => sanitize_key((string) $request->get_param('approval_status')) ?: 'not_required',
+            'folder'           => sanitize_key((string) $request->get_param('folder')) ?: 'working',
+        ]);
+    }
+
+    public static function admin_delete_file($request) {
+        OCD_Project_Files::delete((int) $request['id']);
+        return rest_ensure_response(['deleted' => true]);
+    }
+
+    public static function admin_archive_file($request) {
+        OCD_Project_Files::archive((int) $request['id']);
+        return rest_ensure_response(['archived' => true]);
+    }
+
+    public static function admin_set_file_approval($request) {
+        $admin = wp_get_current_user();
+        $id = (int) $request['id'];
+        $status  = sanitize_key((string) $request->get_param('status'));
+        $comment = (string) $request->get_param('comment');
+        $valid = OCD_Project_Files::APPROVAL_STATES;
+        if (!in_array($status, $valid, true)) {
+            return new WP_Error('ocd_invalid_status', 'Invalid approval status.', ['status' => 400]);
+        }
+        $res = OCD_Project_Files::set_approval($id, $status, $comment, (int) $admin->ID);
+        if (is_wp_error($res)) return $res;
+        return rest_ensure_response(OCD_Project_Files::present($res, true));
+    }
+
+    /**
+     * Common upload pipeline used by both customer + admin endpoints. Always
+     * validates MIME, size, and ownership before writing to private storage.
+     */
+    private static function process_file_upload($request, $base_meta) {
+        $files = $request->get_file_params();
+        if (empty($files['file']) || !is_array($files['file'])) {
+            return new WP_Error('ocd_no_file', 'No file uploaded (expected multipart field "file").', ['status' => 400]);
+        }
+        $f = $files['file'];
+        if (!empty($f['error']) && (int) $f['error'] !== UPLOAD_ERR_OK) {
+            return new WP_Error('ocd_upload_error', 'Upload failed (code ' . (int) $f['error'] . ').', ['status' => 400]);
+        }
+        $tmp = $f['tmp_name'] ?? '';
+        if (!$tmp || !is_readable($tmp)) {
+            return new WP_Error('ocd_upload_error', 'Upload temp file unreadable.', ['status' => 400]);
+        }
+        $bytes = file_get_contents($tmp);
+        if ($bytes === false) {
+            return new WP_Error('ocd_upload_error', 'Could not read upload contents.', ['status' => 400]);
+        }
+        $mime = '';
+        if (function_exists('finfo_open')) {
+            $finfo = @finfo_open(FILEINFO_MIME_TYPE);
+            if ($finfo) {
+                $mime = (string) finfo_buffer($finfo, $bytes);
+                finfo_close($finfo);
+            }
+        }
+        if (!$mime) $mime = (string) ($f['type'] ?? '');
+
+        $meta = array_merge($base_meta, [
+            'file_name' => (string) ($f['name'] ?? 'file'),
+            'mime_type' => $mime,
+        ]);
+        $stored = OCD_Project_Files::store($meta, $bytes);
+        if (is_wp_error($stored)) return $stored;
+        return rest_ensure_response(OCD_Project_Files::present($stored, $base_meta['uploader_role'] !== 'customer'));
+    }
+
+    public static function serve_file($request) {
+        $user = wp_get_current_user();
+        $id = (int) $request['id'];
+        $file = OCD_Project_Files::get($id);
+        if (!$file) return new WP_Error('ocd_no_file', 'File not found.', ['status' => 404]);
+
+        $is_admin = current_user_can('manage_woocommerce') || current_user_can('manage_options');
+        if (!$is_admin) {
+            if ((int) $file['owner_user_id'] !== (int) $user->ID) {
+                return new WP_Error('ocd_forbidden', 'Not your file.', ['status' => 403]);
+            }
+            if ($file['visibility'] !== 'client') {
+                return new WP_Error('ocd_forbidden', 'This file is internal-only.', ['status' => 403]);
+            }
+        }
+
+        $path = OCD_Project_Files::path_for($file);
+        if (!$path || !is_file($path)) {
+            return new WP_Error('ocd_missing', 'File missing on disk.', ['status' => 404]);
+        }
+
+        OCD_Project_Files::record_view($id);
+        // Stream via PHP — never expose the on-disk path.
+        if (!headers_sent()) {
+            header('Content-Type: ' . $file['mime_type']);
+            header('Content-Length: ' . (int) $file['size_bytes']);
+            header('Content-Disposition: inline; filename="' . self::header_safe_filename((string) $file['file_name']) . '"');
+            header('X-Content-Type-Options: nosniff');
+            header('Cache-Control: private, max-age=0, no-store');
+        }
+        OCD_Project_Files::record_download($id);
+        readfile($path);
+        if (function_exists('die')) {
+            die;
+        }
+        return null;
+    }
+
+    private static function header_safe_filename($name) {
+        $name = preg_replace('/[\r\n"]+/', '', $name);
+        return $name;
+    }
+
+    /* ---------------- Task comments ---------------- */
+
+    public static function customer_list_task_comments($request) {
+        $user = wp_get_current_user();
+        $task_id = (int) $request['id'];
+        $task = OCD_Tasks::get($task_id);
+        if (!$task) return new WP_Error('ocd_no_task', 'Task not found.', ['status' => 404]);
+        if ((int) $task['user_id'] !== (int) $user->ID || ($task['visibility'] ?? '') !== 'client') {
+            return new WP_Error('ocd_forbidden', 'Not your task.', ['status' => 403]);
+        }
+        return rest_ensure_response(OCD_Tasks::comments_for_task($task_id, 'customer'));
+    }
+
+    public static function customer_add_task_comment($request) {
+        $user = wp_get_current_user();
+        $task_id = (int) $request['id'];
+        $task = OCD_Tasks::get($task_id);
+        if (!$task) return new WP_Error('ocd_no_task', 'Task not found.', ['status' => 404]);
+        if ((int) $task['user_id'] !== (int) $user->ID || ($task['visibility'] ?? '') !== 'client') {
+            return new WP_Error('ocd_forbidden', 'Not your task.', ['status' => 403]);
+        }
+        $body = (string) $request->get_param('body');
+        $res = OCD_Tasks::add_comment($task_id, (int) $user->ID, 'customer', $body, 'shared');
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_list_task_comments($request) {
+        $task_id = (int) $request['id'];
+        return rest_ensure_response(OCD_Tasks::comments_for_task($task_id, 'admin'));
+    }
+
+    public static function admin_add_task_comment($request) {
+        $admin = wp_get_current_user();
+        $task_id = (int) $request['id'];
+        $body = (string) $request->get_param('body');
+        $visibility = sanitize_key((string) $request->get_param('visibility')) ?: 'shared';
+        $res = OCD_Tasks::add_comment($task_id, (int) $admin->ID, 'staff', $body, $visibility);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function admin_delete_task_comment($request) {
+        OCD_Tasks::delete_comment((int) $request['id']);
+        return rest_ensure_response(['deleted' => true]);
+    }
+
+    /* ---------------- Pending actions + billing ---------------- */
+
+    public static function customer_pending_actions() {
+        $user = wp_get_current_user();
+        $subs = [];
+        $orders = [];
+        if (OCD_WooCommerce::is_configured()) {
+            $customer = OCD_WooCommerce::find_customer_by_email($user->user_email);
+            if (!is_wp_error($customer) && $customer) {
+                $s = OCD_WooCommerce::list_subscriptions_for_customer($customer['id']);
+                $o = OCD_WooCommerce::list_orders_for_customer($customer['id']);
+                $subs   = is_wp_error($s) ? [] : (array) $s;
+                $orders = is_wp_error($o) ? [] : (array) $o;
+            }
+        }
+        return rest_ensure_response(OCD_Pending_Actions::for_user((int) $user->ID, $subs, $orders));
+    }
+
+    public static function customer_billing() {
+        $user = wp_get_current_user();
+        $subs = [];
+        $orders = [];
+        if (OCD_WooCommerce::is_configured()) {
+            $customer = OCD_WooCommerce::find_customer_by_email($user->user_email);
+            if (!is_wp_error($customer) && $customer) {
+                $s = OCD_WooCommerce::list_subscriptions_for_customer($customer['id']);
+                $o = OCD_WooCommerce::list_orders_for_customer($customer['id']);
+                $subs   = is_wp_error($s) ? [] : (array) $s;
+                $orders = is_wp_error($o) ? [] : (array) $o;
+            }
+        }
+        return rest_ensure_response(OCD_Billing::payload_for_customer((int) $user->ID, $subs, $orders));
+    }
+
+    public static function task_status_sets() {
+        return rest_ensure_response([
+            'statuses'        => OCD_Tasks::VALID_STATUSES,
+            'labels'          => OCD_Tasks::STATUS_LABELS,
+            'groups'          => OCD_Tasks::status_groups(),
+            'task_types'      => OCD_Tasks::TASK_TYPES,
+            'visibilities'    => OCD_Tasks::VISIBILITIES,
+            'priorities'      => OCD_Tasks::PRIORITIES,
+            'customer_allowed_statuses' => OCD_Tasks::CUSTOMER_ALLOWED_STATUSES,
+        ]);
+    }
+
+    public static function admin_get_required_step_templates() {
+        return rest_ensure_response(OCD_Entitlements::get_required_step_templates());
+    }
+
+    public static function admin_set_required_step_templates($request) {
+        $tpls = $request->get_param('templates');
+        if (!is_array($tpls)) return new WP_Error('ocd_invalid', 'Expected templates object.', ['status' => 400]);
+        return rest_ensure_response(OCD_Entitlements::set_required_step_templates($tpls));
+    }
+
+    /**
+     * Surfaces native WC Subscriptions switch URL + reasons it may be unavailable.
+     * We never custom-process payment/plan changes — every action links into the
+     * native My Account flow.
+     */
+    public static function customer_subscription_switch_options($request) {
+        $user = wp_get_current_user();
+        $sid = (int) $request['id'];
+
+        if (!OCD_WooCommerce::is_configured()) {
+            return new WP_Error('ocd_not_configured', 'WooCommerce not configured.', ['status' => 400]);
+        }
+        $customer = OCD_WooCommerce::find_customer_by_email($user->user_email);
+        if (is_wp_error($customer) || !$customer) {
+            return new WP_Error('ocd_no_customer', 'Customer not found.', ['status' => 404]);
+        }
+        $sub = OCD_WooCommerce::get_subscription($sid);
+        if (is_wp_error($sub)) return $sub;
+        if ((int) ($sub['customer_id'] ?? 0) !== (int) $customer['id']) {
+            return new WP_Error('ocd_forbidden', 'Not your subscription.', ['status' => 403]);
+        }
+
+        $status = (string) ($sub['status'] ?? '');
+        $reasons = [];
+        if (!in_array($status, ['active'], true)) $reasons[] = 'Switching is only available while a subscription is active.';
+        if (in_array($status, ['on-hold', 'pending-cancel'], true)) $reasons[] = 'Subscriptions on-hold or pending-cancel cannot be switched.';
+        if (OCD_Billing::is_staging_mode()) $reasons[] = 'Site is in staging mode; switching is disabled.';
+
+        $variation_attrs = [];
+        $first_item = $sub['line_items'][0] ?? null;
+        if ($first_item) {
+            $extracted = OCD_Entitlements::extract_line_item($first_item);
+            $variation_attrs = $extracted['attributes'];
+        }
+        $base = function_exists('home_url') ? rtrim(home_url(), '/') : '';
+        $switch_url = '';
+        if ($base && empty($reasons)) {
+            // WooCommerce Subscriptions builds its switch flow from the
+            // subscription view. We surface the view URL and let the native
+            // template render its "Upgrade or Downgrade" CTA.
+            $switch_url = $base . '/my-account/view-subscription/' . (int) $sid . '/';
+        }
+
+        return rest_ensure_response([
+            'subscription_id'   => $sid,
+            'status'            => $status,
+            'switch_available'  => empty($reasons),
+            'unavailable_reasons' => $reasons,
+            'subscription_view_url' => OCD_Billing::subscription_view_url($sid),
+            'switch_url'        => $switch_url,
+            'current_variation' => [
+                'product_id'   => isset($first_item['product_id']) ? (int) $first_item['product_id'] : 0,
+                'variation_id' => isset($first_item['variation_id']) ? (int) $first_item['variation_id'] : 0,
+                'attributes'   => $variation_attrs,
+            ],
+        ]);
     }
 
     /* ---------------- helpers ---------------- */

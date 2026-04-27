@@ -3,7 +3,7 @@
  * Plugin Name: Oversee Customer Dashboard
  * Plugin URI: https://overseeagency.com/plugins/oversee-customer-dashboard
  * Description: Customer-facing dashboard and Oversee Agency admin portal. Integrates HighLevel/LeadConnector CRM and WooCommerce Subscriptions to surface contacts, opportunities, orders, subscriptions and ticket links in one place.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Oversee Agency
  * Author URI: https://overseeagency.com
  * License: GPL v2 or later
@@ -19,7 +19,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('OCD_VERSION', '1.1.0');
+define('OCD_VERSION', '1.2.0');
 define('OCD_FILE', __FILE__);
 define('OCD_DIR', plugin_dir_path(__FILE__));
 define('OCD_URL', plugin_dir_url(__FILE__));
@@ -28,6 +28,7 @@ define('OCD_TEMPLATES', OCD_DIR . 'templates');
 
 require_once OCD_INCLUDES . '/class-ocd-settings.php';
 require_once OCD_INCLUDES . '/class-ocd-schema.php';
+require_once OCD_INCLUDES . '/class-ocd-instruction-media.php';
 require_once OCD_INCLUDES . '/class-ocd-highlevel.php';
 require_once OCD_INCLUDES . '/class-ocd-woocommerce.php';
 require_once OCD_INCLUDES . '/class-ocd-messaging.php';
@@ -36,6 +37,9 @@ require_once OCD_INCLUDES . '/class-ocd-tasks.php';
 require_once OCD_INCLUDES . '/class-ocd-entitlements.php';
 require_once OCD_INCLUDES . '/class-ocd-customer-crm.php';
 require_once OCD_INCLUDES . '/class-ocd-store.php';
+require_once OCD_INCLUDES . '/class-ocd-project-files.php';
+require_once OCD_INCLUDES . '/class-ocd-billing.php';
+require_once OCD_INCLUDES . '/class-ocd-pending-actions.php';
 require_once OCD_INCLUDES . '/class-ocd-woocommerce-hooks.php';
 require_once OCD_INCLUDES . '/class-ocd-rest-api.php';
 require_once OCD_INCLUDES . '/class-ocd-shortcodes.php';
