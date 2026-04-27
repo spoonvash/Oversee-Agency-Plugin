@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 
 class OCD_Project_Files {
 
-    const FOLDERS         = ['intake', 'working', 'deliverables', 'archive'];
+    const FOLDERS         = ['intake', 'working', 'deliverables', 'archive', 'messages', 'tasks'];
     const VISIBILITIES    = ['client', 'internal'];
     const APPROVAL_STATES = ['pending', 'approved', 'rejected', 'not_required'];
 

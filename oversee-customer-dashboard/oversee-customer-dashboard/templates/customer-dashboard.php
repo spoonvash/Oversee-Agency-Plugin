@@ -2,6 +2,12 @@
 /**
  * Customer-facing dashboard template.
  *
+ * Information architecture (post-cleanup): a single primary nav with five
+ * destinations — Home, Projects, Messages, Files, Billing. Add-ons/services
+ * live as a card on Home instead of a separate Store tab. The customer-owned
+ * CRM is exposed as a settings card on Home rather than its own top-level
+ * tab so we don't show two ways to reach the same thing.
+ *
  * @package Oversee_Customer_Dashboard
  */
 
@@ -36,12 +42,11 @@ $status = OCD_Settings::connection_status();
     </header>
 
     <nav class="ocd-tabs" role="tablist">
-        <button class="ocd-tab is-active" data-ocd-cust-tab="overview"><?php esc_html_e('Overview', 'oversee-customer-dashboard'); ?></button>
+        <button class="ocd-tab is-active" data-ocd-cust-tab="home"><?php esc_html_e('Home', 'oversee-customer-dashboard'); ?></button>
         <button class="ocd-tab" data-ocd-cust-tab="projects"><?php esc_html_e('Projects', 'oversee-customer-dashboard'); ?></button>
-        <button class="ocd-tab" data-ocd-cust-tab="tasks"><?php esc_html_e('Tasks', 'oversee-customer-dashboard'); ?></button>
         <button class="ocd-tab" data-ocd-cust-tab="messages"><?php esc_html_e('Messages', 'oversee-customer-dashboard'); ?></button>
-        <button class="ocd-tab" data-ocd-cust-tab="store"><?php esc_html_e('Store', 'oversee-customer-dashboard'); ?></button>
-        <button class="ocd-tab" data-ocd-cust-tab="integrations"><?php esc_html_e('Integrations', 'oversee-customer-dashboard'); ?></button>
+        <button class="ocd-tab" data-ocd-cust-tab="files"><?php esc_html_e('Files', 'oversee-customer-dashboard'); ?></button>
+        <button class="ocd-tab" data-ocd-cust-tab="billing"><?php esc_html_e('Billing', 'oversee-customer-dashboard'); ?></button>
     </nav>
 
     <?php if (!$status['highlevel'] && !$status['woocommerce']) : ?>
@@ -51,7 +56,7 @@ $status = OCD_Settings::connection_status();
         </div>
     <?php endif; ?>
 
-    <section class="ocd-cust-panel is-active" data-ocd-cust-panel="overview">
+    <section class="ocd-cust-panel is-active" data-ocd-cust-panel="home">
         <div class="ocd-grid ocd-grid--summary">
             <div class="ocd-card ocd-stat">
                 <span class="ocd-stat__label"><?php esc_html_e('Active subscriptions', 'oversee-customer-dashboard'); ?></span>
@@ -71,33 +76,64 @@ $status = OCD_Settings::connection_status();
             </div>
         </div>
 
+        <div class="ocd-card">
+            <div class="ocd-card__header">
+                <h2><?php esc_html_e('Your tasks', 'oversee-customer-dashboard'); ?></h2>
+                <span class="ocd-card__hint"><?php esc_html_e('Drag a card between columns to update its status.', 'oversee-customer-dashboard'); ?></span>
+            </div>
+            <div class="ocd-kanban" data-ocd-kanban="customer">
+                <p class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></p>
+            </div>
+        </div>
+
         <section class="ocd-grid ocd-grid--main">
             <div class="ocd-card">
                 <div class="ocd-card__header">
-                    <h2><?php esc_html_e('Subscriptions', 'oversee-customer-dashboard'); ?></h2>
-                    <span class="ocd-card__hint" data-ocd-hint="subs"></span>
+                    <h2><?php esc_html_e('Add-ons & services', 'oversee-customer-dashboard'); ?></h2>
+                    <a class="ocd-btn ocd-btn--ghost" data-ocd-store-cart hidden href="#"><?php esc_html_e('View cart', 'oversee-customer-dashboard'); ?></a>
                 </div>
-                <div class="ocd-table-wrap">
-                    <table class="ocd-table">
-                        <thead><tr>
-                            <th><?php esc_html_e('Subscription', 'oversee-customer-dashboard'); ?></th>
-                            <th><?php esc_html_e('Status', 'oversee-customer-dashboard'); ?></th>
-                            <th><?php esc_html_e('Total', 'oversee-customer-dashboard'); ?></th>
-                            <th><?php esc_html_e('Next payment', 'oversee-customer-dashboard'); ?></th>
-                            <th></th>
-                        </tr></thead>
-                        <tbody data-ocd-list="subscriptions">
-                            <tr><td colspan="5" class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></td></tr>
-                        </tbody>
-                    </table>
+                <p class="ocd-muted"><?php esc_html_e('Each item is an existing WooCommerce product. Checkout uses the real WooCommerce cart — no separate billing.', 'oversee-customer-dashboard'); ?></p>
+                <div class="ocd-store" data-ocd-list="store">
+                    <p class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></p>
                 </div>
             </div>
-
             <div class="ocd-card">
-                <div class="ocd-card__header"><h2><?php esc_html_e('Recent orders', 'oversee-customer-dashboard'); ?></h2></div>
-                <ul class="ocd-list" data-ocd-list="orders">
-                    <li class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></li>
-                </ul>
+                <div class="ocd-card__header"><h2><?php esc_html_e('Need help?', 'oversee-customer-dashboard'); ?></h2></div>
+                <p class="ocd-muted"><?php esc_html_e('Open a support ticket through the Oversee Helpdesk.', 'oversee-customer-dashboard'); ?></p>
+                <p>
+                    <?php $helpdesk_url = apply_filters('ocd_helpdesk_url', '/support/'); ?>
+                    <a class="ocd-btn ocd-btn--primary" href="<?php echo esc_url($helpdesk_url); ?>"><?php esc_html_e('Open Helpdesk', 'oversee-customer-dashboard'); ?></a>
+                </p>
+                <hr />
+                <h3 class="ocd-h3"><?php esc_html_e('Your CRM (optional)', 'oversee-customer-dashboard'); ?></h3>
+                <p class="ocd-muted"><?php esc_html_e('Link your own CRM account — separate from Oversee. Tokens are stored encrypted-at-rest server-side.', 'oversee-customer-dashboard'); ?></p>
+                <div data-ocd-block="customer-crm" class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></div>
+                <form class="ocd-crm-form" data-ocd-form="connect-crm" hidden>
+                    <label><?php esc_html_e('Provider', 'oversee-customer-dashboard'); ?>
+                        <select name="provider">
+                            <option value="highlevel">HighLevel</option>
+                            <option value="hubspot">HubSpot</option>
+                            <option value="pipedrive">Pipedrive</option>
+                            <option value="salesforce">Salesforce</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                    <label><?php esc_html_e('Label (optional)', 'oversee-customer-dashboard'); ?>
+                        <input type="text" name="label" />
+                    </label>
+                    <label><?php esc_html_e('Location/Account ID', 'oversee-customer-dashboard'); ?>
+                        <input type="text" name="location_id" />
+                    </label>
+                    <label><?php esc_html_e('Access token', 'oversee-customer-dashboard'); ?>
+                        <input type="password" name="access_token" required autocomplete="new-password" />
+                    </label>
+                    <label><?php esc_html_e('Refresh token (optional)', 'oversee-customer-dashboard'); ?>
+                        <input type="password" name="refresh_token" autocomplete="new-password" />
+                    </label>
+                    <div class="ocd-actions">
+                        <button type="submit" class="ocd-btn ocd-btn--primary"><?php esc_html_e('Save connection', 'oversee-customer-dashboard'); ?></button>
+                    </div>
+                </form>
             </div>
         </section>
     </section>
@@ -111,15 +147,6 @@ $status = OCD_Settings::connection_status();
         </div>
     </section>
 
-    <section class="ocd-cust-panel" data-ocd-cust-panel="tasks">
-        <div class="ocd-card">
-            <div class="ocd-card__header"><h2><?php esc_html_e('Your tasks', 'oversee-customer-dashboard'); ?></h2></div>
-            <ul class="ocd-tasks" data-ocd-list="tasks">
-                <li class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></li>
-            </ul>
-        </div>
-    </section>
-
     <section class="ocd-cust-panel" data-ocd-cust-panel="messages">
         <div class="ocd-card ocd-messages">
             <div class="ocd-card__header">
@@ -130,68 +157,52 @@ $status = OCD_Settings::connection_status();
                 <p class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></p>
             </div>
             <form class="ocd-msg-form" data-ocd-form="send-message">
-                <textarea required maxlength="5000" name="message" placeholder="<?php esc_attr_e('Write a message to Oversee…', 'oversee-customer-dashboard'); ?>"></textarea>
-                <button type="submit" class="ocd-btn ocd-btn--primary"><?php esc_html_e('Send', 'oversee-customer-dashboard'); ?></button>
+                <textarea maxlength="5000" name="message" placeholder="<?php esc_attr_e('Write a message to Oversee…', 'oversee-customer-dashboard'); ?>"></textarea>
+                <div class="ocd-msg-form__row">
+                    <label class="ocd-btn ocd-btn--ghost ocd-msg-form__attach">
+                        <input type="file" name="attachment" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden />
+                        <span><?php esc_html_e('Attach image', 'oversee-customer-dashboard'); ?></span>
+                    </label>
+                    <div class="ocd-msg-form__previews" data-ocd-msg-previews></div>
+                    <button type="submit" class="ocd-btn ocd-btn--primary"><?php esc_html_e('Send', 'oversee-customer-dashboard'); ?></button>
+                </div>
             </form>
         </div>
     </section>
 
-    <section class="ocd-cust-panel" data-ocd-cust-panel="store">
+    <section class="ocd-cust-panel" data-ocd-cust-panel="files">
         <div class="ocd-card">
-            <div class="ocd-card__header">
-                <h2><?php esc_html_e('Add-ons & services', 'oversee-customer-dashboard'); ?></h2>
-                <a class="ocd-btn ocd-btn--ghost" data-ocd-store-cart hidden href="#"><?php esc_html_e('View cart', 'oversee-customer-dashboard'); ?></a>
-            </div>
-            <p class="ocd-muted">
-                <?php esc_html_e('Each item below is an existing WooCommerce product. Checkout routes to the real WooCommerce cart — no separate billing.', 'oversee-customer-dashboard'); ?>
-            </p>
-            <div class="ocd-store" data-ocd-list="store">
+            <div class="ocd-card__header"><h2><?php esc_html_e('Project files', 'oversee-customer-dashboard'); ?></h2></div>
+            <p class="ocd-muted"><?php esc_html_e('Files Oversee has shared with you, plus anything you have uploaded. Image previews stream through a permission-checked endpoint — direct file paths are never exposed.', 'oversee-customer-dashboard'); ?></p>
+            <div class="ocd-files" data-ocd-list="files">
                 <p class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></p>
             </div>
         </div>
     </section>
 
-    <section class="ocd-cust-panel" data-ocd-cust-panel="integrations">
+    <section class="ocd-cust-panel" data-ocd-cust-panel="billing">
         <div class="ocd-card">
-            <div class="ocd-card__header"><h2><?php esc_html_e('Connect your own CRM', 'oversee-customer-dashboard'); ?></h2></div>
-            <p class="ocd-muted">
-                <?php esc_html_e('This is your private CRM connection — separate from Oversee Agency\'s CRM. Tokens are stored encrypted-at-rest server-side and never shared with Oversee staff.', 'oversee-customer-dashboard'); ?>
-            </p>
-            <div data-ocd-block="customer-crm" class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></div>
-            <form class="ocd-crm-form" data-ocd-form="connect-crm" hidden>
-                <label><?php esc_html_e('Provider', 'oversee-customer-dashboard'); ?>
-                    <select name="provider">
-                        <option value="highlevel">HighLevel</option>
-                        <option value="hubspot">HubSpot</option>
-                        <option value="pipedrive">Pipedrive</option>
-                        <option value="salesforce">Salesforce</option>
-                        <option value="other">Other</option>
-                    </select>
-                </label>
-                <label><?php esc_html_e('Label (optional)', 'oversee-customer-dashboard'); ?>
-                    <input type="text" name="label" />
-                </label>
-                <label><?php esc_html_e('Location/Account ID', 'oversee-customer-dashboard'); ?>
-                    <input type="text" name="location_id" />
-                </label>
-                <label><?php esc_html_e('Access token', 'oversee-customer-dashboard'); ?>
-                    <input type="password" name="access_token" required autocomplete="new-password" />
-                </label>
-                <label><?php esc_html_e('Refresh token (optional)', 'oversee-customer-dashboard'); ?>
-                    <input type="password" name="refresh_token" autocomplete="new-password" />
-                </label>
-                <div class="ocd-actions">
-                    <button type="submit" class="ocd-btn ocd-btn--primary"><?php esc_html_e('Save connection', 'oversee-customer-dashboard'); ?></button>
-                </div>
-            </form>
+            <div class="ocd-card__header"><h2><?php esc_html_e('Subscriptions', 'oversee-customer-dashboard'); ?></h2></div>
+            <div class="ocd-table-wrap">
+                <table class="ocd-table">
+                    <thead><tr>
+                        <th><?php esc_html_e('Subscription', 'oversee-customer-dashboard'); ?></th>
+                        <th><?php esc_html_e('Status', 'oversee-customer-dashboard'); ?></th>
+                        <th><?php esc_html_e('Total', 'oversee-customer-dashboard'); ?></th>
+                        <th><?php esc_html_e('Next payment', 'oversee-customer-dashboard'); ?></th>
+                        <th></th>
+                    </tr></thead>
+                    <tbody data-ocd-list="subscriptions">
+                        <tr><td colspan="5" class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
         <div class="ocd-card">
-            <div class="ocd-card__header"><h2><?php esc_html_e('Need help?', 'oversee-customer-dashboard'); ?></h2></div>
-            <p class="ocd-muted"><?php esc_html_e('Open a support ticket through the Oversee Helpdesk.', 'oversee-customer-dashboard'); ?></p>
-            <p>
-                <?php $helpdesk_url = apply_filters('ocd_helpdesk_url', '/support/'); ?>
-                <a class="ocd-btn ocd-btn--primary" href="<?php echo esc_url($helpdesk_url); ?>"><?php esc_html_e('Open Helpdesk', 'oversee-customer-dashboard'); ?></a>
-            </p>
+            <div class="ocd-card__header"><h2><?php esc_html_e('Recent orders', 'oversee-customer-dashboard'); ?></h2></div>
+            <ul class="ocd-list" data-ocd-list="orders">
+                <li class="ocd-empty"><?php esc_html_e('Loading…', 'oversee-customer-dashboard'); ?></li>
+            </ul>
         </div>
     </section>
 </div>

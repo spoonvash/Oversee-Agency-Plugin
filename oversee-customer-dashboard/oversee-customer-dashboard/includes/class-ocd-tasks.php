@@ -230,9 +230,19 @@ class OCD_Tasks {
 
     /**
      * Customer-facing task payload: omits internal_notes, returns status group.
+     * Attachments are embedded inline so the kanban can render thumbnails
+     * without a second round-trip per card.
      */
     public static function present_for_customer($task) {
         if (!is_array($task)) return null;
+        $attachments = [];
+        if (class_exists('OCD_Project_Files') && !empty($task['id']) && isset($GLOBALS['wpdb']) && is_object($GLOBALS['wpdb'])) {
+            $rows = OCD_Project_Files::all(['task_id' => (int) $task['id'], 'archived' => 0]);
+            foreach ($rows as $row) {
+                if (($row['visibility'] ?? '') !== 'client') continue;
+                $attachments[] = OCD_Project_Files::present($row, false);
+            }
+        }
         return [
             'id'                    => (int) $task['id'],
             'project_id'            => isset($task['project_id']) ? (int) $task['project_id'] : null,
@@ -247,7 +257,9 @@ class OCD_Tasks {
             'instruction_video_url' => $task['instruction_video_url'],
             'instruction_video_provider' => $task['instruction_video_provider'],
             'instruction_image_url' => $task['instruction_image_url'],
+            'attachments'           => $attachments,
             'requires_client_action' => self::requires_client_action($task),
+            'customer_allowed_statuses'  => self::CUSTOMER_ALLOWED_STATUSES,
         ];
     }
 

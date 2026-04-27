@@ -23,11 +23,16 @@ class OCD_Messaging {
 
     /**
      * Persist a customer-authored message and try to forward it to HighLevel.
+     *
+     * $extra may include 'attachment_ids' (array of ocd_project_files.id values
+     * the customer just uploaded). Each id must be owned by $user_id and
+     * client-visible — anything else is silently dropped.
      */
     public static function customer_send($user_id, $body, $extra = []) {
         global $wpdb;
         $body = trim((string) $body);
-        if ($body === '') {
+        $attachment_ids = self::filter_attachment_ids_for_owner((array) ($extra['attachment_ids'] ?? []), (int) $user_id);
+        if ($body === '' && empty($attachment_ids)) {
             return new WP_Error('ocd_empty_message', __('Message cannot be empty.', 'oversee-customer-dashboard'));
         }
         if (strlen($body) > 5000) {
@@ -53,6 +58,8 @@ class OCD_Messaging {
         $wpdb->insert(OCD_Schema::table('messages'), $row);
         $message_id = (int) $wpdb->insert_id;
 
+        self::attach_files_to_message($message_id, $attachment_ids);
+
         $sync = self::sync_inbound_to_highlevel($message_id);
         if (is_wp_error($sync)) {
             $wpdb->update(
@@ -68,11 +75,16 @@ class OCD_Messaging {
     /**
      * Persist a staff/admin-authored reply. Outbound CRM send is gated on
      * configuration; if not configured we still record the local reply.
+     *
+     * $extra['attachment_ids'] — files the admin attached. Each must already
+     * be stored against $user_id (owner) so the customer can preview them
+     * back through the same permission-checked endpoint they use elsewhere.
      */
-    public static function admin_reply($user_id, $body, $admin_id) {
+    public static function admin_reply($user_id, $body, $admin_id, $extra = []) {
         global $wpdb;
         $body = trim((string) $body);
-        if ($body === '') {
+        $attachment_ids = self::filter_attachment_ids_for_owner((array) ($extra['attachment_ids'] ?? []), (int) $user_id);
+        if ($body === '' && empty($attachment_ids)) {
             return new WP_Error('ocd_empty_message', __('Reply cannot be empty.', 'oversee-customer-dashboard'));
         }
         if (strlen($body) > 5000) {
@@ -96,6 +108,8 @@ class OCD_Messaging {
         ];
         $wpdb->insert(OCD_Schema::table('messages'), $row);
         $message_id = (int) $wpdb->insert_id;
+
+        self::attach_files_to_message($message_id, $attachment_ids);
 
         return self::get_message($message_id);
     }
@@ -197,20 +211,104 @@ class OCD_Messaging {
             $wpdb->prepare('SELECT * FROM ' . OCD_Schema::table('messages') . ' WHERE id = %d', (int) $id),
             ARRAY_A
         );
-        return $row ?: null;
+        if (!$row) return null;
+        $row['attachments'] = self::attachments_for_message((int) $row['id']);
+        return $row;
     }
 
     public static function thread_for_user($user_id, $limit = 100) {
         global $wpdb;
         $limit = max(1, min(500, (int) $limit));
-        return $wpdb->get_results(
+        $rows = $wpdb->get_results(
             $wpdb->prepare(
                 'SELECT * FROM ' . OCD_Schema::table('messages') . ' WHERE user_id = %d ORDER BY created_at ASC, id ASC LIMIT %d',
                 (int) $user_id,
                 $limit
             ),
             ARRAY_A
-        );
+        ) ?: [];
+        if (!$rows) return [];
+        $ids = array_map(function ($r) { return (int) $r['id']; }, $rows);
+        $by_msg = self::attachments_indexed_by_message($ids);
+        foreach ($rows as &$r) {
+            $r['attachments'] = $by_msg[(int) $r['id']] ?? [];
+        }
+        return $rows;
+    }
+
+    /* ---------------- Attachments ---------------- */
+
+    public static function filter_attachment_ids_for_owner($ids, $owner_user_id) {
+        $owner_user_id = (int) $owner_user_id;
+        $clean = [];
+        foreach ((array) $ids as $raw) {
+            $id = (int) $raw;
+            if ($id <= 0) continue;
+            if (!class_exists('OCD_Project_Files')) continue;
+            $file = OCD_Project_Files::get($id);
+            if (!$file) continue;
+            // The file MUST be owned by the message's user. We don't trust
+            // the caller — even an admin attaches "to the customer", and
+            // the file row carries owner_user_id = customer.
+            if ((int) $file['owner_user_id'] !== $owner_user_id) continue;
+            // Force client-visible: messages are shared with the customer.
+            if (($file['visibility'] ?? '') !== 'client') continue;
+            $clean[] = $id;
+        }
+        return array_values(array_unique($clean));
+    }
+
+    public static function attach_files_to_message($message_id, $file_ids) {
+        global $wpdb;
+        $message_id = (int) $message_id;
+        $file_ids = array_values(array_unique(array_map('intval', (array) $file_ids)));
+        if ($message_id <= 0 || empty($file_ids)) return;
+        $tbl = OCD_Schema::table('message_attachments');
+        $now = current_time('mysql', true);
+        foreach ($file_ids as $fid) {
+            $wpdb->insert($tbl, [
+                'message_id' => $message_id,
+                'file_id'    => (int) $fid,
+                'created_at' => $now,
+            ]);
+        }
+    }
+
+    public static function attachments_for_message($message_id) {
+        global $wpdb;
+        $message_id = (int) $message_id;
+        if ($message_id <= 0 || !class_exists('OCD_Project_Files')) return [];
+        $rows = $wpdb->get_results($wpdb->prepare(
+            'SELECT a.file_id FROM ' . OCD_Schema::table('message_attachments') . ' a '
+            . 'WHERE a.message_id = %d ORDER BY a.id ASC',
+            $message_id
+        ), ARRAY_A) ?: [];
+        $out = [];
+        foreach ($rows as $r) {
+            $f = OCD_Project_Files::get((int) $r['file_id']);
+            if (!$f) continue;
+            $out[] = OCD_Project_Files::present($f, false);
+        }
+        return $out;
+    }
+
+    public static function attachments_indexed_by_message($message_ids) {
+        global $wpdb;
+        $message_ids = array_values(array_unique(array_map('intval', (array) $message_ids)));
+        if (empty($message_ids) || !class_exists('OCD_Project_Files')) return [];
+        $placeholders = implode(',', array_fill(0, count($message_ids), '%d'));
+        $rows = $wpdb->get_results($wpdb->prepare(
+            'SELECT message_id, file_id FROM ' . OCD_Schema::table('message_attachments')
+            . ' WHERE message_id IN (' . $placeholders . ') ORDER BY id ASC',
+            $message_ids
+        ), ARRAY_A) ?: [];
+        $by_msg = [];
+        foreach ($rows as $r) {
+            $f = OCD_Project_Files::get((int) $r['file_id']);
+            if (!$f) continue;
+            $by_msg[(int) $r['message_id']][] = OCD_Project_Files::present($f, false);
+        }
+        return $by_msg;
     }
 
     public static function admin_inbox($args = []) {

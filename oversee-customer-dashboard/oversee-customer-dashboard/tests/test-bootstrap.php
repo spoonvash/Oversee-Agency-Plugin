@@ -284,7 +284,15 @@ check('empty project file rejected', is_wp_error($empty), $results);
 $ok = OCD_Project_Files::validate_upload('logo.png', 'image/png', 1024);
 check('valid image+size accepted', $ok === true, $results);
 check('FOLDERS contain intake/working/deliverables/archive',
-    OCD_Project_Files::FOLDERS === ['intake', 'working', 'deliverables', 'archive'],
+    in_array('intake', OCD_Project_Files::FOLDERS, true)
+    && in_array('working', OCD_Project_Files::FOLDERS, true)
+    && in_array('deliverables', OCD_Project_Files::FOLDERS, true)
+    && in_array('archive', OCD_Project_Files::FOLDERS, true),
+    $results
+);
+check('FOLDERS extended with messages + tasks for inline attachments',
+    in_array('messages', OCD_Project_Files::FOLDERS, true)
+    && in_array('tasks', OCD_Project_Files::FOLDERS, true),
     $results
 );
 check('approval states contain pending/approved/rejected/not_required',
@@ -349,6 +357,62 @@ check('OCD_Store::listings_for_user backwards-compatible wrapper still returns a
 $cat_in = OCD_Store::set_store_category('Add-Ons & Bonuses!');
 check('store category sanitizes to a slug', $cat_in === 'add-ons-bonuses-' || preg_match('/^[a-z0-9-]+$/', $cat_in), $results);
 check('store category round-trips via wp options', OCD_Store::get_store_category() === $cat_in, $results);
+
+// --- Image MIME allow-list (used by both message attachments and task attachments) ---
+check('image/jpeg is allowed for attachments', OCD_Project_Files::is_image_mime('image/jpeg') && OCD_Project_Files::is_allowed_mime('image/jpeg'), $results);
+check('image/webp is allowed for attachments', OCD_Project_Files::is_image_mime('image/webp') && OCD_Project_Files::is_allowed_mime('image/webp'), $results);
+check('image MIME helper rejects non-image types', !OCD_Project_Files::is_image_mime('application/pdf'), $results);
+check('image MIME helper rejects empty mime', !OCD_Project_Files::is_image_mime(''), $results);
+
+// --- Drag/drop permission rules: which statuses can the CUSTOMER set? ---
+// Allowed transitions (per OCD_Tasks::CUSTOMER_ALLOWED_STATUSES):
+//   not_started, in_progress, completed, waiting_on_oversee
+// Disallowed: needs_your_input, blocked, cancelled
+foreach (['not_started', 'in_progress', 'completed', 'waiting_on_oversee'] as $allowed) {
+    check('drag/drop: customer allowed → ' . $allowed,
+        in_array($allowed, OCD_Tasks::CUSTOMER_ALLOWED_STATUSES, true),
+        $results
+    );
+}
+foreach (['needs_your_input', 'blocked', 'cancelled', 'definitely-not-valid'] as $forbidden) {
+    check('drag/drop: customer cannot set → ' . $forbidden,
+        !in_array($forbidden, OCD_Tasks::CUSTOMER_ALLOWED_STATUSES, true),
+        $results
+    );
+}
+// Admin can set any valid status (covers the broader admin kanban).
+foreach (OCD_Tasks::VALID_STATUSES as $s) {
+    check('drag/drop: admin allowed → ' . $s, in_array($s, OCD_Tasks::VALID_STATUSES, true), $results);
+}
+// Status set must include columns the kanban renders for both roles.
+$kanban_admin    = ['needs_your_input', 'not_started', 'in_progress', 'waiting_on_oversee', 'blocked', 'completed'];
+$kanban_customer = ['needs_your_input', 'not_started', 'in_progress', 'waiting_on_oversee', 'completed'];
+foreach ($kanban_admin as $s) {
+    check('admin kanban column ' . $s . ' is a valid task status', in_array($s, OCD_Tasks::VALID_STATUSES, true), $results);
+}
+foreach ($kanban_customer as $s) {
+    check('customer kanban column ' . $s . ' is a valid task status', in_array($s, OCD_Tasks::VALID_STATUSES, true), $results);
+}
+
+// Customer-presented task payload includes attachments key + customer_allowed_statuses.
+$presented = OCD_Tasks::present_for_customer([
+    'id' => 1, 'project_id' => 0, 'milestone_id' => 0,
+    'title' => 'demo', 'details' => 'd', 'status' => 'not_started',
+    'task_type' => 'client_required', 'visibility' => 'client',
+    'due_date' => null, 'completed_at' => null,
+    'instruction_video_url' => null, 'instruction_video_provider' => null,
+    'instruction_image_url' => null,
+]);
+check('customer task payload exposes attachments[] (drag/drop UI relies on this)',
+    is_array($presented) && array_key_exists('attachments', $presented),
+    $results
+);
+check('customer task payload exposes customer_allowed_statuses for client validation',
+    is_array($presented) && isset($presented['customer_allowed_statuses'])
+    && in_array('not_started', $presented['customer_allowed_statuses'], true)
+    && !in_array('blocked', $presented['customer_allowed_statuses'], true),
+    $results
+);
 
 $failed = array_filter($results, function ($r) { return !$r[1]; });
 if (count($failed) > 0) {

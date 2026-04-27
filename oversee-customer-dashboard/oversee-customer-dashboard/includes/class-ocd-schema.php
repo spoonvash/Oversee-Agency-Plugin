@@ -14,7 +14,7 @@ if (!defined('ABSPATH')) {
 class OCD_Schema {
 
     const DB_VERSION_OPTION = 'ocd_db_version';
-    const DB_VERSION        = '1.2.0';
+    const DB_VERSION        = '1.3.0';
 
     public static function table($name) {
         global $wpdb;
@@ -38,14 +38,15 @@ class OCD_Schema {
 
         $charset = $wpdb->get_charset_collate();
 
-        $messages       = self::table('messages');
-        $projects       = self::table('projects');
-        $milestones     = self::table('milestones');
-        $tasks          = self::table('tasks');
-        $task_comments  = self::table('task_comments');
-        $project_files  = self::table('project_files');
-        $entitlements   = self::table('entitlements');
-        $crm_links      = self::table('customer_crm');
+        $messages           = self::table('messages');
+        $message_attachments = self::table('message_attachments');
+        $projects           = self::table('projects');
+        $milestones         = self::table('milestones');
+        $tasks              = self::table('tasks');
+        $task_comments      = self::table('task_comments');
+        $project_files      = self::table('project_files');
+        $entitlements       = self::table('entitlements');
+        $crm_links          = self::table('customer_crm');
 
         $sql = [];
 
@@ -230,6 +231,22 @@ class OCD_Schema {
             meta LONGTEXT DEFAULT NULL,
             PRIMARY KEY (id),
             UNIQUE KEY user_provider (user_id, provider)
+        ) $charset;";
+
+        // Join table linking ocd_messages → ocd_project_files. Attachments are
+        // never stored as raw paths or URLs on the message row itself: the
+        // file lives in private storage (oversee-private/<owner>/...), the
+        // join row references its file id, and previews flow through the
+        // permission-checked /ocd/v1/files/<id>/download endpoint.
+        $sql[] = "CREATE TABLE $message_attachments (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            message_id BIGINT UNSIGNED NOT NULL,
+            file_id BIGINT UNSIGNED NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            UNIQUE KEY message_file (message_id, file_id),
+            KEY message_id (message_id),
+            KEY file_id (file_id)
         ) $charset;";
 
         foreach ($sql as $statement) {

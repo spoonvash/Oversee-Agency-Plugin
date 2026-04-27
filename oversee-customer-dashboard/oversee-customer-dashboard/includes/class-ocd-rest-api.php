@@ -99,8 +99,16 @@ class OCD_REST_API {
                 'methods'             => 'POST',
                 'callback'            => [__CLASS__, 'customer_send_message'],
                 'permission_callback' => [__CLASS__, 'logged_in_permission'],
-                'args'                => ['message' => ['required' => true, 'type' => 'string']],
+                // No required args — body is optional when attachments are
+                // provided. The handler enforces "body OR attachments".
             ],
+        ]);
+        // Customer uploads an attachment for a message-in-progress and gets
+        // back a file id to include in the subsequent POST /customer/messages.
+        register_rest_route(self::NAMESPACE, '/customer/messages/attachments', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'customer_upload_message_attachment'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
         ]);
 
         // ---------- Customer projects (read-only) ----------
@@ -169,8 +177,15 @@ class OCD_REST_API {
                 'methods'             => 'POST',
                 'callback'            => [__CLASS__, 'admin_reply_thread'],
                 'permission_callback' => [__CLASS__, 'admin_permission'],
-                'args'                => ['message' => ['required' => true, 'type' => 'string']],
+                // Body optional when attachments are provided.
             ],
+        ]);
+        // Admin uploads an attachment scoped to a customer thread; returns a
+        // file id to include in the subsequent POST reply.
+        register_rest_route(self::NAMESPACE, '/admin/messages/thread/(?P<user_id>\d+)/attachments', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'admin_upload_message_attachment'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
         ]);
 
         // ---------- Admin: projects ----------
@@ -238,6 +253,46 @@ class OCD_REST_API {
             [
                 'methods'             => 'DELETE',
                 'callback'            => [__CLASS__, 'admin_delete_task'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+        ]);
+
+        // Drag/drop status endpoints. Same shape for customer + admin so the
+        // kanban controller can call one or the other based on role; the
+        // permission rules differ: customers can only set CUSTOMER_ALLOWED_STATUSES
+        // on their own client-visible tasks, admins can set any valid status
+        // on any task.
+        register_rest_route(self::NAMESPACE, '/customer/tasks/(?P<id>\d+)/status', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'customer_set_task_status'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+            'args'                => ['status' => ['required' => true, 'type' => 'string']],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/tasks/(?P<id>\d+)/status', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'admin_set_task_status'],
+            'permission_callback' => [__CLASS__, 'admin_permission'],
+            'args'                => ['status' => ['required' => true, 'type' => 'string']],
+        ]);
+
+        // Task attachments: scoped reads, plus admin upload of an instruction
+        // image directly attached to a task. Customer reads use the existing
+        // permission-checked /files/<id>/download endpoint, this just lists
+        // which file ids belong to the task.
+        register_rest_route(self::NAMESPACE, '/customer/tasks/(?P<id>\d+)/attachments', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'customer_list_task_attachments'],
+            'permission_callback' => [__CLASS__, 'logged_in_permission'],
+        ]);
+        register_rest_route(self::NAMESPACE, '/admin/tasks/(?P<id>\d+)/attachments', [
+            [
+                'methods'             => 'GET',
+                'callback'            => [__CLASS__, 'admin_list_task_attachments'],
+                'permission_callback' => [__CLASS__, 'admin_permission'],
+            ],
+            [
+                'methods'             => 'POST',
+                'callback'            => [__CLASS__, 'admin_upload_task_attachment'],
                 'permission_callback' => [__CLASS__, 'admin_permission'],
             ],
         ]);
@@ -641,9 +696,22 @@ class OCD_REST_API {
     public static function customer_send_message($request) {
         $user = wp_get_current_user();
         $body = (string) $request->get_param('message');
-        $msg  = OCD_Messaging::customer_send($user->ID, $body);
+        $attachment_ids = self::param_int_list($request->get_param('attachment_ids'));
+        $msg  = OCD_Messaging::customer_send($user->ID, $body, ['attachment_ids' => $attachment_ids]);
         if (is_wp_error($msg)) return $msg;
         return rest_ensure_response(['message' => $msg, 'connected_to_agency_crm' => OCD_HighLevel::is_configured()]);
+    }
+
+    public static function customer_upload_message_attachment($request) {
+        $user = wp_get_current_user();
+        return self::process_file_upload($request, [
+            'owner_user_id'    => (int) $user->ID,
+            'uploader_user_id' => (int) $user->ID,
+            'uploader_role'    => 'customer',
+            'visibility'       => 'client',
+            'approval_status'  => 'not_required',
+            'folder'           => 'messages',
+        ]);
     }
 
     /* ---------------- Customer projects/tasks/entitlements ---------------- */
@@ -738,8 +806,27 @@ class OCD_REST_API {
         $user_id = (int) $request['user_id'];
         $admin   = wp_get_current_user();
         $body    = (string) $request->get_param('message');
-        $msg     = OCD_Messaging::admin_reply($user_id, $body, $admin->ID);
+        $attachment_ids = self::param_int_list($request->get_param('attachment_ids'));
+        $msg     = OCD_Messaging::admin_reply($user_id, $body, $admin->ID, ['attachment_ids' => $attachment_ids]);
         return is_wp_error($msg) ? $msg : rest_ensure_response($msg);
+    }
+
+    public static function admin_upload_message_attachment($request) {
+        $admin = wp_get_current_user();
+        $owner_id = (int) $request['user_id'];
+        if ($owner_id <= 0) {
+            return new WP_Error('ocd_invalid', 'user_id required.', ['status' => 400]);
+        }
+        return self::process_file_upload($request, [
+            'owner_user_id'    => $owner_id,
+            'uploader_user_id' => (int) $admin->ID,
+            'uploader_role'    => 'staff',
+            // Always client-visible — the customer must be able to see what
+            // staff sent in their thread.
+            'visibility'       => 'client',
+            'approval_status'  => 'not_required',
+            'folder'           => 'messages',
+        ]);
     }
 
     /* ---------------- Admin projects ---------------- */
@@ -820,11 +907,19 @@ class OCD_REST_API {
     /* ---------------- Admin tasks ---------------- */
 
     public static function admin_list_tasks($request) {
-        return rest_ensure_response(OCD_Tasks::all([
+        $rows = OCD_Tasks::all([
             'user_id'  => (int) $request->get_param('user_id'),
             'status'   => sanitize_text_field((string) $request->get_param('status')),
             'per_page' => (int) $request->get_param('per_page') ?: 100,
-        ]));
+        ]);
+        // Embed attachments so the admin kanban can show thumbnails inline.
+        if (class_exists('OCD_Project_Files')) {
+            foreach ($rows as &$row) {
+                $files = OCD_Project_Files::all(['task_id' => (int) $row['id']]);
+                $row['attachments'] = array_map(function ($f) { return OCD_Project_Files::present($f, true); }, $files);
+            }
+        }
+        return rest_ensure_response($rows);
     }
 
     public static function admin_create_task($request) {
@@ -866,6 +961,104 @@ class OCD_REST_API {
     public static function admin_delete_task($request) {
         OCD_Tasks::delete((int) $request['id']);
         return rest_ensure_response(['deleted' => true]);
+    }
+
+    /**
+     * Drag/drop status change from the customer kanban. Permission rules:
+     *   - task must belong to the calling user
+     *   - task must be visibility=client
+     *   - new status must be in OCD_Tasks::CUSTOMER_ALLOWED_STATUSES
+     * Anything else returns 403/400 — the frontend snaps the card back.
+     */
+    public static function customer_set_task_status($request) {
+        $user    = wp_get_current_user();
+        $task_id = (int) $request['id'];
+        $status  = sanitize_key((string) $request->get_param('status'));
+        $task    = OCD_Tasks::get($task_id);
+        if (!$task) return new WP_Error('ocd_no_task', 'Task not found.', ['status' => 404]);
+        if ((int) $task['user_id'] !== (int) $user->ID) {
+            return new WP_Error('ocd_forbidden', 'Not your task.', ['status' => 403]);
+        }
+        $res = OCD_Tasks::update($task_id, ['status' => $status], 'customer');
+        if (is_wp_error($res)) return $res;
+        return rest_ensure_response(OCD_Tasks::present_for_customer($res));
+    }
+
+    /**
+     * Drag/drop status change from the admin kanban. Admin can set any valid
+     * status on any task — the route is separate from the generic update so
+     * the UI signal ("status only, from kanban") is captured cleanly and
+     * can be audited later if needed.
+     */
+    public static function admin_set_task_status($request) {
+        $task_id = (int) $request['id'];
+        $status  = sanitize_key((string) $request->get_param('status'));
+        $task = OCD_Tasks::get($task_id);
+        if (!$task) return new WP_Error('ocd_no_task', 'Task not found.', ['status' => 404]);
+        $res = OCD_Tasks::update($task_id, ['status' => $status], 'admin');
+        if (is_wp_error($res)) return $res;
+        return rest_ensure_response($res);
+    }
+
+    /* ---------------- Task attachments ---------------- */
+
+    public static function customer_list_task_attachments($request) {
+        $user = wp_get_current_user();
+        $task_id = (int) $request['id'];
+        $task = OCD_Tasks::get($task_id);
+        if (!$task) return new WP_Error('ocd_no_task', 'Task not found.', ['status' => 404]);
+        if ((int) $task['user_id'] !== (int) $user->ID || ($task['visibility'] ?? '') !== 'client') {
+            return new WP_Error('ocd_forbidden', 'Not your task.', ['status' => 403]);
+        }
+        $rows = OCD_Project_Files::all([
+            'task_id'  => $task_id,
+            'archived' => 0,
+        ]);
+        // Customer view: drop internal-only files even if they were tied to
+        // the task by mistake.
+        $rows = array_values(array_filter($rows, function ($f) {
+            return ($f['visibility'] ?? '') === 'client';
+        }));
+        return rest_ensure_response(array_map(function ($r) { return OCD_Project_Files::present($r, false); }, $rows));
+    }
+
+    public static function admin_list_task_attachments($request) {
+        $task_id = (int) $request['id'];
+        $rows = OCD_Project_Files::all([
+            'task_id' => $task_id,
+        ]);
+        return rest_ensure_response(array_map(function ($r) { return OCD_Project_Files::present($r, true); }, $rows));
+    }
+
+    public static function admin_upload_task_attachment($request) {
+        $admin = wp_get_current_user();
+        $task_id = (int) $request['id'];
+        $task = OCD_Tasks::get($task_id);
+        if (!$task) return new WP_Error('ocd_no_task', 'Task not found.', ['status' => 404]);
+        $owner_id = (int) $task['user_id'];
+        return self::process_file_upload($request, [
+            'owner_user_id'    => $owner_id,
+            'uploader_user_id' => (int) $admin->ID,
+            'uploader_role'    => 'staff',
+            'project_id'       => (int) ($task['project_id'] ?? 0),
+            'task_id'          => $task_id,
+            // Default to client-visible so the customer can see instruction
+            // images. Admin can override with visibility=internal.
+            'visibility'       => sanitize_key((string) $request->get_param('visibility')) ?: 'client',
+            'approval_status'  => 'not_required',
+            'folder'           => 'tasks',
+        ]);
+    }
+
+    private static function param_int_list($raw) {
+        if (is_array($raw)) {
+            return array_values(array_filter(array_map('intval', $raw), function ($n) { return $n > 0; }));
+        }
+        if (is_string($raw) && $raw !== '') {
+            $parts = preg_split('/[\s,]+/', $raw);
+            return array_values(array_filter(array_map('intval', $parts), function ($n) { return $n > 0; }));
+        }
+        return [];
     }
 
     /* ---------------- Admin entitlements + map ---------------- */

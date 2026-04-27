@@ -1,6 +1,13 @@
 /**
  * Oversee Customer Dashboard — frontend controller.
  * Talks only to the WordPress REST namespace `ocd/v1` (server-side API tokens).
+ *
+ * Highlights:
+ *  - Customer + admin task kanbans support drag/drop status changes.
+ *  - Message threads support image attachments uploaded to private storage,
+ *    rendered through the permission-checked /files/<id>/download endpoint.
+ *  - The customer/admin nav was simplified to remove duplicate menus that
+ *    pointed at the same data; old anchors map onto the new tab names.
  */
 (function () {
     'use strict';
@@ -10,14 +17,22 @@
 
     function api(path, opts) {
         opts = opts || {};
+        var headers = {
+            'X-WP-Nonce': cfg.nonce || ''
+        };
+        var body;
+        if (opts.formData) {
+            // Let the browser set the multipart boundary.
+            body = opts.formData;
+        } else if (opts.body !== undefined) {
+            headers['Content-Type'] = 'application/json';
+            body = JSON.stringify(opts.body);
+        }
         return fetch(cfg.restUrl.replace(/\/$/, '') + '/' + path.replace(/^\//, ''), {
             method: opts.method || 'GET',
             credentials: 'same-origin',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-WP-Nonce': cfg.nonce || ''
-            },
-            body: opts.body ? JSON.stringify(opts.body) : undefined
+            headers: headers,
+            body: body
         }).then(function (r) {
             return r.json().then(function (j) { return { ok: r.ok, status: r.status, body: j }; }).catch(function () {
                 return { ok: r.ok, status: r.status, body: null };
@@ -56,6 +71,27 @@
     }
     function setText(node, text) { if (node) node.textContent = text; }
 
+    // Plain-language column ordering for the kanban. Mirrors
+    // OCD_Tasks::status_groups() server-side.
+    var KANBAN_COLUMNS_ADMIN = [
+        { key: 'needs_your_input',   label: 'Needs Client Input' },
+        { key: 'not_started',        label: 'Not Started' },
+        { key: 'in_progress',        label: 'In Progress' },
+        { key: 'waiting_on_oversee', label: 'Waiting on Oversee' },
+        { key: 'blocked',            label: 'Blocked' },
+        { key: 'completed',          label: 'Done' }
+    ];
+    var KANBAN_COLUMNS_CUSTOMER = [
+        { key: 'needs_your_input',   label: 'Needs Your Input' },
+        { key: 'not_started',        label: 'Not Started' },
+        { key: 'in_progress',        label: 'In Progress' },
+        { key: 'waiting_on_oversee', label: 'Waiting on Oversee' },
+        { key: 'completed',          label: 'Done' }
+    ];
+    var CUSTOMER_ALLOWED = ['not_started', 'in_progress', 'completed', 'waiting_on_oversee'];
+
+    /* ---------------- Customer ---------------- */
+
     function setupCustomerTabs(root) {
         var tabs = root.querySelectorAll('[data-ocd-cust-tab]');
         var panels = root.querySelectorAll('[data-ocd-cust-panel]');
@@ -69,9 +105,8 @@
                 if (panel) panel.classList.add('is-active');
                 if (name === 'messages') loadCustomerMessages(root);
                 if (name === 'projects') loadCustomerProjects(root);
-                if (name === 'tasks') loadCustomerTasks(root);
-                if (name === 'store') loadCustomerStore(root);
-                if (name === 'integrations') loadCustomerCRM(root);
+                if (name === 'files')    loadCustomerFiles(root);
+                if (name === 'home')     loadCustomerHomeStore(root);
             });
         });
     }
@@ -85,12 +120,16 @@
         target.innerHTML = projects.map(function (p) {
             var milestones = (p.milestones || []).map(function (m) {
                 var done = m.status === 'completed';
+                var img = m.instruction_image_url
+                    ? '<img class="ocd-instruction-img" loading="lazy" src="' + escapeHtml(m.instruction_image_url) + '" alt="" />'
+                    : '';
                 return '<li class="ocd-milestone ocd-milestone--' + escapeHtml(m.status) + '">' +
                     '<span class="ocd-milestone__dot' + (done ? ' is-done' : '') + '"></span>' +
                     '<div class="ocd-milestone__body">' +
                         '<strong>' + escapeHtml(m.title) + '</strong>' +
                         (m.due_date ? ' <span class="ocd-muted">· due ' + escapeHtml(fmtDate(m.due_date)) + '</span>' : '') +
                         (m.note ? '<p class="ocd-muted">' + escapeHtml(m.note) + '</p>' : '') +
+                        img +
                     '</div>' +
                     '<span class="ocd-milestone__status">' + badge(m.status) + '</span>' +
                 '</li>';
@@ -121,8 +160,6 @@
             '</article>';
         }).join('');
     }
-
-    /* ---------------- Customer ---------------- */
 
     function initCustomer(root) {
         setupCustomerTabs(root);
@@ -181,11 +218,12 @@
                 }
             }
 
-            // Render projects/tasks in their tabs eagerly so stats reflect data already.
             renderProjects(root.querySelector('[data-ocd-list="projects"]'), projects, false);
-            renderCustomerTasks(root.querySelector('[data-ocd-list="tasks"]'), tasks);
+            renderCustomerKanban(root, tasks);
+            renderCustomerFiles(root.querySelector('[data-ocd-list="files"]'), data.files || []);
+            loadCustomerHomeStore(root);
+            loadCustomerCRM(root);
 
-            // Wire cancel actions
             root.querySelectorAll('[data-ocd-cancel]').forEach(function (btn) {
                 btn.addEventListener('click', function () {
                     var id = btn.getAttribute('data-ocd-cancel');
@@ -199,28 +237,12 @@
             });
         });
 
-        // Messages form
-        var sendForm = root.querySelector('[data-ocd-form="send-message"]');
-        if (sendForm) {
-            sendForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                var ta = sendForm.querySelector('textarea[name="message"]');
-                var btn = sendForm.querySelector('button[type="submit"]');
-                if (!ta || !ta.value.trim()) return;
-                btn.disabled = true;
-                api('customer/messages', { method: 'POST', body: { message: ta.value } }).then(function (r) {
-                    btn.disabled = false;
-                    if (r.ok) {
-                        ta.value = '';
-                        loadCustomerMessages(root);
-                    } else {
-                        alert((r.body && r.body.message) || 'Failed to send.');
-                    }
-                });
-            });
-        }
+        wireMessageForm(root, root.querySelector('[data-ocd-form="send-message"]'), {
+            uploadPath: 'customer/messages/attachments',
+            sendPath:   'customer/messages',
+            onSent:     function () { loadCustomerMessages(root); }
+        });
 
-        // CRM form (customer-owned)
         var crmForm = root.querySelector('[data-ocd-form="connect-crm"]');
         if (crmForm) {
             crmForm.addEventListener('submit', function (e) {
@@ -236,6 +258,147 @@
             });
         }
     }
+
+    /* ---------------- Kanban (shared customer/admin) ---------------- */
+
+    function renderCustomerKanban(root, tasks) {
+        var board = root.querySelector('[data-ocd-kanban="customer"]');
+        if (!board) return;
+        if (!tasks || !tasks.length) {
+            board.innerHTML = '<p class="ocd-empty">No tasks assigned. You\'re all caught up!</p>';
+            return;
+        }
+        var grouped = {};
+        KANBAN_COLUMNS_CUSTOMER.forEach(function (c) { grouped[c.key] = []; });
+        (tasks || []).forEach(function (t) {
+            var status = t.status;
+            if (!grouped[status]) status = 'completed';
+            grouped[status].push(t);
+        });
+        board.innerHTML = KANBAN_COLUMNS_CUSTOMER.map(function (col) {
+            return renderKanbanColumn(col, grouped[col.key] || [], 'customer');
+        }).join('');
+        wireKanban(root, board, 'customer');
+    }
+
+    function renderKanbanColumn(col, items, role) {
+        return '<div class="ocd-kanban__col" data-ocd-kanban-col="' + escapeHtml(col.key) + '">' +
+            '<div class="ocd-kanban__col-head">' +
+                '<span>' + escapeHtml(col.label) + '</span>' +
+                '<span class="ocd-pill">' + items.length + '</span>' +
+            '</div>' +
+            '<div class="ocd-kanban__col-body" data-ocd-kanban-drop="' + escapeHtml(col.key) + '">' +
+                (items.length ? items.map(function (t) { return renderKanbanCard(t, role); }).join('') : '<p class="ocd-empty ocd-kanban__col-empty">—</p>') +
+            '</div>' +
+        '</div>';
+    }
+
+    function renderKanbanCard(t, role) {
+        var dueRow = t.due_date ? '<div class="ocd-task-card__row ocd-muted">Due ' + escapeHtml(fmtDate(t.due_date)) + '</div>' : '';
+        var attachments = renderTaskAttachmentStrip(t);
+        var instructionImg = t.instruction_image_url
+            ? '<img class="ocd-task-card__hero" loading="lazy" src="' + escapeHtml(t.instruction_image_url) + '" alt="" />'
+            : '';
+        var actions = '';
+        if (role === 'admin') {
+            actions = '<div class="ocd-actions ocd-actions--inline">' +
+                '<button class="ocd-btn ocd-btn--ghost ocd-btn--xs" data-ocd-task-attach="' + escapeHtml(t.id) + '">Attach image</button>' +
+                '<button class="ocd-btn ocd-btn--danger ocd-btn--xs" data-ocd-task-del="' + escapeHtml(t.id) + '">Delete</button>' +
+            '</div>';
+        }
+        return '<div class="ocd-task-card" draggable="true" data-ocd-task-card="' + escapeHtml(t.id) + '" data-ocd-task-status="' + escapeHtml(t.status) + '">' +
+            instructionImg +
+            '<div class="ocd-task-card__title">' + escapeHtml(t.title) + '</div>' +
+            (t.details ? '<div class="ocd-task-card__details ocd-muted">' + escapeHtml(t.details) + '</div>' : '') +
+            attachments +
+            dueRow +
+            actions +
+        '</div>';
+    }
+
+    function renderTaskAttachmentStrip(t) {
+        var atts = (t && t.attachments) || [];
+        if (!atts.length) return '';
+        return '<div class="ocd-task-card__attachments">' + atts.map(function (a) {
+            if (a.is_image) {
+                return '<a class="ocd-thumb" href="' + escapeHtml(a.download_url) + '" target="_blank" rel="noopener">' +
+                    '<img loading="lazy" src="' + escapeHtml(a.download_url) + '" alt="' + escapeHtml(a.file_name) + '" />' +
+                '</a>';
+            }
+            return '<a class="ocd-file-pill" href="' + escapeHtml(a.download_url) + '" target="_blank" rel="noopener">📎 ' + escapeHtml(a.file_name) + '</a>';
+        }).join('') + '</div>';
+    }
+
+    function wireKanban(root, board, role) {
+        var dragging = null;
+        board.querySelectorAll('[data-ocd-task-card]').forEach(function (card) {
+            card.addEventListener('dragstart', function (ev) {
+                dragging = card;
+                card.classList.add('is-dragging');
+                if (ev.dataTransfer) {
+                    ev.dataTransfer.effectAllowed = 'move';
+                    ev.dataTransfer.setData('text/plain', card.getAttribute('data-ocd-task-card'));
+                }
+            });
+            card.addEventListener('dragend', function () {
+                if (dragging) dragging.classList.remove('is-dragging');
+                dragging = null;
+            });
+        });
+        board.querySelectorAll('[data-ocd-kanban-drop]').forEach(function (col) {
+            col.addEventListener('dragover', function (ev) {
+                ev.preventDefault();
+                col.classList.add('is-drop-target');
+                if (ev.dataTransfer) ev.dataTransfer.dropEffect = 'move';
+            });
+            col.addEventListener('dragleave', function () { col.classList.remove('is-drop-target'); });
+            col.addEventListener('drop', function (ev) {
+                ev.preventDefault();
+                col.classList.remove('is-drop-target');
+                if (!dragging) return;
+                var newStatus = col.getAttribute('data-ocd-kanban-drop');
+                var taskId = dragging.getAttribute('data-ocd-task-card');
+                var oldStatus = dragging.getAttribute('data-ocd-task-status');
+                if (newStatus === oldStatus) return;
+                if (role === 'customer' && CUSTOMER_ALLOWED.indexOf(newStatus) === -1) {
+                    flashError(dragging, 'Customers can\'t set this status.');
+                    return;
+                }
+                col.appendChild(dragging);
+                dragging.classList.add('is-saving');
+                var path = role === 'admin'
+                    ? 'admin/tasks/' + taskId + '/status'
+                    : 'customer/tasks/' + taskId + '/status';
+                api(path, { method: 'POST', body: { status: newStatus } }).then(function (r) {
+                    if (dragging) dragging.classList.remove('is-saving');
+                    if (r.ok) {
+                        if (dragging) dragging.setAttribute('data-ocd-task-status', newStatus);
+                        if (role === 'admin') loadAdminTasks(root);
+                        else loadCustomerTasks(root);
+                    } else {
+                        if (dragging) flashError(dragging, (r.body && r.body.message) || 'Failed to update status.');
+                        if (role === 'admin') loadAdminTasks(root);
+                        else loadCustomerTasks(root);
+                    }
+                });
+            });
+        });
+    }
+
+    function flashError(node, msg) {
+        node.classList.add('is-error');
+        setTimeout(function () { node.classList.remove('is-error'); }, 2000);
+        if (msg) console.warn('[OCD] ' + msg);
+    }
+
+    function loadCustomerTasks(root) {
+        api('customer/dashboard').then(function (r) {
+            if (!r.ok) return;
+            renderCustomerKanban(root, (r.body && r.body.tasks) || []);
+        });
+    }
+
+    /* ---------------- Customer messages ---------------- */
 
     function loadCustomerMessages(root) {
         var thread = root.querySelector('[data-ocd-list="messages"]');
@@ -257,10 +420,25 @@
             thread.innerHTML = msgs.map(function (m) {
                 var cls = m.direction === 'inbound' ? 'ocd-msg ocd-msg--out' : 'ocd-msg ocd-msg--in';
                 var label = m.direction === 'inbound' ? 'You' : 'Oversee';
-                return '<div class="' + cls + '"><div class="ocd-msg__meta"><strong>' + label + '</strong> · ' + escapeHtml(fmtDateTime(m.created_at)) + '</div><div class="ocd-msg__body">' + escapeHtml(m.body).replace(/\n/g, '<br>') + '</div></div>';
+                return '<div class="' + cls + '"><div class="ocd-msg__meta"><strong>' + label + '</strong> · ' + escapeHtml(fmtDateTime(m.created_at)) + '</div>' +
+                    (m.body ? '<div class="ocd-msg__body">' + escapeHtml(m.body).replace(/\n/g, '<br>') + '</div>' : '') +
+                    renderMessageAttachments(m.attachments) +
+                '</div>';
             }).join('');
             thread.scrollTop = thread.scrollHeight;
         });
+    }
+
+    function renderMessageAttachments(attachments) {
+        if (!attachments || !attachments.length) return '';
+        return '<div class="ocd-msg__attachments">' + attachments.map(function (a) {
+            if (a.is_image) {
+                return '<a class="ocd-thumb" href="' + escapeHtml(a.download_url) + '" target="_blank" rel="noopener">' +
+                    '<img loading="lazy" src="' + escapeHtml(a.download_url) + '" alt="' + escapeHtml(a.file_name) + '" />' +
+                '</a>';
+            }
+            return '<a class="ocd-file-pill" href="' + escapeHtml(a.download_url) + '" target="_blank" rel="noopener">📎 ' + escapeHtml(a.file_name) + '</a>';
+        }).join('') + '</div>';
     }
 
     function loadCustomerProjects(root) {
@@ -273,53 +451,39 @@
         });
     }
 
-    function renderCustomerTasks(target, tasks) {
+    function renderCustomerFiles(target, files) {
         if (!target) return;
-        if (!tasks || !tasks.length) {
-            target.innerHTML = '<li class="ocd-empty">No tasks assigned. You\'re all caught up!</li>';
+        if (!files || !files.length) {
+            target.innerHTML = '<p class="ocd-empty">No files yet.</p>';
             return;
         }
-        target.innerHTML = tasks.map(function (t) {
-            var done = t.status === 'completed';
-            return '<li class="ocd-task' + (done ? ' is-done' : '') + '">' +
-                '<label class="ocd-task__check">' +
-                    '<input type="checkbox" data-ocd-task-toggle="' + escapeHtml(t.id) + '" ' + (done ? 'checked' : '') + '>' +
-                    '<span></span>' +
-                '</label>' +
-                '<div class="ocd-task__body">' +
-                    '<strong>' + escapeHtml(t.title) + '</strong>' +
-                    (t.details ? '<p class="ocd-muted">' + escapeHtml(t.details) + '</p>' : '') +
-                    (t.due_date ? '<p class="ocd-muted">Due ' + escapeHtml(fmtDate(t.due_date)) + '</p>' : '') +
-                '</div>' +
-                '<span class="ocd-task__status">' + badge(t.status) + '</span>' +
-            '</li>';
-        }).join('');
-
-        target.querySelectorAll('[data-ocd-task-toggle]').forEach(function (cb) {
-            cb.addEventListener('change', function () {
-                var id = cb.getAttribute('data-ocd-task-toggle');
-                var status = cb.checked ? 'completed' : 'open';
-                cb.disabled = true;
-                api('customer/tasks/' + id, { method: 'POST', body: { status: status } }).then(function (r) {
-                    cb.disabled = false;
-                    if (!r.ok) { cb.checked = !cb.checked; alert((r.body && r.body.message) || 'Failed.'); }
-                    else loadCustomerTasks(cb.closest('.ocd-app'));
-                });
-            });
-        });
+        target.innerHTML = '<div class="ocd-file-grid">' + files.map(function (f) {
+            if (f.is_image) {
+                return '<a class="ocd-file-card ocd-file-card--image" href="' + escapeHtml(f.download_url) + '" target="_blank" rel="noopener">' +
+                    '<img loading="lazy" src="' + escapeHtml(f.download_url) + '" alt="' + escapeHtml(f.file_name) + '" />' +
+                    '<div class="ocd-file-card__meta"><strong>' + escapeHtml(f.file_name) + '</strong>' +
+                    '<span class="ocd-muted">' + escapeHtml(fmtDateTime(f.created_at)) + '</span></div>' +
+                '</a>';
+            }
+            return '<a class="ocd-file-card" href="' + escapeHtml(f.download_url) + '" target="_blank" rel="noopener">' +
+                '<div class="ocd-file-card__icon">📄</div>' +
+                '<div class="ocd-file-card__meta"><strong>' + escapeHtml(f.file_name) + '</strong>' +
+                '<span class="ocd-muted">' + escapeHtml(fmtDateTime(f.created_at)) + '</span></div>' +
+            '</a>';
+        }).join('') + '</div>';
     }
 
-    function loadCustomerTasks(root) {
-        var target = root.querySelector('[data-ocd-list="tasks"]');
+    function loadCustomerFiles(root) {
+        var target = root.querySelector('[data-ocd-list="files"]');
         if (!target) return;
-        target.innerHTML = '<li class="ocd-empty">Loading…</li>';
-        api('customer/tasks').then(function (r) {
-            if (!r.ok) { target.innerHTML = '<li class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</li>'; return; }
-            renderCustomerTasks(target, r.body || []);
+        target.innerHTML = '<p class="ocd-empty">Loading…</p>';
+        api('customer/files').then(function (r) {
+            if (!r.ok) { target.innerHTML = '<p class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</p>'; return; }
+            renderCustomerFiles(target, r.body || []);
         });
     }
 
-    function loadCustomerStore(root) {
+    function loadCustomerHomeStore(root) {
         var target = root.querySelector('[data-ocd-list="store"]');
         var cartBtn = root.querySelector('[data-ocd-store-cart]');
         if (!target) return;
@@ -334,14 +498,11 @@
                 cartBtn.href = data.cart_url;
                 cartBtn.hidden = false;
             }
-            // Empty/setup state — never render fake products. The reason copy is server-supplied.
             if (data.available === false || !data.listings || !data.listings.length) {
                 var reason = data.reason || (data.wc_active === false
                     ? 'WooCommerce products unavailable.'
                     : 'No eligible WooCommerce products mapped yet.');
-                target.innerHTML = '<div class="ocd-store__empty">' +
-                    '<p class="ocd-muted">' + escapeHtml(reason) + '</p>' +
-                '</div>';
+                target.innerHTML = '<div class="ocd-store__empty"><p class="ocd-muted">' + escapeHtml(reason) + '</p></div>';
                 return;
             }
             var listings = data.listings;
@@ -391,9 +552,102 @@
                     api('customer/crm', { method: 'DELETE' }).then(function () { loadCustomerCRM(root); });
                 });
             } else {
-                block.innerHTML = '<p class="ocd-muted">No customer-owned CRM connected. Use the form below to link your own account — separate from Oversee.</p>';
+                block.innerHTML = '<p class="ocd-muted">No customer-owned CRM connected.</p>';
                 if (form) form.hidden = false;
             }
+        });
+    }
+
+    /* ---------------- Message form (shared) ----------------
+     *
+     * Two-step flow: (1) for each selected file, POST to opts.uploadPath as
+     * multipart; the server stores it in private storage and returns its
+     * file id. (2) on submit, POST to opts.sendPath with body+attachment_ids.
+     * If any upload fails, send is blocked until the user removes the
+     * failed preview.
+     */
+    function wireMessageForm(root, form, opts) {
+        if (!form) return;
+        // Clone the form first so any previously-attached handlers (e.g. from
+        // a prior thread open) are dropped — this is what lets the admin
+        // reply form switch between threads cleanly.
+        var fresh = form.cloneNode(true);
+        form.parentNode.replaceChild(fresh, form);
+        form = fresh;
+
+        var fileInput = form.querySelector('input[type="file"]');
+        var previews  = form.querySelector('[data-ocd-msg-previews]');
+        var pending = [];
+
+        function renderPreviews() {
+            if (!previews) return;
+            previews.innerHTML = pending.map(function (p) {
+                var stateLabel = p.status === 'uploading' ? '⏳' : (p.status === 'error' ? '⚠' : '🖼');
+                return '<span class="ocd-msg-preview ocd-msg-preview--' + p.status + '" data-ocd-preview="' + p.tempId + '">' +
+                    stateLabel + ' ' + escapeHtml(p.name) +
+                    ' <button type="button" class="ocd-msg-preview__remove" aria-label="Remove" data-ocd-preview-remove="' + p.tempId + '">×</button>' +
+                '</span>';
+            }).join('');
+            previews.querySelectorAll('[data-ocd-preview-remove]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var id = btn.getAttribute('data-ocd-preview-remove');
+                    pending = pending.filter(function (x) { return x.tempId !== id; });
+                    renderPreviews();
+                });
+            });
+        }
+
+        if (fileInput) {
+            fileInput.addEventListener('change', function () {
+                var files = Array.from(fileInput.files || []);
+                fileInput.value = '';
+                files.forEach(function (file) {
+                    var tempId = 'p_' + Math.random().toString(36).slice(2);
+                    var entry = { tempId: tempId, status: 'uploading', name: file.name };
+                    pending.push(entry);
+                    renderPreviews();
+                    var fd = new FormData();
+                    fd.append('file', file);
+                    api(opts.uploadPath, { method: 'POST', formData: fd }).then(function (r) {
+                        if (r.ok && r.body && r.body.id) {
+                            entry.status = 'done';
+                            entry.fileId = parseInt(r.body.id, 10);
+                        } else {
+                            entry.status = 'error';
+                        }
+                        renderPreviews();
+                    });
+                });
+            });
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var ta = form.querySelector('textarea[name="message"]');
+            var btn = form.querySelector('button[type="submit"]');
+            var msg = ta ? ta.value.trim() : '';
+            if (pending.some(function (p) { return p.status === 'error'; })) {
+                alert('Remove the failed attachment before sending.');
+                return;
+            }
+            if (pending.some(function (p) { return p.status === 'uploading'; })) {
+                alert('Wait for attachments to finish uploading.');
+                return;
+            }
+            var fileIds = pending.filter(function (p) { return p.status === 'done'; }).map(function (p) { return p.fileId; });
+            if (!msg && !fileIds.length) return;
+            if (btn) btn.disabled = true;
+            api(opts.sendPath, { method: 'POST', body: { message: msg, attachment_ids: fileIds } }).then(function (r) {
+                if (btn) btn.disabled = false;
+                if (r.ok) {
+                    if (ta) ta.value = '';
+                    pending = [];
+                    renderPreviews();
+                    if (typeof opts.onSent === 'function') opts.onSent();
+                } else {
+                    alert((r.body && r.body.message) || 'Failed to send.');
+                }
+            });
         });
     }
 
@@ -410,18 +664,14 @@
                 var name = t.getAttribute('data-ocd-tab');
                 var panel = root.querySelector('[data-ocd-panel="' + name + '"]');
                 if (panel) panel.classList.add('is-active');
-                if (name === 'inbox') loadAdminInbox(root);
-                if (name === 'projects') loadAdminProjects(root);
-                if (name === 'tasks') loadAdminTasks(root);
-                if (name === 'entitlements') loadProductMap(root);
-                if (name === 'customers') loadCustomers(root);
-                if (name === 'subscriptions') loadSubscriptions(root);
-                if (name === 'crm') { loadContacts(root); loadOpportunities(root); }
-                if (name === 'sync') loadSync(root);
+                if (name === 'inbox')    loadAdminInbox(root);
+                if (name === 'work')     { loadAdminTasks(root); loadAdminProjects(root); }
+                if (name === 'clients')  { loadCustomers(root); loadContacts(root); loadOpportunities(root); }
+                if (name === 'billing')  { loadSubscriptions(root); loadProductMap(root); }
+                if (name === 'settings') { loadSync(root); loadStoreCategory(root); }
             });
         });
 
-        // Overview
         function loadOverview() {
             var body = root.querySelector('[data-ocd-list="admin-recent-subs"]');
             api('admin/subscriptions?per_page=10').then(function (r) {
@@ -462,13 +712,12 @@
             var userId = prompt('Customer user ID?'); if (!userId) return;
             var title  = prompt('Task title?'); if (!title) return;
             var due    = prompt('Due date (YYYY-MM-DD, optional)?') || '';
-            api('admin/tasks', { method: 'POST', body: { user_id: parseInt(userId, 10), title: title, due_date: due } }).then(function (r) {
+            api('admin/tasks', { method: 'POST', body: { user_id: parseInt(userId, 10), title: title, due_date: due, visibility: 'client', task_type: 'client_required' } }).then(function (r) {
                 if (r.ok) loadAdminTasks(root);
                 else alert((r.body && r.body.message) || 'Failed.');
             });
         });
 
-        // Live product search → click-to-map. Existing WooCommerce products only — never creates products.
         var prodSearch = root.querySelector('[data-ocd-search="wc-products"]');
         var prodResults = root.querySelector('[data-ocd-list="wc-products"]');
         if (prodSearch && prodResults) {
@@ -488,7 +737,6 @@
             });
         }
 
-        // Customers tab
         var custSearch = root.querySelector('[data-ocd-search="customers"]');
         if (custSearch) {
             var ct;
@@ -558,24 +806,20 @@
                 msgs.innerHTML = thread.map(function (m) {
                     var cls = m.direction === 'inbound' ? 'ocd-msg ocd-msg--in' : 'ocd-msg ocd-msg--out';
                     var label = m.direction === 'inbound' ? (d.name || 'Customer') : 'Oversee';
-                    return '<div class="' + cls + '"><div class="ocd-msg__meta"><strong>' + escapeHtml(label) + '</strong> · ' + escapeHtml(fmtDateTime(m.created_at)) + (m.hl_synced ? ' · <span class="ocd-pill ocd-pill--success">CRM ✓</span>' : '') + '</div><div class="ocd-msg__body">' + escapeHtml(m.body).replace(/\n/g, '<br>') + '</div></div>';
+                    return '<div class="' + cls + '"><div class="ocd-msg__meta"><strong>' + escapeHtml(label) + '</strong> · ' + escapeHtml(fmtDateTime(m.created_at)) + (m.hl_synced ? ' · <span class="ocd-pill ocd-pill--success">CRM ✓</span>' : '') + '</div>' +
+                        (m.body ? '<div class="ocd-msg__body">' + escapeHtml(m.body).replace(/\n/g, '<br>') + '</div>' : '') +
+                        renderMessageAttachments(m.attachments) +
+                    '</div>';
                 }).join('');
                 msgs.scrollTop = msgs.scrollHeight;
             }
             if (form) {
                 form.hidden = false;
-                form.onsubmit = function (e) {
-                    e.preventDefault();
-                    var ta = form.querySelector('textarea[name="message"]');
-                    var btn = form.querySelector('button[type="submit"]');
-                    if (!ta || !ta.value.trim()) return;
-                    btn.disabled = true;
-                    api('admin/messages/thread/' + userId, { method: 'POST', body: { message: ta.value } }).then(function (rr) {
-                        btn.disabled = false;
-                        if (rr.ok) { ta.value = ''; openThread(root, userId); }
-                        else alert((rr.body && rr.body.message) || 'Failed.');
-                    });
-                };
+                wireMessageForm(root, form, {
+                    uploadPath: 'admin/messages/thread/' + userId + '/attachments',
+                    sendPath:   'admin/messages/thread/' + userId,
+                    onSent:     function () { openThread(root, userId); }
+                });
             }
         });
     }
@@ -622,39 +866,51 @@
     }
 
     function loadAdminTasks(root) {
-        var body = root.querySelector('[data-ocd-list="admin-tasks"]');
-        if (!body) return;
-        body.innerHTML = '<tr><td colspan="6" class="ocd-empty">Loading…</td></tr>';
-        api('admin/tasks').then(function (r) {
-            if (!r.ok) { body.innerHTML = '<tr><td colspan="6" class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</td></tr>'; return; }
+        var board = root.querySelector('[data-ocd-kanban="admin"]');
+        if (!board) return;
+        board.innerHTML = '<p class="ocd-empty">Loading…</p>';
+        api('admin/tasks?per_page=200').then(function (r) {
+            if (!r.ok) { board.innerHTML = '<p class="ocd-empty">' + escapeHtml((r.body && r.body.message) || 'Failed.') + '</p>'; return; }
             var rows = r.body || [];
-            body.innerHTML = rows.length ? rows.map(function (t) {
-                return '<tr>' +
-                    '<td>#' + escapeHtml(t.id) + '</td>' +
-                    '<td>' + escapeHtml(t.user_id) + '</td>' +
-                    '<td>' + escapeHtml(t.title) + '</td>' +
-                    '<td>' + badge(t.status) + '</td>' +
-                    '<td>' + escapeHtml(fmtDate(t.due_date)) + '</td>' +
-                    '<td>' +
-                        '<button class="ocd-btn ocd-btn--ghost" data-ocd-task-status="' + escapeHtml(t.id) + '">Set status</button> ' +
-                        '<button class="ocd-btn ocd-btn--danger" data-ocd-task-del="' + escapeHtml(t.id) + '">Delete</button>' +
-                    '</td>' +
-                '</tr>';
-            }).join('') : '<tr><td colspan="6" class="ocd-empty">No tasks yet.</td></tr>';
-            body.querySelectorAll('[data-ocd-task-status]').forEach(function (b) {
-                b.addEventListener('click', function () {
-                    var status = prompt('open / in-progress / completed / blocked / cancelled?');
-                    if (!status) return;
-                    api('admin/tasks/' + b.getAttribute('data-ocd-task-status'), { method: 'POST', body: { status: status } }).then(function (rr) {
-                        if (rr.ok) loadAdminTasks(root);
-                        else alert((rr.body && rr.body.message) || 'Failed.');
-                    });
-                });
+            if (!rows.length) {
+                board.innerHTML = '<p class="ocd-empty">No tasks yet.</p>';
+                return;
+            }
+            var grouped = {};
+            KANBAN_COLUMNS_ADMIN.forEach(function (c) { grouped[c.key] = []; });
+            rows.forEach(function (t) {
+                var status = t.status;
+                if (!grouped[status]) status = 'completed';
+                grouped[status].push(t);
             });
-            body.querySelectorAll('[data-ocd-task-del]').forEach(function (b) {
-                b.addEventListener('click', function () {
+            board.innerHTML = KANBAN_COLUMNS_ADMIN.map(function (col) {
+                return renderKanbanColumn(col, grouped[col.key] || [], 'admin');
+            }).join('');
+            wireKanban(root, board, 'admin');
+            board.querySelectorAll('[data-ocd-task-del]').forEach(function (b) {
+                b.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
                     if (!confirm('Delete this task?')) return;
                     api('admin/tasks/' + b.getAttribute('data-ocd-task-del'), { method: 'DELETE' }).then(function () { loadAdminTasks(root); });
+                });
+            });
+            board.querySelectorAll('[data-ocd-task-attach]').forEach(function (b) {
+                b.addEventListener('click', function (ev) {
+                    ev.stopPropagation();
+                    var taskId = b.getAttribute('data-ocd-task-attach');
+                    var input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+                    input.addEventListener('change', function () {
+                        if (!input.files || !input.files[0]) return;
+                        var fd = new FormData();
+                        fd.append('file', input.files[0]);
+                        api('admin/tasks/' + taskId + '/attachments', { method: 'POST', formData: fd }).then(function (r) {
+                            if (r.ok) loadAdminTasks(root);
+                            else alert((r.body && r.body.message) || 'Failed.');
+                        });
+                    });
+                    input.click();
                 });
             });
         });
@@ -684,7 +940,6 @@
                         '</td>' +
                     '</tr>';
                 }).join('');
-                // Hydrate product names/thumbs from WC for already-mapped IDs.
                 keys.forEach(function (pid) { hydrateMappedProduct(root, pid); });
                 body.querySelectorAll('[data-ocd-map-save]').forEach(function (b) {
                     b.addEventListener('click', function () {
@@ -706,13 +961,11 @@
                 });
             }
         });
-        loadStoreCategory(root);
     }
 
     function hydrateMappedProduct(root, productId) {
         api('admin/wc-products?per_page=1&search=' + encodeURIComponent('id:' + productId)).then(function (r) {
             if (!r.ok || !Array.isArray(r.body)) return;
-            // Fallback: just look it up by listing & matching id.
             var match = (r.body || []).filter(function (p) { return parseInt(p.id, 10) === parseInt(productId, 10); })[0];
             if (!match) return;
             var name = root.querySelector('[data-ocd-map-name="' + productId + '"]');

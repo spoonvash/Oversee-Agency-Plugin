@@ -13,6 +13,54 @@ The visual design uses the Oversee brand color discovered in the Hub Child theme
 
 (These supersede any prior teal palette from earlier visual previews.)
 
+## What's in release 1.3.x
+
+This release answers the latest UX feedback round: **send images in messages**, **see images in tasks**, **drag-and-drop tasks across columns**, and **stop showing several menus that go to the same place**.
+
+### Message image attachments
+
+- Customers and admins can attach images to a message before sending it. The flow is two-step: each selected file is POSTed to a private upload endpoint (`/customer/messages/attachments` or `/admin/messages/thread/<user_id>/attachments`), the server stores it in `wp-content/uploads/oversee-private/<owner-id>/...` (the same private storage used for project files — never the WP Media Library), and returns a file id. The message itself is then POSTed with `attachment_ids: [...]`.
+- Stored files reference the customer as `owner_user_id` whether the customer or an admin uploaded them — that way the customer's permission-checked download endpoint (`/files/<id>/download`) is the only path used to render them, even from the admin side.
+- The MIME allow-list is reused from `OCD_Project_Files` (PNG, JPEG, GIF, WebP and more), and the same 25 MB-per-file size cap applies. The frontend's `<input type="file">` is restricted to `image/*` for the message UI; non-image files are rejected by both the client `accept` and the server allow-list.
+- A new `wp_ocd_message_attachments` join table links message rows to file rows. Messages and attachments can each be queried independently; the join is included in `OCD_Messaging::thread_for_user()` and `get_message()` so the frontend gets attachments inline with each message.
+- **HighLevel sync**: when a customer message is forwarded to HighLevel, only the message body is synced. Attachment URLs would require either signed URLs or a public CDN, neither of which we want to expose for private project files. The local thread keeps the attachments; the HighLevel mirror gets the text. This is intentional and documented as a limitation — the alternative (leaking private URLs to the CRM) is worse.
+
+### Task image previews + admin instruction images
+
+- The customer task payload now includes an inline `attachments[]` array of client-visible files attached to that task. `is_image: true` files are rendered as thumbnails directly on the kanban card, and clicking a thumbnail opens the full-size image through the same permission-checked endpoint.
+- Admins have a new "Attach image" button on each task card (admin kanban) that uploads directly to `POST /admin/tasks/<id>/attachments` — the file is stored against the *task's* customer, scoped to that task, and defaults to `client` visibility so the customer can immediately see it.
+- The existing `instruction_image_url` field on tasks/milestones is still validated against the same-host allow-list (`OCD_Instruction_Media::validate_image_url`), so external image URLs are rejected at the storage boundary. Inline attachments use the same private-storage path used everywhere else in the plugin — no path leakage either way.
+
+### Drag/drop kanban for tasks
+
+- The customer's "Your tasks" section on Home is now a column kanban (Needs Your Input, Not Started, In Progress, Waiting on Oversee, Done). Cards are HTML5-draggable; drop targets are the column bodies.
+- The admin Work tab gets a parallel kanban with the broader admin column set (adds Blocked).
+- Drag/drop posts to:
+  - `POST /ocd/v1/customer/tasks/<id>/status` — customer endpoint, validates the calling user owns the task and the new status is in `OCD_Tasks::CUSTOMER_ALLOWED_STATUSES` (`not_started`, `in_progress`, `completed`, `waiting_on_oversee`). Anything else returns a 4xx and the UI snaps the card back. Internal-visibility tasks are forbidden — customers can never see them, let alone move them.
+  - `POST /ocd/v1/admin/tasks/<id>/status` — admin endpoint, accepts any value in `OCD_Tasks::VALID_STATUSES`, including `blocked` and `cancelled`. Permission gated by `manage_woocommerce`/`manage_options`.
+- Both endpoints reuse `OCD_Tasks::update($id, ['status' => …], $context)`, so the existing context-aware permission checks (and the `completed_at` side-effect for `completed`) keep working from the new entry points.
+
+### UX simplification: fewer duplicate menus
+
+The customer dashboard was previously six top-level tabs (Overview / Projects / Tasks / Messages / Store / Integrations). Several pointed at the same data:
+
+- "Overview" duplicated "Projects" and "Tasks" widgets that already had dedicated tabs.
+- "Store" was its own tab even though it's a small surface — and "Integrations" was a top-level tab for what is really a single optional CRM connect form.
+
+The new IA collapses this to **five tabs that are strictly disjoint**:
+
+- **Home** — KPIs + the task kanban (drag/drop), an Add-ons & services card (the old Store), and a "Need help / your CRM" card (the old Integrations).
+- **Projects** — only project timelines.
+- **Messages** — only the thread + composer (with image attachments).
+- **Files** — the private project files, with image previews. Was previously hidden inside the Overview payload.
+- **Billing** — subscriptions + recent orders.
+
+Admin nav was equivalently simplified from nine tabs to **six**:
+
+- **Command** (overview), **Inbox** (messages, with image attachments), **Clients** (customers + CRM contacts + opportunities, previously three tabs), **Work** (tasks kanban + projects, previously two tabs), **Billing** (subscriptions + product → feature map, previously two tabs), **Settings** (sync status + store category).
+
+The deleted tabs are not re-implemented as duplicate menu entries pointing at the same data; they are merged into the new tab they belong to.
+
 ## What's in release 1.2.x
 
 This release implements the marketing-agency-dashboard backlog from the Oversee research brief and the requirements review:
