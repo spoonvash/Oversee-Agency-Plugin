@@ -7,13 +7,15 @@ import { BoardDetail } from "./pages/BoardDetail";
 import {
     // Client (12)
     Tasks, Files, Forms, Contracts, Messages, Schedule, Reports, Reviews,
-    BrowseServices, Subscriptions, Billing,
+    Subscriptions, Billing,
     // Admin (15)
     AdminToday, AdminClients, AdminProjects, AdminTasks, AdminMessages,
     AdminOrders, AdminSubscriptions, AdminServiceTemplates, AdminServiceCatalog, AdminPayments,
     AdminForms, AdminContracts, AdminFiles, AdminAutomations,
     AdminTeam, AdminSettings,
 } from "./pages/SimplePages";
+import { BrowseServices } from "./pages/BrowseServices";
+import { ProductDetail } from "./pages/ProductDetail";
 import { isAdmin } from "./lib/api";
 
 export function App() {
@@ -39,6 +41,7 @@ export function App() {
                         <Route path="/reports" element={<Reports />} />
                         <Route path="/reviews" element={<Reviews />} />
                         <Route path="/services" element={<BrowseServices />} />
+                        <Route path="/services/:id" element={<ProductDetail />} />
                         <Route path="/subscriptions" element={<Subscriptions />} />
                         <Route path="/billing" element={<Billing />} />
                         {/* Project workspace (drill-down) */}

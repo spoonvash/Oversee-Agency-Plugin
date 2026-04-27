@@ -383,6 +383,68 @@ Anything else is rejected. Tasks, milestones, and required-step templates only e
 
 `OCD_Instruction_Media::validate_image_url($url)` accepts only images served from the local site host. Off-host image URLs are rejected to prevent SSRF and tracking pixels.
 
+## Variant strategy — WooCommerce as the source of truth
+
+The dashboard never invents, hardcodes, or seeds products. Everything the SPA renders for the storefront comes from the live `wc_get_products()` API on the same WordPress install. This is enforced by `OCD_Commerce` and surfaced through the `oversee/v1/commerce/*` endpoints.
+
+### How real Oversee products are exposed
+
+| Product on overseeagency.com | WC type | What the dashboard does |
+|---|---|---|
+| Search Engine Optimization (#9732) | `variable-subscription` | Shows three attribute selectors (`On-Page Optimized Pages`, `Blog Posts or Pages`, `Backlinks`); resolves them to a real `variation_id` via `WC_Data_Store::find_matching_product_variation` before adding to cart. |
+| Social Media Mangement (#14250) | `variable-subscription` | Same, with `Static Posts per Month` × `Video Posts per Month`. |
+| WordPress Website Development (#10911) | `variable-subscription` | Single `Select Number of Webpages` selector. |
+| WordPress E-Commerce Website (#10926) | `variable-subscription` | `Webpages` × `Product Pages` two-axis selector. |
+| Managed WordPress Hosting (#10981) and Maintenance (#11698) | `variable-subscription` | `Select Number of Websites`. |
+| Video Commercial Advertisement (#15858) | `variable` | `Length of Commercial` (30 / 60 / 90s). |
+| Tiktok / Snapchat / LinkedIn / Meta / etc. ads | `subscription` | Single add-to-cart button (no variant selector). |
+| Logo Package, Business Card Design, etc. | `simple` | Single add-to-cart button. |
+
+### REST surface
+
+```
+GET  /wp-json/oversee/v1/commerce/products              ← lightweight grid (no variations)
+GET  /wp-json/oversee/v1/commerce/products/<id>          ← detail + full variations[]
+POST /wp-json/oversee/v1/commerce/products/<id>/resolve-variation
+     body: { "attributes": { "length-of-commercial": "60-seconds" } }
+     → { variation_id, price_html, add_to_cart }
+```
+
+The resolver delegates to WC's native variation matcher when available, then falls back to scanning `get_available_variations()`. Missing or invalid attribute combinations return `WP_Error` (`ocd_missing_attribute`, `ocd_invalid_attribute_value`, `ocd_unknown_variation`, `ocd_variation_unavailable`) — the SPA renders an `ActionNotice` instead of silently failing.
+
+### Add-to-cart and checkout behavior
+
+The dashboard never simulates checkout. Every add-to-cart CTA opens the standard WooCommerce cart with the resolved `variation_id` + `attribute_pa_*` keys:
+
+```
+/cart/?add-to-cart=<product_id>&variation_id=<vid>&attribute_pa_length-of-commercial=60-seconds
+```
+
+That hits the WooCommerce `add_to_cart_action` handler the same way the public store does, so cart contents (and the resulting subscription line items) carry the variation, attributes, and any subscription period meta. `OCD_Entitlements::extract_line_item()` then normalises those line items for display in the dashboard.
+
+### Staging test cases
+
+Smoke-test every release on the staging WP install by adding each of the following to cart from the dashboard:
+
+1. **SEO** — pick `On-Page Optimized Pages = 5`, `Blog Posts or Pages = 1`, `Backlinks = 10`. Cart line item must show three "Choose options" pairs, the resolved variation id, and `$ / month` formatting.
+2. **Social Media Management** — pick `Static Posts = 6`, `Video Posts = 1`. Same checks.
+3. **WordPress Website Development** — pick `Number of Webpages = 5`. Subscription duration meta must show `for 6 months`.
+4. **Video Commercial** — pick `60 Seconds`. One-off variable (no subscription suffix).
+5. **Tiktok Ads** — simple subscription, single button add-to-cart.
+
+If any of those produce a generic `?add-to-cart=<parent_id>` URL with no `variation_id`, the dashboard is talking to an out-of-date plugin build — regenerate the SPA bundle and reactivate the plugin.
+
+### Action-state contract for buttons
+
+Every visible CTA in the SPA is one of:
+
+- a working REST call (e.g. add-to-cart, cancel-subscription)
+- a routed `<Link>` that lands on a working SPA page
+- a real WordPress URL (cart, payment-methods, view-subscription)
+- an `<ActionNotice>` / `<SetupRequired>` block that names the missing integration and points the user to where it can be enabled
+
+Surfaces that depend on integrations the agency hasn't connected yet (HighLevel, AI assist, Pusher, Bunny, Resend, file uploads in `not_implemented` state) render the `SetupRequired` component and never show a button that does nothing.
+
 ## Variation / sub-selection strategy
 
 The product → feature map (`ocd_product_feature_map`) is variation-aware:
@@ -465,6 +527,40 @@ PHP syntax check (no WordPress required):
 find oversee-customer-dashboard -name '*.php' -print0 \
   | xargs -0 -n1 php -l
 ```
+
+PHP test harness (shimmed WordPress + WooCommerce — no real install required):
+```bash
+php oversee-customer-dashboard/tests/test-bootstrap.php   # 99 assertions: settings, entitlements, billing, project files, tasks, etc.
+php oversee-customer-dashboard/tests/test-commerce.php    # 23 assertions: real Oversee variable-subscription products, variation resolver, unknown-product/variation rejection, add-to-cart URL shape
+```
+
+SPA build & typecheck:
+```bash
+cd oversee-customer-dashboard/spa
+npm ci
+npm run typecheck
+npm run build
+```
+
+## QA checklist — every button works or names what's missing
+
+Before tagging a release, walk through each surface and confirm every CTA is one of:
+- a working REST call (success and failure paths produce a toast or inline notice);
+- a routed `<Link>` that lands on a working SPA page;
+- a real WordPress URL (cart, checkout, my-account/*); or
+- an `<ActionNotice>` / `<SetupRequired>` block that names the missing integration.
+
+| Surface | What to check |
+|---|---|
+| `/dashboard/` (Home) | Action tiles route to the named page. KPIs render real numbers or `—` if unavailable. |
+| `/dashboard/services` | Grid loads from `oversee/v1/commerce/products`. Search + category chips filter live. Variable products show "Choose options" (not "Add to cart"). Simple products show "Add to cart" linking to `/cart/?add-to-cart=<id>`. |
+| `/dashboard/services/<id>` | Variant selectors render for every variation attribute. Selecting all attributes triggers `resolve-variation` POST and shows the matching price + variation_id. Add-to-cart URL contains `variation_id=` and `attribute_pa_*=`. Invalid combinations surface `ActionNotice`. |
+| `/dashboard/subscriptions` | Lists real WC subscriptions; each row's Manage link opens `/my-account/view-subscription/<id>/`. Empty state offers "Browse services". Disconnected state shows `SetupRequired`. |
+| `/dashboard/billing` | Payment-methods + invoices cards link to native WC. Recent orders list shows real orders. |
+| `/dashboard/tasks`, `/dashboard/files` | Live data from `customer/dashboard`; no hardcoded sample rows. Empty states route to projects. |
+| `/dashboard/forms`, `/dashboard/contracts` | `SetupRequired` block (until form/contract templating ships) — never a dead button. |
+| `/dashboard/messages`, `/schedule`, `/reports`, `/reviews` | `EmbedFrame` shows `SetupRequired` if HighLevel SSO isn't configured. |
+| `/dashboard/admin/*` | Each admin surface either renders live data via `LegacyAdminCard` or names the integration (`SetupRequired`) and links to WP Admin. |
 
 ## Disconnected / setup state
 

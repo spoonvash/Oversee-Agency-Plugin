@@ -189,6 +189,32 @@ class Oversee_REST_API {
             'callback' => [__CLASS__, 'home_payload'],
             'permission_callback' => [__CLASS__, 'logged_in'],
         ]);
+
+        // -------- Commerce (real WooCommerce products only) --------
+        register_rest_route(self::NS, '/commerce/products', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'commerce_products'],
+            'permission_callback' => [__CLASS__, 'logged_in'],
+            'args'                => [
+                'per_page' => ['type' => 'integer', 'required' => false],
+                'search'   => ['type' => 'string', 'required' => false],
+                'category' => ['type' => 'string', 'required' => false],
+                'type'     => ['type' => 'string', 'required' => false],
+            ],
+        ]);
+        register_rest_route(self::NS, '/commerce/products/(?P<id>\d+)', [
+            'methods'             => 'GET',
+            'callback'            => [__CLASS__, 'commerce_product_detail'],
+            'permission_callback' => [__CLASS__, 'logged_in'],
+        ]);
+        register_rest_route(self::NS, '/commerce/products/(?P<id>\d+)/resolve-variation', [
+            'methods'             => 'POST',
+            'callback'            => [__CLASS__, 'commerce_resolve_variation'],
+            'permission_callback' => [__CLASS__, 'logged_in'],
+            'args'                => [
+                'attributes' => ['required' => true],
+            ],
+        ]);
     }
 
     /* ---------------- Permissions ---------------- */
@@ -1051,6 +1077,36 @@ class Oversee_REST_API {
             ];
         }
         return $rows;
+    }
+
+    /* ---------------- Commerce ---------------- */
+
+    public static function commerce_products($req) {
+        $payload = OCD_Commerce::products([
+            'per_page' => (int) ($req->get_param('per_page') ?: 50),
+            'search'   => (string) ($req->get_param('search') ?: ''),
+            'category' => (string) ($req->get_param('category') ?: ''),
+            'type'     => (string) ($req->get_param('type') ?: ''),
+        ]);
+        return rest_ensure_response($payload);
+    }
+
+    public static function commerce_product_detail($req) {
+        $res = OCD_Commerce::product_detail((int) $req['id']);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
+    }
+
+    public static function commerce_resolve_variation($req) {
+        $attrs = $req->get_param('attributes');
+        if (!is_array($attrs)) {
+            return new WP_Error('oversee_invalid_attributes', 'Attributes must be an object.', ['status' => 400]);
+        }
+        $clean = [];
+        foreach ($attrs as $k => $v) {
+            $clean[(string) $k] = is_scalar($v) ? (string) $v : '';
+        }
+        $res = OCD_Commerce::resolve_variation((int) $req['id'], $clean);
+        return is_wp_error($res) ? $res : rest_ensure_response($res);
     }
 
     /* ---------------- Helpers ---------------- */

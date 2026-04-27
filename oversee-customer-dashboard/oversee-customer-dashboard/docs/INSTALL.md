@@ -86,8 +86,10 @@ After activation:
 
 1. Visit `/wp-json/oversee/v1/status` — must return JSON with `version` and `namespace: "oversee/v1"`.
 2. Visit `/wp-json/ocd/v1/status` — must return the legacy namespace status (back-compat).
-3. Visit `/dashboard/` while logged in — must mount the React SPA.
-4. Place a test order — `woocommerce_order_status_completed` should spawn a `project_board` CPT post automatically (visible in the WP admin under Project Boards).
+3. Visit `/wp-json/oversee/v1/commerce/products` (logged in) — must return the live WooCommerce catalog including any variable-subscription products with their attribute lists.
+4. Visit `/dashboard/services` while logged in — should render the WooCommerce catalog grid; clicking a variable product (e.g. SEO, WordPress Website Development) should land on a detail page with attribute selectors that resolve to a real `variation_id`.
+5. Visit `/dashboard/` while logged in — must mount the React SPA.
+6. Place a test order — `woocommerce_order_status_completed` should spawn a `project_board` CPT post automatically (visible in the WP admin under Project Boards). Check the resulting line items: the cart/checkout/billing/subscriptions payloads MUST preserve `variation_id`, the chosen attribute pairs and any subscription interval/duration meta.
 
 ## Build / dev commands (SPA)
 

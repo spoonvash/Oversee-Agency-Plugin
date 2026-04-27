@@ -104,7 +104,12 @@ Per-user dark mode preference is stored in `oversee_dark_mode` user meta and per
 - [ ] Activate child theme over Hub parent — confirm marketing site still renders Hub styles.
 - [ ] Confirm `/dashboard/`, `/login/`, `/register/` use the correct templates.
 - [ ] Confirm logged-out visitor on `/dashboard/foo` redirects to `/login/?redirect_to=/dashboard/foo`.
-- [ ] Run the WP-shim test harness: `php oversee-customer-dashboard/tests/test-bootstrap.php` and `tests/test-boards.php`.
+- [ ] Run the WP-shim test harnesses:
+      `php oversee-customer-dashboard/tests/test-bootstrap.php`,
+      `php oversee-customer-dashboard/tests/test-commerce.php`,
+      `php oversee-customer-dashboard/tests/test-boards.php`.
+- [ ] Hit `/wp-json/oversee/v1/commerce/products` (logged in). Each row must include `id`, `type`, `is_variable`, `attributes`, `subscription`, `add_to_cart`. Variable products must include `requires_selection: true` and an empty `add_to_cart` so the SPA forces a variant pick first.
+- [ ] Open `/dashboard/services` and walk every variable product (SEO, Social Media Mangement, WordPress Website Development / E-Commerce, Hosting, Maintenance, Video Commercial). Each variant pick must call `resolve-variation` and produce a real `variation_id=` query parameter in the resulting cart URL.
 - [ ] Check that `oversee_client`, `oversee_account_manager`, `oversee_specialist`, `oversee_contractor`, `oversee_admin` roles appear in WP admin → Users.
 - [ ] Run a test WooCommerce order and confirm a board is spawned.
 - [ ] Run a renewal cycle and confirm the monthly group resets.

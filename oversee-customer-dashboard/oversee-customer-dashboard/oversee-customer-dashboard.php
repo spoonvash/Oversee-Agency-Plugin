@@ -41,6 +41,7 @@ require_once OCD_INCLUDES . '/class-ocd-tasks.php';
 require_once OCD_INCLUDES . '/class-ocd-entitlements.php';
 require_once OCD_INCLUDES . '/class-ocd-customer-crm.php';
 require_once OCD_INCLUDES . '/class-ocd-store.php';
+require_once OCD_INCLUDES . '/class-ocd-commerce.php';
 require_once OCD_INCLUDES . '/class-ocd-project-files.php';
 require_once OCD_INCLUDES . '/class-ocd-billing.php';
 require_once OCD_INCLUDES . '/class-ocd-pending-actions.php';
