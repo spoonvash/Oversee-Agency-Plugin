@@ -1,6 +1,10 @@
 # Oversee Dashboard SPA
 
-Vite + React 19 + TypeScript + Tailwind v4 SPA mounted at `/dashboard/` by the Oversee Customer Dashboard plugin.
+Vite + React 18 + TypeScript + Tailwind 3 SPA mounted at `/dashboard/` by the
+Oversee Customer Dashboard plugin. Replaces the legacy 1.x/2.0 implementation
+with the current preview/coded design (assembly-style boards, real WooCommerce
+variants, consolidated Account hub, single-close file preview, simplified admin
+boards, zero inline styles).
 
 ## Build
 
@@ -8,33 +12,73 @@ Vite + React 19 + TypeScript + Tailwind v4 SPA mounted at `/dashboard/` by the O
 cd spa
 npm install
 npm run build      # outputs to ../assets/build (manifest + hashed JS/CSS)
-npm run dev        # local Vite dev server (point WP at it via define('OCD_SPA_DEV_URL', 'http://localhost:5173'))
+npm run dev        # local Vite dev server
 npm run typecheck  # tsc --noEmit
 ```
 
-The plugin's `OCD_Assets` class reads `assets/build/.vite/manifest.json` (or the dev URL when set) and emits `<script type="module">` plus the hashed CSS link tag.
+The plugin's `OCD_Assets` class reads `assets/build/.vite/manifest.json` and
+emits `<script type="module">` for the entry chunk plus a `<link>` for the
+emitted CSS.
 
-## Architecture
+## Mount point
 
-- `src/main.tsx` — root bootstrap. Mounts into `#oversee-dashboard-root` with `BrowserRouter basename="/dashboard"`.
-- `src/App.tsx` — top-level layout (sidebar + topbar) and route table.
-- `src/components/Sidebar.tsx` — collapsible nav. Picks client vs admin nav based on `OCD_CONFIG.isAdmin`.
-- `src/components/Topbar.tsx` — breadcrumb, Cmd+K command palette stub, notification bell, dark mode toggle.
-- `src/components/EmbedFrame.tsx` — generic HighLevel iframe wrapper that handles the unconfigured/no-contact empty states.
-- `src/pages/*.tsx` — route bodies. `BoardDetail.tsx` renders the table + kanban views.
-- `src/lib/api.ts` — REST wrapper using `OCD_CONFIG.restUrl` + nonce.
-- `src/lib/theme.ts` — dark mode hook (server-persisted via `oversee_dark_mode` user meta).
-- `src/lib/nav.ts` — sidebar navigation per the user's spec (12 client / 13 admin items).
+`src/main.tsx` mounts into either `#oversee-dashboard-root` (the WordPress
+mount node, used by the `oversee-hub-child` `page-dashboard.php` template and
+by the plugin's `[oversee_customer_dashboard]` / `[oversee_admin_dashboard]`
+shortcodes) or, in standalone Vite dev mode, falls back to `#root`.
 
-## Brand language
+## Routing
 
-Light mode — white/near-white surfaces, orange accent (#ff8201).
-Dark mode — black/zinc surfaces, orange accent.
-Orange is reserved for primary buttons, the active nav item, focus rings, and links. Surfaces are neutral so the orange reads as deliberate.
+The SPA uses **wouter hash routing** so it can live under any WordPress page
+permalink (e.g. `/dashboard/`) without a server-side rewrite for every sub-route.
+Top-level routes:
 
-## Limitations / next steps
+```
+#/                  Preview selector (offers /login, /client, /admin)
+#/login             Login screen (handoff to WP login on submit)
+#/client[...]       Customer surface (Home, Work, Files, Commerce, Account, Onboarding, Updates)
+#/admin[...]        Staff surface (Today, Boards, Clients, Files & Approvals,
+                    Commerce handoff, System, Updates)
+```
 
-- The Cmd+K command palette is a UI shell; wire it to a `/search` endpoint when the back-end gains one.
-- The TipTap editor and Pusher realtime client are scaffolded as dependencies but the integration is left to follow-up commits to keep this PR reviewable.
-- Recharts is bundled but the only chart used today is a stub on Performance Reports (the embed handles real charts).
-- The drag/drop reorder REST endpoint is implemented (`/items/<id>/move`) but the Kanban view doesn't yet wire `@dnd-kit` to it — it renders read-only lanes.
+Authoritative source-of-truth principles enforced in the SPA:
+
+- WooCommerce products / variants / images surface in `pages/client/commerce.tsx`.
+- The Account hub (`pages/client/account.tsx`) consolidates subscriptions,
+  orders, payment methods, addresses, and profile — deep-linked to the real
+  WooCommerce my-account / cart / checkout endpoints.
+- `components/client-comms.tsx` is the Admin Clients comms composer
+  (HighLevel client-facing, Slack internal, email draft handoff). No real
+  messages are sent in tests; everything is a draft/handoff payload.
+- `components/document-preview.tsx` exposes a single close control.
+- Admin board pages (`pages/admin/boards.tsx`) use the simplified IA and
+  approval-clarity terminology from `lib/approval-clarity.ts`.
+
+## WordPress runtime config
+
+`OCD_Assets::enqueue_frontend()` injects two globals (identical payloads,
+both names supported):
+
+```ts
+window.OCD_CONFIG = window.OVERSEE_CONFIG = {
+  restUrl, overseeRestUrl, wcRestUrl, nonce, isAdmin, isLoggedIn,
+  siteUrl, accountUrl, cartUrl, checkoutUrl, logoutUrl, currentUser
+};
+```
+
+`lib/queryClient.ts` and the commerce/account flows read these for the real
+WooCommerce deep links instead of hardcoding URLs.
+
+## Inline-style policy
+
+There must be **zero** inline `style={{ … }}` props in `src/`. CI / review
+should grep for `style={{` and fail on any match. Token customisation
+goes through CSS custom properties in `src/index.css` and Tailwind theme
+extensions (`tailwind.config.ts`).
+
+## Demo data
+
+`src/lib/demo-store.tsx` is an in-memory store the SPA falls back to when
+WordPress REST endpoints aren't yet wired for a given screen. It is **not**
+used for cart/checkout/payment/subscription flows — those always defer to
+WooCommerce native surfaces via the URLs in `OCD_CONFIG`.

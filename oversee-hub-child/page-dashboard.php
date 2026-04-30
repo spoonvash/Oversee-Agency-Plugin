@@ -20,6 +20,14 @@ if (!is_user_logged_in()) {
 
 nocache_headers();
 
+// Make sure the React SPA assets the customer dashboard plugin built into
+// /assets/build are enqueued on this template even when the page content is
+// empty. The plugin's own shortcodes do this automatically; here we have to
+// call it explicitly because the template renders the bare mount node.
+if (class_exists('OCD_Assets')) {
+    OCD_Assets::enqueue_frontend();
+}
+
 $dark_mode = get_user_meta(get_current_user_id(), 'oversee_dark_mode', true) === '1';
 ?>
 <!doctype html>
