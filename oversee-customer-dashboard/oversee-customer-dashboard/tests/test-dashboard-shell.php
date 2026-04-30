@@ -169,11 +169,44 @@ assert_true(get_post_meta(7, '_wp_page_template', true) === OCD_Page_Template::T
 assert_true(get_option(OCD_Page_Template::ASSIGNED_FLAG) !== false,
     'force_assign_on_activation records the one-shot flag');
 
-// maybe_assign_template should NOT clobber an editor's manual selection.
-$GLOBALS['__ocd_options'] = [];
-$GLOBALS['__ocd_post_meta'] = [7 => ['_wp_page_template' => 'custom-template.php']];
+// First run of maybe_assign_template (v2 flag missing) MUST force-assign the
+// full-bleed template even when the page already had a non-default selection.
+// This is the production recovery path: PR#5 left /dashboard/ stuck on the
+// theme/Elementor template, and PR#6 needs to force the correction once.
+$GLOBALS['__ocd_options']   = [];
+$GLOBALS['__ocd_post_meta'] = [7 => ['_wp_page_template' => 'elementor_canvas']];
 OCD_Page_Template::maybe_assign_template();
-assert_true(get_post_meta(7, '_wp_page_template', true) === 'custom-template.php',
-    'maybe_assign_template respects existing non-default template selection');
+assert_true(get_post_meta(7, '_wp_page_template', true) === OCD_Page_Template::TEMPLATE_FILE,
+    'maybe_assign_template (v2) force-assigns full-bleed even over an existing non-default template');
+assert_true(get_option(OCD_Page_Template::ASSIGNED_FLAG) !== false,
+    'maybe_assign_template records the v2 one-shot flag');
+
+// Subsequent runs (flag already set) are a no-op — editor changes stick.
+$GLOBALS['__ocd_post_meta'] = [7 => ['_wp_page_template' => 'editor-pick.php']];
+OCD_Page_Template::maybe_assign_template();
+assert_true(get_post_meta(7, '_wp_page_template', true) === 'editor-pick.php',
+    'maybe_assign_template is a no-op once the v2 flag is recorded');
+
+// Mount nodes are present in both customer and admin templates so the SPA can
+// hydrate. Regression guard for the original PR#6 incident.
+$customer_tpl = file_get_contents(OCD_TEMPLATES . '/customer-dashboard.php');
+assert_true(strpos($customer_tpl, 'id="oversee-dashboard-root"') !== false,
+    'customer template still renders the SPA mount node');
+$admin_tpl = file_get_contents(OCD_TEMPLATES . '/admin-dashboard.php');
+assert_true(strpos($admin_tpl, 'id="oversee-dashboard-root"') !== false,
+    'admin template still renders the SPA mount node');
+
+// The full-bleed template must call wp_head() and wp_footer() so enqueued
+// assets emit. It must NOT call get_header() / get_footer() — that would pull
+// in the Hub child theme chrome, defeating the point of the template.
+$fullbleed_tpl = file_get_contents(OCD_TEMPLATES . '/page-oversee-dashboard.php');
+assert_true(strpos($fullbleed_tpl, 'wp_head()') !== false,
+    'full-bleed template calls wp_head()');
+assert_true(strpos($fullbleed_tpl, 'wp_footer()') !== false,
+    'full-bleed template calls wp_footer()');
+assert_true(strpos($fullbleed_tpl, 'get_header(') === false,
+    'full-bleed template does not pull in theme header');
+assert_true(strpos($fullbleed_tpl, 'get_footer(') === false,
+    'full-bleed template does not pull in theme footer');
 
 echo "\n$assertions assertions passed.\n";

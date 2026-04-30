@@ -23,8 +23,58 @@ class OCD_Assets {
     public static function init() {
         add_action('wp_enqueue_scripts', [__CLASS__, 'register']);
         add_action('admin_enqueue_scripts', [__CLASS__, 'register_admin']);
+        // Pre-enqueue the SPA bundle on dashboard pages BEFORE wp_head fires, so
+        // that page builders / cache plugins / themes that render shortcodes in
+        // late phases still get the script tag and inline config in <head>.
+        add_action('wp', [__CLASS__, 'maybe_preenqueue_for_dashboard'], 5);
         // Vite emits <script type="module">. Tell WordPress to do the same.
         add_filter('script_loader_tag', [__CLASS__, 'add_module_attribute'], 10, 3);
+    }
+
+    /**
+     * If the current request is the Oversee dashboard page, pre-enqueue the SPA
+     * bundle and inline config before wp_head runs. The shortcode call in the
+     * page body still calls enqueue_frontend(), but that path is too late for
+     * Hub / Elementor renders that flush wp_head() before resolving content.
+     */
+    public static function maybe_preenqueue_for_dashboard() {
+        if (is_admin() || self::$enqueued) {
+            return;
+        }
+        if (!self::current_request_is_dashboard()) {
+            return;
+        }
+        self::enqueue_frontend();
+    }
+
+    /**
+     * Heuristic: is this request the Oversee dashboard page? We accept either
+     * the page with slug "dashboard", a page whose post_content contains the
+     * [oversee_customer_dashboard] / [oversee_admin_dashboard] shortcode, or a
+     * page assigned the full-bleed template.
+     */
+    private static function current_request_is_dashboard() {
+        if (!function_exists('is_singular') || !is_singular()) {
+            return false;
+        }
+        $post = get_queried_object();
+        if (!$post || empty($post->ID)) {
+            return false;
+        }
+        if (!empty($post->post_name) && $post->post_name === 'dashboard') {
+            return true;
+        }
+        $template = get_post_meta($post->ID, '_wp_page_template', true);
+        if ($template === 'page-oversee-dashboard.php') {
+            return true;
+        }
+        if (!empty($post->post_content) && (
+            has_shortcode($post->post_content, 'oversee_customer_dashboard') ||
+            has_shortcode($post->post_content, 'oversee_admin_dashboard')
+        )) {
+            return true;
+        }
+        return false;
     }
 
     public static function register() {
