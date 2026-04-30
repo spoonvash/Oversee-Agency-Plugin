@@ -18,7 +18,6 @@ if (!defined('ABSPATH')) {
 class OCD_Assets {
 
     private static $enqueued = false;
-    private static $config_printed_inline = false;
 
     public static function init() {
         add_action('wp_enqueue_scripts', [__CLASS__, 'register']);
@@ -57,118 +56,54 @@ class OCD_Assets {
             wp_enqueue_style('ocd-frontend');
         }
 
-        // Always emit window.OCD_CONFIG / OVERSEE_CONFIG to wp_head, even if the
-        // SPA bundle is missing or the manifest hasn't been built yet. The SPA
-        // reads these to decide whether to show the role picker, login CTA, or
-        // boot directly into the customer / admin surface.
-        self::print_config_inline_once();
-
         $manifest = self::load_manifest();
-        $script_handle = 'oversee-spa';
+        if (!$manifest) {
+            return; // No build yet — config is still localized below for any inline use.
+        }
 
-        if ($manifest) {
-            // Find the entry chunk (matches src/main.tsx).
-            $entry_key = null;
-            foreach ($manifest as $key => $chunk) {
-                if (!empty($chunk['isEntry'])) {
-                    $entry_key = $key;
-                    break;
-                }
-            }
-            if ($entry_key) {
-                $entry = $manifest[$entry_key];
-
-                // CSS imports from the entry chunk.
-                if (!empty($entry['css']) && is_array($entry['css'])) {
-                    foreach ($entry['css'] as $i => $css_path) {
-                        $handle = 'oversee-spa-css-' . $i;
-                        wp_enqueue_style(
-                            $handle,
-                            OCD_URL . 'assets/build/' . ltrim($css_path, '/'),
-                            [],
-                            OCD_VERSION
-                        );
-                    }
-                }
-
-                // Register first, then localize, then enqueue. This ordering
-                // guarantees wp_localize_script attaches the data even when
-                // other plugins reorder enqueues during wp_footer.
-                wp_register_script(
-                    $script_handle,
-                    OCD_URL . 'assets/build/' . ltrim($entry['file'], '/'),
-                    [],
-                    OCD_VERSION,
-                    true
-                );
-
-                $config = self::runtime_config();
-                wp_localize_script($script_handle, 'OCD_CONFIG', $config);
-                wp_localize_script($script_handle, 'OVERSEE_CONFIG', $config);
-
-                wp_enqueue_script($script_handle);
+        // Find the entry chunk (matches src/main.tsx).
+        $entry_key = null;
+        foreach ($manifest as $key => $chunk) {
+            if (!empty($chunk['isEntry'])) {
+                $entry_key = $key;
+                break;
             }
         }
-    }
-
-    /**
-     * Print window.OCD_CONFIG / OVERSEE_CONFIG inline to wp_head as a belt-and-
-     * suspenders measure. wp_localize_script can be defeated by aggressive
-     * cache plugins or missing-script edge cases; the inline copy guarantees
-     * the SPA always finds runtime config no matter what.
-     */
-    private static function print_config_inline_once() {
-        if (self::$config_printed_inline) return;
-        self::$config_printed_inline = true;
-        add_action('wp_head', [__CLASS__, 'print_inline_config'], 1);
-        // Also print to the footer in case wp_head already fired before the
-        // shortcode renders (some themes do template_redirect-stage rendering).
-        add_action('wp_footer', [__CLASS__, 'print_inline_config'], 1);
-    }
-
-    public static function print_inline_config() {
-        static $emitted = false;
-        if ($emitted) return;
-        $emitted = true;
-        $config = self::runtime_config();
-        $json = wp_json_encode($config);
-        if (!is_string($json)) {
+        if (!$entry_key) {
             return;
         }
-        echo "<script id=\"oversee-ocd-config\">"
-            . "window.OCD_CONFIG=window.OCD_CONFIG||" . $json . ";"
-            . "window.OVERSEE_CONFIG=window.OVERSEE_CONFIG||window.OCD_CONFIG;"
-            . "</script>\n";
-    }
+        $entry = $manifest[$entry_key];
 
-    /**
-     * Derive the effective SPA role from current capabilities.
-     *
-     * Staff users (manage_woocommerce / manage_options) get "admin"; logged-in
-     * non-staff get "customer"; logged-out users get "guest". The SPA boot
-     * shim consults this to pick between client portal, admin console, and
-     * the passwordless login CTA without relying on the role picker.
-     */
-    public static function derive_role() {
-        if (!is_user_logged_in()) {
-            return 'guest';
-        }
-        if (current_user_can('manage_woocommerce') || current_user_can('manage_options')) {
-            return 'admin';
-        }
-        return 'customer';
-    }
-
-    public static function runtime_config() {
-        $current = wp_get_current_user();
-        $dashboard_url = home_url('/dashboard/');
-        $page = get_page_by_path('dashboard');
-        if ($page && $page->ID) {
-            $permalink = get_permalink($page->ID);
-            if ($permalink) {
-                $dashboard_url = $permalink;
+        // CSS imports from the entry chunk.
+        if (!empty($entry['css']) && is_array($entry['css'])) {
+            foreach ($entry['css'] as $i => $css_path) {
+                $handle = 'oversee-spa-css-' . $i;
+                wp_enqueue_style(
+                    $handle,
+                    OCD_URL . 'assets/build/' . ltrim($css_path, '/'),
+                    [],
+                    OCD_VERSION
+                );
             }
         }
+
+        // Main JS module.
+        $script_handle = 'oversee-spa';
+        wp_enqueue_script(
+            $script_handle,
+            OCD_URL . 'assets/build/' . ltrim($entry['file'], '/'),
+            [],
+            OCD_VERSION,
+            true
+        );
+
+        // Localize the WordPress runtime config the SPA reads.
+        wp_localize_script($script_handle, 'OCD_CONFIG', self::runtime_config());
+        wp_localize_script($script_handle, 'OVERSEE_CONFIG', self::runtime_config());
+    }
+
+    private static function runtime_config() {
+        $current = wp_get_current_user();
         return [
             'restUrl'      => esc_url_raw(rest_url(OCD_REST_API::NAMESPACE . '/')),
             'overseeRestUrl' => class_exists('Oversee_REST_API')
@@ -178,10 +113,6 @@ class OCD_Assets {
             'nonce'        => wp_create_nonce('wp_rest'),
             'isAdmin'      => current_user_can('manage_woocommerce') || current_user_can('manage_options'),
             'isLoggedIn'   => is_user_logged_in(),
-            'role'         => self::derive_role(),
-            'pluginUrl'    => esc_url_raw(OCD_URL),
-            'dashboardUrl' => esc_url_raw($dashboard_url),
-            'loginUrl'     => esc_url_raw(wp_login_url($dashboard_url)),
             'siteUrl'      => esc_url_raw(home_url('/')),
             'accountUrl'   => esc_url_raw(function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/')),
             'cartUrl'      => esc_url_raw(function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/')),
