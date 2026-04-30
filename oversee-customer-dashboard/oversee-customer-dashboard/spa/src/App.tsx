@@ -16,6 +16,13 @@ import NotFound from "@/pages/not-found";
 function AppRouter() {
   return (
     <Switch>
+      {/* The marketing role picker is no longer the production default. It
+          remains accessible at /#/welcome (or via ?preview=1 / ?welcome=1)
+          so the design team can still demo the cards. */}
+      <Route path="/welcome" component={PreviewSelector} />
+      {/* Legacy: previously / mounted the role picker. Keep it pointing at
+          the welcome page so old bookmarks resolve, but main.tsx will
+          replace this hash before React boots in production. */}
       <Route path="/" component={PreviewSelector} />
       <Route path="/login" component={LoginPage} />
       <Route path="/client" component={ClientDashboard} />
