@@ -216,18 +216,8 @@ define('OCD_WEBHOOK_SECRET', 'change-me');
 1. Install and activate **WooCommerce** and **WooCommerce Subscriptions** (already present on the Oversee Agency site).
 2. Generate a REST API key under WooCommerce → Settings → Advanced → REST API with **Read/Write** permissions for an admin user. Use these as `WOOCOMMERCE_CONSUMER_KEY` / `WOOCOMMERCE_CONSUMER_SECRET`.
 3. Install and activate this plugin (`oversee-customer-dashboard`).
-4. Place `[oversee_customer_dashboard]` on a logged-in customer page (e.g. `/dashboard/`). The plugin auto-assigns the **Oversee Dashboard (full-bleed)** page template to the page with slug `dashboard` on activation, so the Hub child theme's header/footer/nav doesn't wrap the SPA. To opt out, switch the template back to **Default** under *Page Attributes → Template*. To re-apply manually on an existing page, pick **Oversee Dashboard (full-bleed)** in the same dropdown.
-5. Place `[oversee_admin_dashboard]` on an internal staff page (visible only to roles with `manage_woocommerce`). The customer shortcode also boots staff users into the admin console automatically based on capabilities, so a single `/dashboard/` page handles both surfaces; the dedicated staff shortcode is for pages that should ONLY render the admin UI.
-
-### Default route behavior
-
-`window.OCD_CONFIG` is injected to `wp_head` via `OCD_Assets`. The SPA's `main.tsx` reads it before React mounts and replaces the URL hash:
-
-- Logged out → `/#/login` (passwordless login CTA)
-- Logged-in customer → `/#/client`
-- Logged-in staff (`manage_woocommerce` / `manage_options`) → `/#/admin`
-
-The marketing role-picker page is no longer the production default. It remains accessible at `/#/welcome` (or by appending `?preview=1` to the dashboard URL) for design-team demos. Deep links like `/#/admin/boards/foo` are preserved on refresh as long as the user has the matching role.
+4. Place `[oversee_customer_dashboard]` on a logged-in customer page (e.g. `/dashboard/`).
+5. Place `[oversee_admin_dashboard]` on an internal staff page (visible only to roles with `manage_woocommerce`).
 
 ## HighLevel setup (agency CRM)
 

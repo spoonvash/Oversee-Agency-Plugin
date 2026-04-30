@@ -28,16 +28,10 @@ class OCD_Shortcodes {
     public static function render_customer_dashboard($atts = []) {
         try {
             OCD_Assets::enqueue_frontend();
-            // Mount role is derived from capabilities, NOT from the shortcode
-            // name. A staff user landing on /dashboard/ should boot into the
-            // admin console; the customer surface is reserved for non-staff.
-            // The dedicated [oversee_admin_dashboard] shortcode remains for
-            // pages that should only ever render the staff UI.
-            $role = OCD_Assets::derive_role();
             ob_start();
+            // The template renders ONLY customer-facing panels. No admin/CRM operational nav.
             include OCD_TEMPLATES . '/customer-dashboard.php';
-            $html = ob_get_clean();
-            return self::inject_mount_role($html, $role);
+            return ob_get_clean();
         } catch (\Throwable $e) {
             if (ob_get_level() > 0) {
                 ob_end_clean();
@@ -45,27 +39,6 @@ class OCD_Shortcodes {
             self::log_render_error('customer', $e);
             return self::render_error_notice();
         }
-    }
-
-    /**
-     * Replace the hard-coded data-ocd-role on the SPA mount node with the
-     * capability-derived role. The template still ships a default value of
-     * "customer" for safety in case this method is bypassed.
-     */
-    private static function inject_mount_role($html, $role) {
-        if (!is_string($html) || $html === '') {
-            return $html;
-        }
-        $allowed = ['guest', 'customer', 'admin'];
-        if (!in_array($role, $allowed, true)) {
-            $role = 'customer';
-        }
-        return preg_replace(
-            '/(data-ocd-role=)"[^"]*"/',
-            '$1"' . esc_attr($role) . '"',
-            $html,
-            1
-        );
     }
 
     public static function render_admin_dashboard($atts = []) {
