@@ -20,12 +20,10 @@ export default function PreviewSelector() {
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <OverseeLogo />
           <div className="flex items-center gap-3">
-            <Badge
-              variant="outline"
-              className="border-border bg-background text-[11px] font-medium uppercase tracking-[0.16em] text-muted-foreground"
-            >
-              Preview · v5
-            </Badge>
+            {/* Preview · v5 badge intentionally removed. This page now only
+                renders at /#/welcome (or behind ?preview=1) and must not look
+                like a production marketing page when a stakeholder lands on
+                it directly. */}
             <ThemeToggle />
           </div>
         </div>

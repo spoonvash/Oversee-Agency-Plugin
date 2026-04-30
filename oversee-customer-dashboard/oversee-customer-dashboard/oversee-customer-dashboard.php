@@ -53,6 +53,7 @@ require_once OCD_INCLUDES . '/class-ocd-boards-rest.php';
 require_once OCD_INCLUDES . '/class-ocd-shortcodes.php';
 require_once OCD_INCLUDES . '/class-ocd-admin.php';
 require_once OCD_INCLUDES . '/class-ocd-assets.php';
+require_once OCD_INCLUDES . '/class-ocd-page-template.php';
 // Spec-aligned (2.x) layer — additive, lives alongside legacy ocd_* code.
 require_once OCD_INCLUDES . '/class-oversee-schema.php';
 require_once OCD_INCLUDES . '/class-oversee-cpt.php';
@@ -91,6 +92,7 @@ final class Oversee_Customer_Dashboard {
         OCD_Shortcodes::init();
         OCD_Admin::init();
         OCD_Assets::init();
+        OCD_Page_Template::init();
         if (class_exists('OCD_WooCommerce_Hooks')) {
             OCD_WooCommerce_Hooks::init();
         }
@@ -117,6 +119,9 @@ final class Oversee_Customer_Dashboard {
         foreach (['customer', 'subscriber', 'administrator', 'shop_manager'] as $role) {
             OCD_WooCommerce_Hooks::add_capability_to_role($role);
         }
+        // Auto-assign the full-bleed template to the /dashboard page so the
+        // child theme's header/footer/nav doesn't wrap the SPA shell.
+        OCD_Page_Template::force_assign_on_activation();
         flush_rewrite_rules();
     }
 }
