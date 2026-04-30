@@ -24,6 +24,41 @@ class OCD_Assets {
         add_action('admin_enqueue_scripts', [__CLASS__, 'register_admin']);
         // Vite emits <script type="module">. Tell WordPress to do the same.
         add_filter('script_loader_tag', [__CLASS__, 'add_module_attribute'], 10, 3);
+        // Early enqueue: when the current request is the dashboard page (or any
+        // page containing one of our shortcodes), make sure the SPA bundle and
+        // OCD_CONFIG land in <head>. Page builders like Elementor/Hub may render
+        // shortcodes after wp_head has already printed, which would otherwise
+        // ship the page with no asset references at all.
+        add_action('wp_enqueue_scripts', [__CLASS__, 'maybe_enqueue_for_dashboard'], 1);
+    }
+
+    /**
+     * If the current page is the dashboard (slug `dashboard`) or its content
+     * contains one of our shortcodes, enqueue the SPA early so the JS/CSS and
+     * localized OCD_CONFIG are present before wp_head closes — even when a
+     * page builder defers shortcode rendering until after wp_head.
+     */
+    public static function maybe_enqueue_for_dashboard() {
+        if (is_admin()) return;
+        if (!self::current_request_is_dashboard()) return;
+        self::enqueue_frontend();
+    }
+
+    private static function current_request_is_dashboard() {
+        // Match the canonical /dashboard/ permalink.
+        if (function_exists('is_page') && is_page('dashboard')) {
+            return true;
+        }
+        // Fallback: scan the current post's content for either shortcode. This
+        // also catches pages that embed the shortcode under a different slug.
+        $post = function_exists('get_post') ? get_post() : null;
+        if ($post && isset($post->post_content) && is_string($post->post_content)) {
+            if (function_exists('has_shortcode')) {
+                if (has_shortcode($post->post_content, 'oversee_customer_dashboard')) return true;
+                if (has_shortcode($post->post_content, 'oversee_admin_dashboard'))    return true;
+            }
+        }
+        return false;
     }
 
     public static function register() {
@@ -104,25 +139,31 @@ class OCD_Assets {
 
     private static function runtime_config() {
         $current = wp_get_current_user();
+        $is_admin_user = current_user_can('manage_woocommerce') || current_user_can('manage_options');
+        $role = $is_admin_user ? 'admin' : ($current && $current->ID ? 'customer' : 'guest');
         return [
-            'restUrl'      => esc_url_raw(rest_url(OCD_REST_API::NAMESPACE . '/')),
+            'restUrl'        => esc_url_raw(rest_url(OCD_REST_API::NAMESPACE . '/')),
             'overseeRestUrl' => class_exists('Oversee_REST_API')
                 ? esc_url_raw(rest_url(Oversee_REST_API::NAMESPACE . '/'))
                 : esc_url_raw(rest_url('oversee/v1/')),
-            'wcRestUrl'    => esc_url_raw(rest_url('wc/v3/')),
-            'nonce'        => wp_create_nonce('wp_rest'),
-            'isAdmin'      => current_user_can('manage_woocommerce') || current_user_can('manage_options'),
-            'isLoggedIn'   => is_user_logged_in(),
-            'siteUrl'      => esc_url_raw(home_url('/')),
-            'accountUrl'   => esc_url_raw(function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/')),
-            'cartUrl'      => esc_url_raw(function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/')),
-            'checkoutUrl'  => esc_url_raw(function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/checkout/')),
-            'logoutUrl'    => esc_url_raw(wp_logout_url(home_url('/'))),
-            'currentUser'  => $current && $current->ID ? [
-                'id'           => (int) $current->ID,
-                'displayName'  => $current->display_name,
-                'email'        => $current->user_email,
-                'roles'        => array_values($current->roles),
+            'wcRestUrl'      => esc_url_raw(rest_url('wc/v3/')),
+            'nonce'          => wp_create_nonce('wp_rest'),
+            'isAdmin'        => $is_admin_user,
+            'isLoggedIn'     => is_user_logged_in(),
+            'role'           => $role,
+            'mountRole'      => $role,
+            'siteUrl'        => esc_url_raw(home_url('/')),
+            'dashboardUrl'   => esc_url_raw(home_url('/dashboard/')),
+            'pluginUrl'      => esc_url_raw(OCD_URL),
+            'accountUrl'     => esc_url_raw(function_exists('wc_get_page_permalink') ? wc_get_page_permalink('myaccount') : home_url('/my-account/')),
+            'cartUrl'        => esc_url_raw(function_exists('wc_get_cart_url') ? wc_get_cart_url() : home_url('/cart/')),
+            'checkoutUrl'    => esc_url_raw(function_exists('wc_get_checkout_url') ? wc_get_checkout_url() : home_url('/checkout/')),
+            'logoutUrl'      => esc_url_raw(wp_logout_url(home_url('/'))),
+            'currentUser'    => $current && $current->ID ? [
+                'id'          => (int) $current->ID,
+                'displayName' => $current->display_name,
+                'email'       => $current->user_email,
+                'roles'       => array_values($current->roles),
             ] : null,
         ];
     }
