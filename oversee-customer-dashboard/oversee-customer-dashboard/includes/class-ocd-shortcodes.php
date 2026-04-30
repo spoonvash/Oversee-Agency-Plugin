@@ -26,22 +26,56 @@ class OCD_Shortcodes {
     }
 
     public static function render_customer_dashboard($atts = []) {
-        OCD_Assets::enqueue_frontend();
-        ob_start();
-        // The template renders ONLY customer-facing panels. No admin/CRM operational nav.
-        include OCD_TEMPLATES . '/customer-dashboard.php';
-        return ob_get_clean();
+        try {
+            OCD_Assets::enqueue_frontend();
+            ob_start();
+            // The template renders ONLY customer-facing panels. No admin/CRM operational nav.
+            include OCD_TEMPLATES . '/customer-dashboard.php';
+            return ob_get_clean();
+        } catch (\Throwable $e) {
+            if (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            self::log_render_error('customer', $e);
+            return self::render_error_notice();
+        }
     }
 
     public static function render_admin_dashboard($atts = []) {
         if (!current_user_can('manage_woocommerce') && !current_user_can('manage_options')) {
             return '<div class="ocd-notice ocd-notice--error">' . esc_html__('You do not have permission to view this page.', 'oversee-customer-dashboard') . '</div>';
         }
-        OCD_Assets::enqueue_frontend();
-        ob_start();
-        // The template renders ONLY the admin operational surface. Staff who want to QA the
-        // customer view should visit the customer page, not see customer panels mixed in here.
-        include OCD_TEMPLATES . '/admin-dashboard.php';
-        return ob_get_clean();
+        try {
+            OCD_Assets::enqueue_frontend();
+            ob_start();
+            // The template renders ONLY the admin operational surface. Staff who want to QA the
+            // customer view should visit the customer page, not see customer panels mixed in here.
+            include OCD_TEMPLATES . '/admin-dashboard.php';
+            return ob_get_clean();
+        } catch (\Throwable $e) {
+            if (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+            self::log_render_error('admin', $e);
+            return self::render_error_notice();
+        }
+    }
+
+    private static function render_error_notice() {
+        return '<div class="ocd-notice ocd-notice--error">'
+            . esc_html__('The Oversee dashboard is temporarily unavailable. Please refresh in a moment, or contact support if the issue persists.', 'oversee-customer-dashboard')
+            . '</div>';
+    }
+
+    private static function log_render_error($surface, $e) {
+        if (function_exists('error_log')) {
+            error_log(sprintf(
+                '[oversee-customer-dashboard] %s shortcode render failed: %s in %s:%d',
+                $surface,
+                $e->getMessage(),
+                $e->getFile(),
+                $e->getLine()
+            ));
+        }
     }
 }
