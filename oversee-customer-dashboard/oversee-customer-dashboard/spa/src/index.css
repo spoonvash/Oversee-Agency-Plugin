@@ -1,0 +1,293 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Oversee Assembly-style: pure white, zinc neutrals, #ff8201 accent used sparingly.
+   Inter throughout. 1px borders, rounded-lg, no heavy shadows. */
+
+:root {
+  --background: 0 0% 100%;          /* #ffffff */
+  --foreground: 240 6% 10%;         /* near-black, zinc-900 */
+  --border: 30 8% 90%;              /* warm soft border (replaces zinc-200) */
+  --border-strong: 30 6% 80%;       /* hover/focus border */
+  --card: 0 0% 100%;
+  --card-foreground: 240 6% 10%;
+  --surface-elevated: 30 14% 98%;   /* warm card-on-card surface */
+  --surface-subtle: 30 12% 97%;     /* zebra/list-stripe surface */
+
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 240 6% 22%;
+  --sidebar-border: 30 8% 90%;
+  --sidebar-primary: 27 100% 50%;   /* #ff8201 */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 30 14% 96%;     /* warm hover */
+  --sidebar-accent-foreground: 240 6% 10%;
+  --sidebar-ring: 27 100% 50%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 6% 10%;
+
+  --primary: 27 100% 50%;           /* #ff8201 */
+  --primary-foreground: 0 0% 100%;
+  --primary-soft: 30 100% 96%;      /* warm faint orange tint */
+  --primary-soft-strong: 27 100% 92%;
+  --primary-border: 27 100% 88%;
+  --primary-hover: 22 100% 45%;
+
+  --secondary: 240 6% 96%;
+  --secondary-foreground: 240 6% 10%;
+  --muted: 240 6% 96%;
+  --muted-foreground: 240 5% 38%; /* boost contrast vs prior 44% for AA on body copy */
+  --accent: 240 6% 96%;
+  --accent-foreground: 240 6% 10%;
+
+  --destructive: 0 72% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --warning: 32 92% 48%;
+  --warning-foreground: 0 0% 100%;
+  --success: 142 60% 36%;
+  --success-foreground: 0 0% 100%;
+  --info: 210 90% 50%;
+  --info-foreground: 0 0% 100%;
+
+  --input: 240 6% 88%;
+  --ring: 27 100% 50%;
+
+  /* Chart palette: monochromatic orange + zinc */
+  --chart-1: 27 100% 50%;
+  --chart-2: 22 80% 38%;
+  --chart-3: 32 92% 60%;
+  --chart-4: 240 5% 50%;
+  --chart-5: 240 5% 75%;
+
+  --radius: 0.5rem;
+  /* deliberately subtle shadows */
+  --shadow-2xs: 0 1px 2px 0 hsl(240 6% 10% / 0.03);
+  --shadow-xs: 0 1px 2px 0 hsl(240 6% 10% / 0.04);
+  --shadow-sm: 0 1px 2px 0 hsl(240 6% 10% / 0.05);
+  --shadow: 0 1px 3px 0 hsl(240 6% 10% / 0.06);
+  --shadow-md: 0 2px 6px -1px hsl(240 6% 10% / 0.08);
+  --shadow-lg: 0 8px 20px -8px hsl(240 6% 10% / 0.12);
+  --shadow-xl: 0 12px 28px -10px hsl(240 6% 10% / 0.15);
+  --shadow-2xl: 0 18px 40px -14px hsl(240 6% 10% / 0.18);
+
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-serif: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", SFMono-Regular, Consolas, monospace;
+}
+
+.dark {
+  --background: 240 6% 6%;          /* deeper zinc-950 */
+  --foreground: 0 0% 96%;
+  --border: 30 4% 18%;              /* softer warm border */
+  --border-strong: 30 4% 26%;
+  --card: 240 6% 9%;                /* zinc-900 */
+  --card-foreground: 0 0% 96%;
+  --surface-elevated: 240 5% 11%;
+  --surface-subtle: 240 5% 10%;
+
+  --sidebar: 240 6% 7%;
+  --sidebar-foreground: 0 0% 90%;
+  --sidebar-border: 30 4% 16%;
+  --sidebar-primary: 27 100% 55%;
+  --sidebar-primary-foreground: 0 0% 8%;
+  --sidebar-accent: 240 4% 14%;
+  --sidebar-accent-foreground: 0 0% 96%;
+  --sidebar-ring: 27 100% 55%;
+
+  --popover: 240 6% 9%;
+  --popover-foreground: 0 0% 96%;
+
+  --primary: 27 100% 55%;
+  --primary-foreground: 0 0% 8%;
+  --primary-soft: 27 50% 12%;
+  --primary-soft-strong: 27 60% 18%;
+  --primary-border: 27 60% 24%;
+  --primary-hover: 27 100% 50%;
+
+  --secondary: 240 4% 14%;
+  --secondary-foreground: 0 0% 96%;
+  --muted: 240 4% 13%;
+  --muted-foreground: 240 5% 70%; /* boost dark-mode contrast vs prior 64% */
+  --accent: 240 4% 14%;
+  --accent-foreground: 0 0% 96%;
+
+  --destructive: 0 70% 55%;
+  --destructive-foreground: 0 0% 100%;
+  --warning: 32 92% 56%;
+  --warning-foreground: 0 0% 8%;
+  --success: 142 50% 50%;
+  --success-foreground: 0 0% 100%;
+  --info: 210 80% 60%;
+  --info-foreground: 0 0% 100%;
+
+  --input: 240 4% 22%;
+  --ring: 27 100% 55%;
+
+  --chart-1: 27 100% 60%;
+  --chart-2: 22 60% 50%;
+  --chart-3: 32 92% 64%;
+  --chart-4: 240 4% 60%;
+  --chart-5: 240 4% 40%;
+
+  --shadow-2xs: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
+  --shadow-xs: 0 1px 2px 0 hsl(0 0% 0% / 0.24);
+  --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.3);
+  --shadow: 0 2px 4px -1px hsl(0 0% 0% / 0.36);
+  --shadow-md: 0 4px 8px -2px hsl(0 0% 0% / 0.42);
+  --shadow-lg: 0 12px 24px -8px hsl(0 0% 0% / 0.48);
+  --shadow-xl: 0 18px 36px -12px hsl(0 0% 0% / 0.54);
+  --shadow-2xl: 0 28px 56px -18px hsl(0 0% 0% / 0.6);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+    overflow: hidden;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    letter-spacing: -0.015em;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer utilities {
+  .scrollbar-soft {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+  }
+
+  .bg-primary-soft {
+    background-color: hsl(var(--primary-soft));
+  }
+  .bg-primary-soft-strong {
+    background-color: hsl(var(--primary-soft-strong));
+  }
+  .border-primary-soft {
+    border-color: hsl(var(--primary-border));
+  }
+  .bg-surface-elevated {
+    background-color: hsl(var(--surface-elevated));
+  }
+  .bg-surface-subtle {
+    background-color: hsl(var(--surface-subtle));
+  }
+  .border-strong {
+    border-color: hsl(var(--border-strong));
+  }
+  .ring-strong {
+    box-shadow: inset 0 0 0 1px hsl(var(--border-strong));
+  }
+  .bg-warning {
+    background-color: hsl(var(--warning));
+  }
+  .text-warning {
+    color: hsl(var(--warning));
+  }
+  .bg-success {
+    background-color: hsl(var(--success));
+  }
+  .text-success {
+    color: hsl(var(--success));
+  }
+  .bg-info {
+    background-color: hsl(var(--info));
+  }
+  .text-info {
+    color: hsl(var(--info));
+  }
+  .border-info\/30 {
+    border-color: hsl(var(--info) / 0.3);
+  }
+
+  /* Subtle Oversee orange gradient for hero/status surfaces */
+  .bg-gradient-orange-soft {
+    background-image:
+      radial-gradient(ellipse at top left, hsl(27 100% 96%) 0%, transparent 60%),
+      linear-gradient(180deg, hsl(27 100% 98%) 0%, hsl(0 0% 100%) 100%);
+  }
+  .dark .bg-gradient-orange-soft {
+    background-image:
+      radial-gradient(ellipse at top left, hsl(27 60% 16%) 0%, transparent 60%),
+      linear-gradient(180deg, hsl(27 30% 10%) 0%, hsl(240 6% 9%) 100%);
+  }
+
+  /* Premium priority gradient — used on hero/PriorityBanner only */
+  .bg-gradient-priority {
+    background-image:
+      radial-gradient(120% 100% at 0% 0%, hsl(27 100% 94%) 0%, transparent 55%),
+      radial-gradient(80% 80% at 100% 100%, hsl(27 100% 97%) 0%, transparent 60%),
+      linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(30 100% 98%) 100%);
+  }
+  .dark .bg-gradient-priority {
+    background-image:
+      radial-gradient(120% 100% at 0% 0%, hsl(27 80% 14%) 0%, transparent 55%),
+      radial-gradient(80% 80% at 100% 100%, hsl(27 60% 10%) 0%, transparent 60%),
+      linear-gradient(135deg, hsl(240 6% 8%) 0%, hsl(27 30% 10%) 100%);
+  }
+
+  /* Subtle neutral hero gradient — for non-priority hero panels */
+  .bg-gradient-surface {
+    background-image: linear-gradient(180deg, hsl(30 14% 99%) 0%, hsl(0 0% 100%) 100%);
+  }
+  .dark .bg-gradient-surface {
+    background-image: linear-gradient(180deg, hsl(240 6% 9%) 0%, hsl(240 6% 7%) 100%);
+  }
+
+  /* Subtle orange ring for hero status pills */
+  .ring-orange-soft {
+    box-shadow: inset 0 0 0 1px hsl(27 100% 50% / 0.18);
+  }
+
+  /* Softer alpha-aware border helpers */
+  .border-soft {
+    border-color: hsl(var(--border) / 0.7);
+  }
+  .border-stronger {
+    border-color: hsl(var(--foreground) / 0.12);
+  }
+
+  /* Review-state ring & background helpers — used on preview cards & approval dialog */
+  .ring-review-pending {
+    box-shadow: inset 0 0 0 1px hsl(27 100% 50% / 0.35);
+  }
+  .ring-review-approved {
+    box-shadow: inset 0 0 0 1px hsl(142 60% 36% / 0.30);
+  }
+  .ring-review-changes {
+    box-shadow: inset 0 0 0 1px hsl(0 72% 50% / 0.35);
+  }
+  .bg-review-pending {
+    background-color: hsl(27 100% 96%);
+  }
+  .dark .bg-review-pending {
+    background-color: hsl(27 60% 14%);
+  }
+
+  /* App-level sidebar sizing override (no inline styles in app source).
+     The shadcn SidebarProvider sets these vars via inline style; we use
+     `!important` here to override the default 16rem. */
+  .app-sidebar-provider {
+    --sidebar-width: 13.75rem !important; /* 220px */
+    --sidebar-width-icon: 3.75rem !important; /* 60px */
+  }
+}
